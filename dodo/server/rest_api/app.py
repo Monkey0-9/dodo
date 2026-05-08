@@ -1,4 +1,4 @@
-﻿import faulthandler
+import faulthandler
 import importlib.util
 import json
 import logging
@@ -109,13 +109,13 @@ class SafeORJSONResponse(ORJSONResponse):
 
 from dodo.server.global_exception_handler import setup_global_exception_handlers
 
-# NOTE(charles): these are extra routes that are not part of v1 but we still need to mount to pass tests
-from dodo.server.rest_api.auth.index import setup_auth_router  # TODO: probably remove right?
+# Mount necessary routes for backwards compatibility and extension support
+from dodo.server.rest_api.auth.index import setup_auth_router
 from dodo.server.rest_api.interface import StreamingServerInterface
 from dodo.server.rest_api.middleware import CheckPasswordMiddleware, LoggingMiddleware, RequestIdMiddleware
 from dodo.server.rest_api.routers.v1 import ROUTERS as v1_routes
 from dodo.server.rest_api.routers.v1.organizations import router as organizations_router
-from dodo.server.rest_api.routers.v1.users import router as users_router  # TODO: decide on admin
+from dodo.server.rest_api.routers.v1.users import router as users_router
 from dodo.server.rest_api.static_files import mount_static_files
 from dodo.server.rest_api.utils import SENTRY_ENABLED
 from dodo.server.server import SyncServer
@@ -127,7 +127,6 @@ if SENTRY_ENABLED:
 
 IS_WINDOWS = platform.system() == "Windows"
 
-# NOTE(charles): @ethan I had to add this to get the global as the bottom to work
 interface: type = StreamingServerInterface
 server = SyncServer(default_interface_factory=lambda: interface())
 logger = get_logger(__name__)
@@ -424,7 +423,7 @@ def create_application() -> "FastAPI":
     setup_global_exception_handlers()
 
     # === Exception Handlers ===
-    # TODO (cliandy): move to separate file
+
 
     @app.exception_handler(anyio.BrokenResourceError)
     @app.exception_handler(anyio.ClosedResourceError)

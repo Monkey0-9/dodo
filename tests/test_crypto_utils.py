@@ -26,12 +26,16 @@ class TestCryptoUtils:
 
         for plaintext in test_cases:
             encrypted = CryptoUtils.encrypt(plaintext, self.MOCK_KEY_1)
-            assert encrypted != plaintext, f"Encryption failed for: {plaintext[:50]}"
+            assert encrypted != plaintext, (
+                f"Encryption failed for: {plaintext[:50]}"
+            )
             # Encrypted value is base64 encoded
             assert len(encrypted) > 0, "Encrypted value should not be empty"
 
             decrypted = CryptoUtils.decrypt(encrypted, self.MOCK_KEY_1)
-            assert decrypted == plaintext, f"Roundtrip failed for: {plaintext[:50]}"
+            assert decrypted == plaintext, (
+                f"Roundtrip failed for: {plaintext[:50]}"
+            )
 
     def test_encrypt_with_different_keys(self):
         """Test that different keys produce different ciphertexts."""
@@ -52,7 +56,7 @@ class TestCryptoUtils:
         plaintext = "secret message"
         encrypted = CryptoUtils.encrypt(plaintext, self.MOCK_KEY_1)
 
-        with pytest.raises(Exception):  # Could be ValueError or cryptography exception
+        with pytest.raises(Exception):  # Could be ValueError or cryptography exc
             CryptoUtils.decrypt(encrypted, self.MOCK_KEY_2)
 
     def test_encrypt_none_value(self):
@@ -94,11 +98,13 @@ class TestCryptoUtils:
 
         # Decoded data should contain salt, IV, tag, and ciphertext
         # Total should be at least SALT_SIZE + IV_SIZE + TAG_SIZE bytes
-        min_size = CryptoUtils.SALT_SIZE + CryptoUtils.IV_SIZE + CryptoUtils.TAG_SIZE
+        min_size = (
+            CryptoUtils.SALT_SIZE + CryptoUtils.IV_SIZE + CryptoUtils.TAG_SIZE
+        )
         assert len(decoded) >= min_size
 
     def test_deterministic_with_same_salt(self):
-        """Test that encryption is deterministic when using the same salt (for testing)."""
+        """Test that encryption is deterministic (with fixed salt)."""
         plaintext = "deterministic test"
 
         # Note: In production, each encryption generates a random salt
@@ -170,7 +176,10 @@ class TestCryptoUtils:
         json_data = {
             "user": "test_user",
             "token": "secret_token_123",
-            "nested": {"api_key": "sk-1234567890", "headers": {"Authorization": "Bearer token"}},
+            "nested": {
+                "api_key": "sk-1234567890",
+                "headers": {"Authorization": "Bearer token"},
+            },
         }
 
         json_str = json.dumps(json_data)
@@ -230,7 +239,9 @@ class TestCryptoUtils:
         for plaintext in test_cases:
             encrypted = CryptoUtils.encrypt(plaintext, self.MOCK_KEY_1)
             decrypted = CryptoUtils.decrypt(encrypted, self.MOCK_KEY_1)
-            assert decrypted == plaintext, f"Whitespace handling failed for: {repr(plaintext)}"
+            assert decrypted == plaintext, (
+                f"Whitespace handling failed for: {repr(plaintext)}"
+            )
 
 
 class TestIsEncrypted:
@@ -244,7 +255,9 @@ class TestIsEncrypted:
 
         for plaintext in test_values:
             encrypted = CryptoUtils.encrypt(plaintext, self.MOCK_KEY)
-            assert CryptoUtils.is_encrypted(encrypted), f"Failed to detect encrypted value for: {plaintext}"
+            assert CryptoUtils.is_encrypted(encrypted), (
+                f"Failed to detect encrypted value for: {plaintext}"
+            )
 
     def test_openai_api_keys_not_detected(self):
         """Test that OpenAI API keys are not detected as encrypted."""
@@ -255,7 +268,9 @@ class TestIsEncrypted:
         ]
 
         for key in openai_keys:
-            assert not CryptoUtils.is_encrypted(key), f"OpenAI key incorrectly detected as encrypted: {key}"
+            assert not CryptoUtils.is_encrypted(key), (
+                f"OpenAI key incorrectly detected as encrypted: {key}"
+            )
 
     def test_github_tokens_not_detected(self):
         """Test that GitHub tokens are not detected as encrypted."""
@@ -268,7 +283,9 @@ class TestIsEncrypted:
         ]
 
         for token in github_tokens:
-            assert not CryptoUtils.is_encrypted(token), f"GitHub token incorrectly detected as encrypted: {token}"
+            assert not CryptoUtils.is_encrypted(token), (
+                f"GitHub token incorrectly detected as encrypted: {token}"
+            )
 
     def test_aws_keys_not_detected(self):
         """Test that AWS access keys are not detected as encrypted."""
@@ -280,7 +297,9 @@ class TestIsEncrypted:
         ]
 
         for key in aws_keys:
-            assert not CryptoUtils.is_encrypted(key), f"AWS key incorrectly detected as encrypted: {key}"
+            assert not CryptoUtils.is_encrypted(key), (
+                f"AWS key incorrectly detected as encrypted: {key}"
+            )
 
     def test_slack_tokens_not_detected(self):
         """Test that Slack tokens are not detected as encrypted."""
@@ -290,17 +309,23 @@ class TestIsEncrypted:
         ]
 
         for token in slack_tokens:
-            assert not CryptoUtils.is_encrypted(token), f"Slack token incorrectly detected as encrypted: {token}"
+            assert not CryptoUtils.is_encrypted(token), (
+                f"Slack token incorrectly detected as encrypted: {token}"
+            )
 
     def test_bearer_tokens_not_detected(self):
         """Test that Bearer tokens are not detected as encrypted."""
         bearer_tokens = [
-            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
+            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+            "eyJzdWIiOiIxMjM0NTY3ODkwIn0."
+            "dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
             "Bearer some-long-token-string-1234567890abcdefghijklmnop",
         ]
 
         for token in bearer_tokens:
-            assert not CryptoUtils.is_encrypted(token), f"Bearer token incorrectly detected as encrypted: {token}"
+            assert not CryptoUtils.is_encrypted(token), (
+                f"Bearer token incorrectly detected as encrypted: {token}"
+            )
 
     def test_generic_prefixes_not_detected(self):
         """Test that strings with generic API key prefixes are not detected as encrypted."""
@@ -312,14 +337,18 @@ class TestIsEncrypted:
         ]
 
         for key in generic_keys:
-            assert not CryptoUtils.is_encrypted(key), f"Generic key incorrectly detected as encrypted: {key}"
+            assert not CryptoUtils.is_encrypted(key), (
+                f"Generic key incorrectly detected as encrypted: {key}"
+            )
 
     def test_short_strings_not_detected(self):
         """Test that short strings are not detected as encrypted."""
         short_strings = ["short", "abc", "1234567890", ""]
 
         for s in short_strings:
-            assert not CryptoUtils.is_encrypted(s), f"Short string incorrectly detected as encrypted: {s}"
+            assert not CryptoUtils.is_encrypted(s), (
+                f"Short string incorrectly detected as encrypted: {s}"
+            )
 
     def test_invalid_base64_not_detected(self):
         """Test that invalid base64 strings are not detected as encrypted."""
@@ -330,7 +359,9 @@ class TestIsEncrypted:
         ]
 
         for s in invalid_strings:
-            assert not CryptoUtils.is_encrypted(s), f"Invalid base64 incorrectly detected as encrypted: {s}"
+            assert not CryptoUtils.is_encrypted(s), (
+                f"Invalid base64 incorrectly detected as encrypted: {s}"
+            )
 
     def test_valid_base64_but_too_short_not_detected(self):
         """Test that valid base64 strings that are too short are not detected."""
@@ -409,7 +440,6 @@ class TestBackwardsCompatibility:
 
         # Keys must be identical
         assert hashlib_key == cryptography_key, (
-            "hashlib.pbkdf2_hmac and cryptography PBKDF2HMAC produced different keys! "
             "This would break decryption of existing encrypted values."
         )
 
@@ -492,5 +522,7 @@ class TestBackwardsCompatibility:
         for plaintext in test_cases:
             encrypted = CryptoUtils.encrypt(plaintext, self.MOCK_KEY)
             decrypted = CryptoUtils.decrypt(encrypted, self.MOCK_KEY)
-            assert decrypted == plaintext, f"Roundtrip failed for: {plaintext[:50]}..."
+            assert decrypted == plaintext, (
+                f"Roundtrip failed for: {plaintext[:50]}..."
+            )
 
