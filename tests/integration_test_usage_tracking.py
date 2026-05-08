@@ -22,7 +22,7 @@ from typing import Any, List, Optional, Tuple
 import pytest
 from dotenv import load_dotenv
 from dodo_client import Asyncdodo
-from dodo_client.types import (
+from dodo.client.types import (
     AgentState,
     MessageCreateParam,
 )

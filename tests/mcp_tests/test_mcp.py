@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 from dotenv import load_dotenv
-from dodo_client import dodo
-from dodo_client.types import MessageCreateParam, Tool, ToolReturnMessage
+from dodo.client import dodo
+from dodo.client.types import MessageCreateParam, Tool, ToolReturnMessage
 from dodo_client.types.agents import ToolCallMessage
 
 from dodo.functions.mcp_client.types import SSEServerConfig, StdioServerConfig, StreamableHTTPServerConfig

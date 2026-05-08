@@ -10,7 +10,7 @@ from typing import Any, List, Optional
 import pytest
 import requests
 from dodo_client import APIError, Asyncdodo, dodo
-from dodo_client.types import MessageCreateParam
+from dodo.client.types import MessageCreateParam
 
 logger = logging.getLogger(__name__)
 

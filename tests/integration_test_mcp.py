@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 import requests
 from dotenv import load_dotenv
-from dodo_client import dodo
-from dodo_client.types import MessageCreateParam
+from dodo.client import dodo
+from dodo.client.types import MessageCreateParam
 from dodo_client.types.agents.tool_call_message import ToolCallMessage
 from dodo_client.types.tool_return_message import ToolReturnMessage
 

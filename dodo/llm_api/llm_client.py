@@ -1,4 +1,4 @@
-﻿from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional
 
 from dodo.llm_api.llm_client_base import LLMClientBase
 from dodo.schemas.enums import ProviderType

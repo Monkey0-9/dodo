@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pytest
 from dotenv import load_dotenv
-from dodo_client import dodo
+from dodo.client import dodo
 from tqdm import tqdm
 
 from dodo.schemas.embedding_config import EmbeddingConfig

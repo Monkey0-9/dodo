@@ -411,12 +411,17 @@ def create_application() -> "FastAPI":
         swagger_ui_parameters={"docExpansion": "none"},
         # openapi_tags=TAGS_METADATA,
         title="dodo",
-        summary="Create LLM agents with long-term memory and custom tools ðŸ“šðŸ¦™",
+        summary="Unified Agent Framework with Persistent Memory and Cognitive Tools",
         version=dodo_version,
         debug=debug_mode,  # if True, the stack trace will be printed in the response
         lifespan=lifespan,
         default_response_class=SafeORJSONResponse,  # Use orjson for 10x faster JSON serialization, with surrogate safety
     )
+
+    from fastapi.middleware.gzip import GzipMiddleware
+
+    # Add Gzip compression for all responses > 500 bytes
+    app.add_middleware(GzipMiddleware, minimum_size=500)
 
     # === Global Exception Handlers ===
     # Set up handlers for exceptions outside of request context (background tasks, threads, etc.)
@@ -818,7 +823,7 @@ def create_application() -> "FastAPI":
     # Set up OpenTelemetry tracing
     otlp_endpoint = settings.otel_exporter_otlp_endpoint
     if otlp_endpoint and not settings.disable_tracing:
-        print(f"â–¶ Using OTLP tracing with endpoint: {otlp_endpoint}")
+        logger.info(f"Telemetry: Using OTLP tracing with endpoint: {otlp_endpoint}")
         env_name_suffix = os.getenv("ENV_NAME")
         service_name = f"dodo-server-{env_name_suffix.lower()}" if env_name_suffix else "dodo-server"
         from dodo.otel.metrics import setup_metrics
@@ -840,7 +845,7 @@ def create_application() -> "FastAPI":
                     enable_joined_monitoring=True,  # Monitor joined loading operations
                     sql_truncate_length=1500,  # Longer SQL statements for debugging
                 )
-                print("â–¶ SQLAlchemy synchronous operation instrumentation enabled")
+                logger.info("Telemetry: SQLAlchemy synchronous operation instrumentation enabled")
             except Exception as e:
                 logger.warning(f"Failed to setup SQLAlchemy instrumentation: {e}")
                 # Don't fail startup if instrumentation fails

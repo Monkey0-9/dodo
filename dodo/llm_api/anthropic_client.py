@@ -1,4 +1,4 @@
-﻿import copy
+import copy
 import json
 import logging
 import re
@@ -35,6 +35,7 @@ from dodo.helpers.decorators import deprecated
 from dodo.helpers.json_helpers import sanitize_unicode_surrogates
 from dodo.llm_api.anthropic_constants import ANTHROPIC_MAX_STRICT_TOOLS, ANTHROPIC_STRICT_MODE_ALLOWLIST
 from dodo.llm_api.error_utils import is_insufficient_credits_message
+from dodo.llm_api.client_manager import client_manager
 from dodo.llm_api.helpers import add_inner_thoughts_to_functions, unpack_all_inner_thoughts_from_kwargs
 from dodo.llm_api.llm_client_base import LLMClientBase
 from dodo.local_llm.constants import INNER_THOUGHTS_KWARG, INNER_THOUGHTS_KWARG_DESCRIPTION
@@ -429,14 +430,12 @@ class AnthropicClient(LLMClientBase):
         self, llm_config: LLMConfig, async_client: bool = False
     ) -> Union[anthropic.AsyncAnthropic, anthropic.Anthropic]:
         api_key, _, _ = self.get_byok_overrides(llm_config)
-
-        # For claude-pro-max provider, use OAuth Bearer token instead of api_key
         is_oauth_provider = llm_config.provider_name == "claude-pro-max"
 
         if async_client:
             if api_key:
                 if is_oauth_provider:
-                    return anthropic.AsyncAnthropic(
+                    return client_manager.get_async_anthropic_client(
                         max_retries=model_settings.anthropic_max_retries,
                         default_headers={
                             "Authorization": f"Bearer {api_key}",
@@ -444,12 +443,12 @@ class AnthropicClient(LLMClientBase):
                             "anthropic-beta": "oauth-2025-04-20",
                         },
                     )
-                return anthropic.AsyncAnthropic(api_key=api_key, max_retries=model_settings.anthropic_max_retries)
-            return anthropic.AsyncAnthropic(max_retries=model_settings.anthropic_max_retries)
+                return client_manager.get_async_anthropic_client(api_key=api_key, max_retries=model_settings.anthropic_max_retries)
+            return client_manager.get_async_anthropic_client(max_retries=model_settings.anthropic_max_retries)
 
         if api_key:
             if is_oauth_provider:
-                return anthropic.Anthropic(
+                return client_manager.get_sync_anthropic_client(
                     max_retries=model_settings.anthropic_max_retries,
                     default_headers={
                         "Authorization": f"Bearer {api_key}",
@@ -457,22 +456,20 @@ class AnthropicClient(LLMClientBase):
                         "anthropic-beta": "oauth-2025-04-20",
                     },
                 )
-            return anthropic.Anthropic(api_key=api_key, max_retries=model_settings.anthropic_max_retries)
-        return anthropic.Anthropic(max_retries=model_settings.anthropic_max_retries)
+            return client_manager.get_sync_anthropic_client(api_key=api_key, max_retries=model_settings.anthropic_max_retries)
+        return client_manager.get_sync_anthropic_client(max_retries=model_settings.anthropic_max_retries)
 
     @trace_method
     async def _get_anthropic_client_async(
         self, llm_config: LLMConfig, async_client: bool = False
     ) -> Union[anthropic.AsyncAnthropic, anthropic.Anthropic]:
         api_key, _, _ = await self.get_byok_overrides_async(llm_config)
-
-        # For claude-pro-max provider, use OAuth Bearer token instead of api_key
         is_oauth_provider = llm_config.provider_name == "claude-pro-max"
 
         if async_client:
             if api_key:
                 if is_oauth_provider:
-                    return anthropic.AsyncAnthropic(
+                    return client_manager.get_async_anthropic_client(
                         max_retries=model_settings.anthropic_max_retries,
                         default_headers={
                             "Authorization": f"Bearer {api_key}",
@@ -480,12 +477,12 @@ class AnthropicClient(LLMClientBase):
                             "anthropic-beta": "oauth-2025-04-20",
                         },
                     )
-                return anthropic.AsyncAnthropic(api_key=api_key, max_retries=model_settings.anthropic_max_retries)
-            return anthropic.AsyncAnthropic(max_retries=model_settings.anthropic_max_retries)
+                return client_manager.get_async_anthropic_client(api_key=api_key, max_retries=model_settings.anthropic_max_retries)
+            return client_manager.get_async_anthropic_client(max_retries=model_settings.anthropic_max_retries)
 
         if api_key:
             if is_oauth_provider:
-                return anthropic.Anthropic(
+                return client_manager.get_sync_anthropic_client(
                     max_retries=model_settings.anthropic_max_retries,
                     default_headers={
                         "Authorization": f"Bearer {api_key}",
@@ -493,8 +490,8 @@ class AnthropicClient(LLMClientBase):
                         "anthropic-beta": "oauth-2025-04-20",
                     },
                 )
-            return anthropic.Anthropic(api_key=api_key, max_retries=model_settings.anthropic_max_retries)
-        return anthropic.Anthropic(max_retries=model_settings.anthropic_max_retries)
+            return client_manager.get_sync_anthropic_client(api_key=api_key, max_retries=model_settings.anthropic_max_retries)
+        return client_manager.get_sync_anthropic_client(max_retries=model_settings.anthropic_max_retries)
 
     @trace_method
     def build_request_data(

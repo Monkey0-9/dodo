@@ -13,7 +13,7 @@ import pytest
 import requests
 from dotenv import load_dotenv
 from dodo_client import Asyncdodo
-from dodo_client.types import (
+from dodo.client.types import (
     AgentState,
     AnthropicModelSettings,
     JsonSchemaResponseFormat,
@@ -316,7 +316,7 @@ async def accumulate_chunks(chunks, verify_token_streaming: bool = False) -> Lis
 
                             chunk = ToolCallMessage(**data)
                         elif message_type == "tool_return_message":
-                            from dodo_client.types import ToolReturnMessage
+                            from dodo.client.types import ToolReturnMessage
 
                             chunk = ToolReturnMessage(**data)
                         elif message_type == "user_message":
@@ -1348,7 +1348,7 @@ async def test_openai_prompt_cache_integration(
     We rely on OpenAI's default prefix-hash routing (no prompt_cache_key) since each
     agent has a unique system prompt, providing natural cache affinity.
     """
-    from dodo_client.types import CreateBlockParam
+    from dodo.client.types import CreateBlockParam
 
     model_handle, model_settings = model_config
 

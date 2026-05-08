@@ -6,7 +6,7 @@ import httpx
 import pytest
 import requests
 from dotenv import load_dotenv
-from dodo_client import dodo, MessageCreate, TextContent
+from dodo.client import dodo, MessageCreate, TextContent
 
 from tests.helpers.utils import upload_test_agentfile_from_disk
 

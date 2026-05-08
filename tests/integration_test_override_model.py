@@ -19,7 +19,7 @@ import pytest
 import requests
 from dotenv import load_dotenv
 from dodo_client import APIError, Asyncdodo, dodo
-from dodo_client.types import AgentState, MessageCreateParam
+from dodo.client.types import AgentState, MessageCreateParam
 
 logger = logging.getLogger(__name__)
 

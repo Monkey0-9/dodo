@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 import requests
 from dotenv import load_dotenv
-from dodo_client import dodo
+from dodo.client import dodo
 from sqlalchemy import delete
 
 from dodo.functions.function_sets.base import core_memory_append, core_memory_replace
@@ -1305,7 +1305,7 @@ async def test_local_sandbox_with_client_injection(disable_e2b_api_key, list_too
     print("=" * 80)
 
     # Verify the script contains dodo client initialization
-    assert "from dodo_client import dodo" in script, "Script should import dodo client"
+    assert "from dodo.client import dodo" in script, "Script should import dodo client"
     assert "dodo_API_KEY" in script, "Script should check for dodo_API_KEY"
     assert "client = dodo(" in script or "client = None" in script, "Script should initialize dodo client"
 
@@ -1366,7 +1366,7 @@ async def test_e2b_sandbox_with_client_injection(check_e2b_key_is_set, list_tool
     print("=" * 80)
 
     # Verify the script contains dodo client initialization
-    assert "from dodo_client import dodo" in script, "Script should import dodo client"
+    assert "from dodo.client import dodo" in script, "Script should import dodo client"
     assert "dodo_API_KEY" in script, "Script should check for dodo_API_KEY"
     assert "client = dodo(" in script or "client = None" in script, "Script should initialize dodo client"
 

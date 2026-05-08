@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 from enum import Enum
 from typing import Annotated, Optional
 
@@ -24,7 +24,10 @@ def server(
     secure: Annotated[bool, typer.Option(help="Adds simple security access")] = False,
     localhttps: Annotated[bool, typer.Option(help="Setup local https")] = False,
 ):
-    """Launch a dodo server process"""
+    """Launch the dodo agent server.
+
+    Optimized for high-concurrency and persistent memory management.
+    """
     if type == ServerChoice.rest_api:
         pass
 
@@ -35,11 +38,11 @@ def server(
 
         except KeyboardInterrupt:
             # Handle CTRL-C
-            typer.secho("Terminating the server...")
+            typer.secho("\nTerminating Dodo server...", fg=typer.colors.YELLOW)
             sys.exit(0)
 
     elif type == ServerChoice.ws_api:
-        raise NotImplementedError("WS suppport deprecated")
+        raise NotImplementedError("WS support deprecated")
 
 
 def version() -> str:

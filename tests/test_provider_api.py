@@ -3,7 +3,7 @@ import threading
 
 import pytest
 from dotenv import load_dotenv
-from dodo_client import dodo
+from dodo.client import dodo
 from dodo_client.core.api_error import ApiError
 
 from tests.utils import wait_for_server

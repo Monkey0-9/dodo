@@ -14,7 +14,7 @@ import os
 import uuid
 
 import pytest
-from dodo_client import dodo
+from dodo.client import dodo
 from dodo_client.types.agents import ApprovalRequestMessage, AssistantMessage
 
 # ------------------------------

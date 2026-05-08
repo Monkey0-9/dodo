@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import json
 import uuid
 from typing import Any, AsyncGenerator, Dict, Optional
@@ -1056,7 +1056,7 @@ class dodoAgentV3(dodoAgentV2):
                         resolved_llm_config = active_llm_config
                         if not is_primary:
                             self.logger.info(f"[LLM ROUTER]: primary {primary_handle} rerouted, falling back to {active_llm_config.handle}")
-                        # Content-based rerouting (e.g. images â†’ vision-capable model)
+
                         active_llm_config = routing_client.apply_reroute_rules(
                             resolved_config=active_llm_config,
                             messages=messages,
@@ -1069,13 +1069,9 @@ class dodoAgentV3(dodoAgentV2):
                             put_inner_thoughts_first=True,
                             actor=self.actor,
                         )
-                        # Update the adapter to use the resolved client and config
                         llm_adapter.llm_client = active_llm_client
                         llm_adapter.llm_config = active_llm_config
                     finally:
-                        # Update persisted step with resolved model info so billing can
-                        # identify the actual model and charge at the correct rate,
-                        # even if resolution fails partway through.
                         if resolved_llm_config is not None:
                             await self.step_manager.update_step_resolved_model_async(
                                 actor=self.actor,
@@ -1164,15 +1160,17 @@ class dodoAgentV3(dodoAgentV2):
                             step_id=step_id,
                             actor=self.actor,
                         )
+                        request_start_time = get_utc_timestamp_ns()
                         async for chunk in invocation:
                             if llm_adapter.supports_token_streaming():
                                 if include_return_message_types is None or chunk.message_type in include_return_message_types:
                                     yield chunk
-                        # Report success to circuit breaker (only for models with fallback routes)
+                        request_end_time = get_utc_timestamp_ns()
+                        latency_ms = (request_end_time - request_start_time) / 1_000_000
+
+                        # Report success to circuit breaker
                         routing_client = await get_llm_routing_client()
-                        if routing_client.get_fallback_handle(active_llm_config.handle):
-                            await routing_client.record_success(active_llm_config.handle)
-                        # If you've reached this point without an error, break out of retry loop
+                        await routing_client.record_success(active_llm_config.handle, latency_ms=latency_ms)
                         break
                     except ValueError as e:
                         self.stop_reason = dodoStopReason(stop_reason=StopReasonType.invalid_llm_response.value)

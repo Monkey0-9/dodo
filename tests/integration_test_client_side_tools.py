@@ -11,7 +11,7 @@ These tests verify that:
 import uuid
 
 import pytest
-from dodo_client import dodo
+from dodo.client import dodo
 
 # ------------------------------
 # Constants

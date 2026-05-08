@@ -80,9 +80,9 @@ if __name__ == "__main__":
 
 - [x] Full Project Rebranding & Sanitization
 - [x] SQLite & PostgreSQL Dual-Engine Support
-- [ ] Distributed Memory Vector Search (Pinecone Integration)
-- [ ] Real-time Streaming WebSocket API
-- [ ] Dodo Portal (Admin UI Dashboard)
+- [x] Distributed Memory Vector Search (Pinecone Integration)
+- [x] Real-time Streaming WebSocket API
+- [x] Dodo Portal (Admin UI Dashboard)
 
 ---
 

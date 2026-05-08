@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import pytest
 import requests
 from dotenv import load_dotenv
-from dodo_client import dodo
+from dodo.client import dodo
 
 
 @pytest.fixture(scope="session")

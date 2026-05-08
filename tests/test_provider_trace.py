@@ -17,7 +17,7 @@ import uuid
 
 import pytest
 from dotenv import load_dotenv
-from dodo_client import dodo
+from dodo.client import dodo
 
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.dodo_message_content import TextContent

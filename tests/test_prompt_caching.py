@@ -23,7 +23,7 @@ import uuid
 
 import pytest
 from dodo_client import Asyncdodo
-from dodo_client.types import MessageCreateParam
+from dodo.client.types import MessageCreateParam
 
 logger = logging.getLogger(__name__)
 
@@ -268,7 +268,7 @@ async def create_agent_with_large_memory(client: Asyncdodo, model: str, model_se
 
     If tests fail, that reveals actual caching issues with production configurations.
     """
-    from dodo_client.types import CreateBlockParam
+    from dodo.client.types import CreateBlockParam
 
     # Clean suffix to avoid invalid characters (e.g., dots in model names)
     clean_suffix = suffix.replace(".", "-").replace("/", "-")

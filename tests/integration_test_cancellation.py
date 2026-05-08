@@ -7,7 +7,7 @@ from typing import Any, List
 import pytest
 from dotenv import load_dotenv
 from dodo_client import Asyncdodo
-from dodo_client.types import MessageCreateParam
+from dodo.client.types import MessageCreateParam
 
 from dodo.log import get_logger
 from dodo.schemas.agent import AgentState

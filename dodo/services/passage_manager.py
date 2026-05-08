@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Dict, List, Optional
 
@@ -629,7 +629,35 @@ class PassageManager:
                 except Exception as e:
                     logger.error(f"Failed to insert passages to Turbopuffer: {e}")
                     if strict_mode:
-                        raise  # Re-raise the exception in strict mode
+                        raise
+
+            # If archive uses Pinecone, also write to Pinecone (dual-write)
+            elif archive.vector_db_provider == VectorDBProvider.PINECONE:
+                try:
+                    from dodo.helpers.pinecone_utils import (
+                        should_use_pinecone,
+                        upsert_records_to_pinecone_index,
+                    )
+                    from dodo.constants import PINECONE_TEXT_FIELD_NAME
+
+                    if should_use_pinecone():
+                        records = []
+                        for p in passages:
+                            record = {
+                                "id": p.id,
+                                PINECONE_TEXT_FIELD_NAME: p.text,
+                                "archive_id": archive.id,
+                                "organization_id": actor.organization_id,
+                                "tags": tags or [],
+                            }
+                            # Optional: add metadata if needed
+                            records.append(record)
+
+                        await upsert_records_to_pinecone_index(records, actor)
+                except Exception as e:
+                    logger.error(f"Failed to insert passages to Pinecone: {e}")
+                    if strict_mode:
+                        raise
 
             return passages
 
@@ -789,7 +817,26 @@ class PassageManager:
                         except Exception as e:
                             logger.error(f"Failed to delete passage from Turbopuffer: {e}")
                             if strict_mode:
-                                raise  # Re-raise the exception in strict mode
+                                raise
+
+                    # Check if archive uses Pinecone and dual-delete
+                    elif archive.vector_db_provider == VectorDBProvider.PINECONE:
+                        try:
+                            from dodo.helpers.pinecone_utils import (
+                                should_use_pinecone,
+                                PineconeAsyncio,
+                                settings
+                            )
+
+                            if should_use_pinecone():
+                                async with PineconeAsyncio(api_key=settings.pinecone_api_key) as pc:
+                                    description = await pc.describe_index(name=settings.pinecone_agent_index)
+                                    async with pc.IndexAsyncio(host=description.index.host) as index:
+                                        await index.delete(ids=[passage_id], namespace=actor.organization_id)
+                        except Exception as e:
+                            logger.error(f"Failed to delete passage from Pinecone: {e}")
+                            if strict_mode:
+                                raise
 
                 return True
             except NoResultFound:

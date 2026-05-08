@@ -11,8 +11,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import pytest
-from dodo_client import dodo
-from dodo_client.types import CreateBlockParam, MessageCreateParam
+from dodo.client import dodo
+from dodo.client.types import CreateBlockParam, MessageCreateParam
 
 from dodo.config import dodoConfig
 from dodo.schemas.tool import ToolSearchResult

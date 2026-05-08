@@ -10,12 +10,12 @@ from typing import ClassVar, List, Type
 
 import pytest
 from dotenv import load_dotenv
-from dodo_client import (
+from dodo.client import (
     APIError,
     dodo as dodoSDKClient,
     NotFoundError,
 )
-from dodo_client.types import (
+from dodo.client.types import (
     AgentState,
     ContinueToolRule,
     CreateBlockParam,
@@ -24,7 +24,7 @@ from dodo_client.types import (
     TerminalToolRule,
     ToolReturnMessage,
 )
-from dodo_client.types.tool import BaseTool
+from dodo.client.types import Tool as BaseTool
 from pydantic import BaseModel, Field
 
 from dodo.config import dodoConfig

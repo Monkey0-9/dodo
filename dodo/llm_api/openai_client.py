@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import asyncio
 import json
@@ -39,6 +39,7 @@ from dodo.llm_api.helpers import (
     unpack_all_inner_thoughts_from_kwargs,
 )
 from dodo.llm_api.llm_client_base import LLMClientBase
+from dodo.llm_api.client_manager import client_manager
 from dodo.llm_api.openai_ws_session import AsyncStreamCompat, OpenAIWSSessionManager
 from dodo.local_llm.constants import INNER_THOUGHTS_KWARG, INNER_THOUGHTS_KWARG_DESCRIPTION, INNER_THOUGHTS_KWARG_DESCRIPTION_GO_FIRST
 from dodo.log import get_logger
@@ -746,7 +747,7 @@ class OpenAIClient(LLMClientBase):
         # Sanitize Unicode surrogates to prevent encoding errors
         request_data = sanitize_unicode_surrogates(request_data)
 
-        client = OpenAI(**self._prepare_client_kwargs(llm_config))
+        client = client_manager.get_sync_openai_client(**self._prepare_client_kwargs(llm_config))
         # Route based on payload shape: Responses uses 'input', Chat Completions uses 'messages'
         try:
             if "input" in request_data and "messages" not in request_data:
@@ -772,7 +773,7 @@ class OpenAIClient(LLMClientBase):
         request_data = sanitize_unicode_surrogates(request_data)
 
         kwargs = await self._prepare_client_kwargs_async(llm_config)
-        client = AsyncOpenAI(**kwargs)
+        client = client_manager.get_async_openai_client(**kwargs)
         # Route based on payload shape: Responses uses 'input', Chat Completions uses 'messages'
         try:
             if "input" in request_data and "messages" not in request_data:
@@ -1040,9 +1041,8 @@ class OpenAIClient(LLMClientBase):
                 logger.error(f"Error streaming OpenAI Responses WebSocket request: {e}")
                 raise
 
-        # --- HTTP SSE path (default) ---
         kwargs = await self._prepare_client_kwargs_async(llm_config)
-        client = AsyncOpenAI(**kwargs)
+        client = client_manager.get_async_openai_client(**kwargs)
 
         # Route based on payload shape: Responses uses 'input', Chat Completions uses 'messages'
         if is_responses_request:
@@ -1050,10 +1050,9 @@ class OpenAIClient(LLMClientBase):
                 response_stream: AsyncStream[ResponseStreamEvent] = await client.responses.create(
                     **request_data,
                     stream=True,
-                    # stream_options={"include_usage": True},
                 )
             except Exception as e:
-                logger.error(f"Error streaming OpenAI Responses request: {e} with request data: {json.dumps(request_data)}")
+                logger.error(f"Error streaming OpenAI Responses request: {e}")
                 raise e
         else:
             try:
@@ -1063,7 +1062,7 @@ class OpenAIClient(LLMClientBase):
                     stream_options={"include_usage": True},
                 )
             except Exception as e:
-                logger.error(f"Error streaming OpenAI Chat Completions request: {e} with request data: {json.dumps(request_data)}")
+                logger.error(f"Error streaming OpenAI Chat Completions request: {e}")
                 raise e
         return response_stream
 
@@ -1076,7 +1075,7 @@ class OpenAIClient(LLMClientBase):
         request_data = sanitize_unicode_surrogates(request_data)
 
         kwargs = await self._prepare_client_kwargs_async(llm_config)
-        client = AsyncOpenAI(**kwargs)
+        client = client_manager.get_async_openai_client(**kwargs)
         response_stream: AsyncStream[ResponseStreamEvent] = await client.responses.create(**request_data, stream=True)
         return response_stream
 
@@ -1121,7 +1120,7 @@ class OpenAIClient(LLMClientBase):
         inputs = valid_inputs
 
         kwargs = self._prepare_client_kwargs_embedding(embedding_config)
-        client = AsyncOpenAI(**kwargs)
+        client = client_manager.get_async_openai_client(**kwargs)
 
         # track results by original index to maintain order
         results = [None] * len(inputs)

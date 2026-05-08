@@ -12,8 +12,8 @@ import warnings
 
 import pytest
 from dotenv import load_dotenv
-from dodo_client import dodo as dodoSDKClient
-from dodo_client.types import CreateBlockParam
+from dodo.client import dodo as dodoSDKClient
+from dodo.client.types import CreateBlockParam
 
 from tests.utils import wait_for_server
 

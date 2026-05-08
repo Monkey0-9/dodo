@@ -15,7 +15,7 @@ import time
 from typing import List, Tuple
 
 import pytest
-from dodo_client import dodo, MessageCreate
+from dodo.client import dodo, MessageCreate
 
 from tests.utils import wait_for_server
 

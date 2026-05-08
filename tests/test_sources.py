@@ -9,9 +9,9 @@ from typing import Any
 
 import pytest
 from dotenv import load_dotenv
-from dodo_client import dodo as dodoSDKClient
-from dodo_client.types import CreateBlockParam
-from dodo_client.types.agent_state import AgentState
+from dodo.client import dodo as dodoSDKClient
+from dodo.client.types import CreateBlockParam
+from dodo.client.types import AgentState
 
 from dodo.constants import DEFAULT_ORG_ID, FILES_TOOLS
 from dodo.helpers.pinecone_utils import should_use_pinecone

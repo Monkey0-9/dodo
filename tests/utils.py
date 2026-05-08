@@ -5,8 +5,8 @@ import time
 from datetime import datetime, timezone
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from dodo_client import dodo
-from dodo_client.types.agents.system_message import SystemMessage
+from dodo.client import dodo
+from dodo.client.types import SystemMessage
 
 from dodo.config import dodoConfig
 from dodo.data_sources.connectors import DataConnector

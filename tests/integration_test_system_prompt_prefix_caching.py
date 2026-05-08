@@ -8,7 +8,7 @@ These tests verify:
 """
 
 import pytest
-from dodo_client import dodo
+from dodo.client import dodo
 
 
 @pytest.fixture(scope="module")

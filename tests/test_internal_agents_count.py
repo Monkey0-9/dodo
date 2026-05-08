@@ -2,7 +2,7 @@
 
 import httpx
 import pytest
-from dodo_client import dodo
+from dodo.client import dodo
 
 from dodo.schemas.agent import AgentState
 

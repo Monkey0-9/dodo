@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 from dotenv import load_dotenv
-from dodo_client import dodo
+from dodo.client import dodo
 from openai import AsyncOpenAI
 from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
 

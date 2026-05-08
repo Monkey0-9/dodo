@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass, field
+from dataclasses import dataclass, field
 from functools import partial
 
 from opentelemetry import metrics
@@ -499,6 +499,32 @@ class MetricRegistry:
                 name="count_db_pool_connection_errors",
                 description="Count of database connection pool errors",
                 unit="1",
+            ),
+        )
+
+    # (includes model_handle, transition)
+    @property
+    def circuit_breaker_transitions_counter(self) -> Counter:
+        return self._get_or_create_metric(
+            "circuit_breaker_transitions_total",
+            partial(
+                self._meter.create_counter,
+                name="circuit_breaker_transitions_total",
+                description="Total number of circuit breaker state transitions.",
+                unit="1",
+            ),
+        )
+
+    # (includes model_handle)
+    @property
+    def provider_latency_ms_histogram(self) -> Histogram:
+        return self._get_or_create_metric(
+            "provider_latency_ms",
+            partial(
+                self._meter.create_histogram,
+                name="provider_latency_ms",
+                description="End-to-end latency for model provider requests.",
+                unit="ms",
             ),
         )
 
