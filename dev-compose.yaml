@@ -1,0 +1,49 @@
+﻿services:
+  dodo_db:
+    image: pgvector/pgvector:0.8.1-pg15
+    networks:
+      default:
+        aliases:
+          - pgvector_db
+          - dodo-db
+    environment:
+      - POSTGRES_USER=${dodo_PG_USER:-dodo}
+      - POSTGRES_PASSWORD=${dodo_PG_PASSWORD:-dodo}
+      - POSTGRES_DB=${dodo_PG_DB:-dodo}
+    volumes:
+      - ./.persist/pgdata-test:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - '5432:5432'
+  dodo_server:
+    image: dodo/dodo:latest
+    hostname: dodo
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    depends_on:
+      - dodo_db
+    ports:
+      - '8083:8083'
+      - '8283:8283'
+    environment:
+      - dodo_PG_DB=${dodo_PG_DB:-dodo}
+      - dodo_PG_USER=${dodo_PG_USER:-dodo}
+      - dodo_PG_PASSWORD=${dodo_PG_PASSWORD:-dodo}
+      - dodo_PG_HOST=${dodo_PG_HOST:-pgvector_db}
+      - dodo_PG_PORT=${dodo_PG_PORT:-5432}
+      - dodo_PG_URI=${dodo_PG_URI:-postgresql://${dodo_PG_USER:-dodo}:${dodo_PG_PASSWORD:-dodo}@${dodo_PG_HOST:-pgvector_db}:${dodo_PG_PORT:-5432}/${dodo_PG_DB:-dodo}}
+      - dodo_DEBUG=True
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - AZURE_API_KEY=${AZURE_API_KEY}
+      - AZURE_BASE_URL=${AZURE_BASE_URL}
+      - AZURE_API_VERSION=${AZURE_API_VERSION}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - VLLM_API_BASE=${VLLM_API_BASE}
+      - OPENLLM_AUTH_TYPE=${OPENLLM_AUTH_TYPE}
+      - OPENLLM_API_KEY=${OPENLLM_API_KEY}
+

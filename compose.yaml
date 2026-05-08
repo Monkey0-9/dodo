@@ -1,0 +1,66 @@
+﻿services:
+  dodo_db:
+    image: ankane/pgvector:v0.5.1
+    networks:
+      default:
+        aliases:
+          - pgvector_db
+          - dodo-db
+    environment:
+      - POSTGRES_USER=${dodo_PG_USER:-dodo}
+      - POSTGRES_PASSWORD=${dodo_PG_PASSWORD:-dodo}
+      - POSTGRES_DB=${dodo_PG_DB:-dodo}
+    volumes:
+      - ./.persist/pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "${dodo_PG_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dodo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  dodo_server:
+    image: dodo/dodo:latest
+    hostname: dodo-server
+    depends_on:
+      dodo_db:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+      - "8283:8283"
+    env_file:
+      - .env
+    environment:
+      - dodo_PG_URI=${dodo_PG_URI:-postgresql://${dodo_PG_USER:-dodo}:${dodo_PG_PASSWORD:-dodo}@${dodo_DB_HOST:-dodo-db}:${dodo_PG_PORT:-5432}/${dodo_PG_DB:-dodo}}
+      - dodo_DEBUG=True
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - AZURE_API_KEY=${AZURE_API_KEY}
+      - AZURE_BASE_URL=${AZURE_BASE_URL}
+      - AZURE_API_VERSION=${AZURE_API_VERSION}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - VLLM_API_BASE=${VLLM_API_BASE}
+      - OPENLLM_AUTH_TYPE=${OPENLLM_AUTH_TYPE}
+      - OPENLLM_API_KEY=${OPENLLM_API_KEY}
+      - dodo_OTEL_EXPORTER_OTLP_ENDPOINT=${dodo_OTEL_EXPORTER_OTLP_ENDPOINT}
+      - CLICKHOUSE_ENDPOINT=${CLICKHOUSE_ENDPOINT}
+      - CLICKHOUSE_DATABASE=${CLICKHOUSE_DATABASE}
+      - CLICKHOUSE_USERNAME=${CLICKHOUSE_USERNAME}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+    # volumes:
+    # - ./configs/server_config.yaml:/root/.dodo/config # config file
+    # - ~/.dodo/credentials:/root/.dodo/credentials # credentials file
+    # Uncomment this line to mount a local directory for tool execution, and specify the mount path
+    # before running docker compose: `export dodo_SANDBOX_MOUNT_PATH=$PWD/directory`
+    # - ${dodo_SANDBOX_MOUNT_PATH:?}:/root/.dodo/tool_execution_dir # mounted volume for tool execution
+  dodo_nginx:
+    hostname: dodo-nginx
+    image: nginx:stable-alpine3.17-slim
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+

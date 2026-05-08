@@ -1,0 +1,31 @@
+﻿services:
+  dodo_server:
+    image: dodo_server
+    hostname: dodo-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+      args:
+        - DODO_ENVIRONMENT=DEVELOPMENT
+    depends_on:
+      - dodo_db
+    env_file:
+      - .env
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
+
+    volumes:
+      - ./dodo:/dodo
+      - ~/.dodo/credentials:/root/.dodo/credentials
+      - ./configs/server_config.yaml:/root/.dodo/config
+      - ./CONTRIBUTING.md:/CONTRIBUTING.md
+      - ./tests/pytest_cache:/dodo/.pytest_cache
+      - ./tests/pytest.ini:/dodo/pytest.ini
+      - ./pyproject.toml:/pyproject.toml
+      - ./tests:/tests
+    ports:
+      - "8083:8083"
+      - "8283:8283"
+
+
