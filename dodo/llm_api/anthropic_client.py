@@ -55,6 +55,8 @@ from dodo.schemas.openai.chat_completion_response import (
 )
 from dodo.schemas.usage import dodoUsageStatistics
 from dodo.settings import model_settings
+from dodo.llm_api.anthropic.thinking import apply_thinking_config
+from dodo.llm_api.anthropic.caching import apply_cache_control
 
 DUMMY_FIRST_USER_MESSAGE = "User initializing bootup sequence."
 
@@ -532,35 +534,11 @@ class AnthropicClient(LLMClientBase):
             "temperature": llm_config.temperature,
         }
 
-        # Extended Thinking
-        # Note: Anthropic does not allow thinking when forcing tool use with split_thread_agent
-        should_enable_thinking = (
-            self.is_reasoning_model(llm_config)
-            and llm_config.enable_reasoner
-            and not (agent_type == AgentType.split_thread_agent and force_tool_call is not None)
-        )
+        # Applied modular thinking/reasoning configuration
+        apply_thinking_config(data, llm_config)
 
-        if should_enable_thinking:
-            # Opus 4.6 / Sonnet 4.6 uses Auto Thinking (no budget tokens)
-            if llm_config.model.startswith("claude-opus-4-6") or llm_config.model.startswith("claude-sonnet-4-6"):
-                data["thinking"] = {
-                    "type": "adaptive",
-                }
-            else:
-                # Traditional extended thinking with budget tokens
-                thinking_budget = max(llm_config.max_reasoning_tokens, 1024)
-                if thinking_budget != llm_config.max_reasoning_tokens:
-                    logger.warning(
-                        f"Max reasoning tokens must be at least 1024 for Claude. Setting max_reasoning_tokens to 1024 for model {llm_config.model}."
-                    )
-                data["thinking"] = {
-                    "type": "enabled",
-                    "budget_tokens": thinking_budget,
-                }
-            # `temperature` may only be set to 1 when thinking is enabled. Please consult our documentation at https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking#important-considerations-when-using-extended-thinking'
-            data["temperature"] = 1.0
-
-            # Silently disable prefix_fill for now
+        # Silently disable prefix_fill for now if thinking is enabled
+        if "thinking" in data:
             prefix_fill = False
 
         # Effort configuration for Opus 4.5, Opus 4.6, and Sonnet 4.6 (controls token spending)
@@ -652,9 +630,8 @@ class AnthropicClient(LLMClientBase):
                 tools_for_request,
                 use_strict=use_strict,
             )
-            # Add cache control to the last tool for caching tool definitions
-            if len(data["tools"]) > 0:
-                data["tools"][-1]["cache_control"] = {"type": "ephemeral"}
+            # Apply modular cache control to tools
+            apply_cache_control(data["messages"], data["tools"])
 
         # Messages
         inner_thoughts_xml_tag = "thinking"
@@ -705,10 +682,8 @@ class AnthropicClient(LLMClientBase):
         # produce multiple tool_result blocks with the same id; consolidate them here.
         data["messages"] = dedupe_tool_results_in_user_messages(data["messages"])
 
-        # Add cache control to final message for incremental conversation caching
-        # Per Anthropic docs: "During each turn, we mark the final block of the final message with
-        # cache_control so the conversation can be incrementally cached."
-        data["messages"] = self._add_cache_control_to_messages(data["messages"])
+        # Apply modular cache control to final message
+        apply_cache_control(data["messages"])
 
         # Debug: Log cache control placement
         logger.debug(f"Anthropic request has {len(data.get('messages', []))} messages")

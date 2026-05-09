@@ -61,7 +61,7 @@ async def main():
     
     # Create an agent with long-term memory
     agent = await client.create_agent(
-        name="Nexus-Core",
+        name="Dodo-Core",
         persona="You are an expert quantitative analyst with access to institutional data.",
         human="I am your operator. We are building the next generation of AI trading."
     )

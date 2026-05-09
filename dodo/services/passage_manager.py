@@ -12,6 +12,7 @@ from sqlalchemy.orm import noload
 
 from dodo.constants import MAX_EMBEDDING_DIM
 from dodo.helpers.decorators import async_redis_cache
+from async_lru import alru_cache
 from dodo.llm_api.llm_client import LLMClient
 from dodo.log import get_logger
 from dodo.orm import ArchivesAgents
@@ -87,6 +88,7 @@ class PassageManager:
     # AGENT PASSAGE METHODS
     @enforce_types
     @trace_method
+    @alru_cache(maxsize=1024)
     async def get_agent_passage_by_id_async(self, passage_id: str, actor: PydanticUser) -> Optional[PydanticPassage]:
         """Fetch an agent passage by ID."""
         async with db_registry.async_session() as session:
