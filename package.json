@@ -1,0 +1,16 @@
+{
+  "name": "dodo-root",
+  "version": "1.0.0",
+  "description": "Dodo AI Operating System - Root Orchestrator",
+  "scripts": {
+    "dev:frontend": "cd dodo_portal && npm run dev",
+    "dev:backend": "dodo server --reload --debug",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "build": "cd dodo_portal && npm run build",
+    "install:all": "pip install -e . && cd dodo_portal && npm install",
+    "init": "powershell ./init_project.ps1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}

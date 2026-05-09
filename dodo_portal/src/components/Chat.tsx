@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Wand2, Shield, BrainCircuit, Loader2, Cpu, Database, Network, Zap, Send, Terminal, Hash, Sparkles, Brain, History, Activity, Save, Bot, ChevronRight, User } from 'lucide-react';
+import { X, Shield, Loader2, Database, Zap, Send, Terminal, Hash, Sparkles, Brain, History, Activity, Save, Bot, ChevronRight, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../api/client';
 import { clsx } from 'clsx';

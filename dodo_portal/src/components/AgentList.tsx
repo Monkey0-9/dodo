@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Activity, Shield, HardDrive, ExternalLink, Loader2, Cpu, Zap, Signal } from 'lucide-react';
+import { Shield, HardDrive, Loader2, Cpu, Zap, Signal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../api/client';
-import { clsx } from 'clsx';
 
 export const AgentList = ({ onSelectAgent }: { onSelectAgent: (id: string) => void }) => {
   const [agents, setAgents] = useState<any[]>([]);

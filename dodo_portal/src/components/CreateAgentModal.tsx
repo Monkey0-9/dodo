@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Bot, Wand2, Shield, BrainCircuit, Loader2, Cpu, Database, Network, Zap } from 'lucide-react';
+import { X, Wand2, Shield, BrainCircuit, Loader2, Cpu, Database, Network, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../api/client';
 

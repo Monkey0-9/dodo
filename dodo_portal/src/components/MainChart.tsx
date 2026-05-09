@@ -1,6 +1,6 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
-import { Maximize2, MoreHorizontal } from 'lucide-react';
+import { Maximize2 } from 'lucide-react';
 
 const data = [
   { time: '00:00', latency: 120, requests: 400 },

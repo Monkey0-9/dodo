@@ -2,12 +2,10 @@ import {
   Zap, 
   Activity, 
   Binary, 
-  ShieldAlert, 
   ChevronUp, 
-  TrendingUp,
-  Globe,
-  Database
+  Globe
 } from 'lucide-react';
+import { clsx } from 'clsx';
 import { motion } from 'framer-motion';
 
 const stats = [
@@ -101,4 +99,3 @@ export const StatsGrid = () => {
   );
 };
 
-import { clsx } from 'clsx';
