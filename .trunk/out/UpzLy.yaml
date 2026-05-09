@@ -1,0 +1,21 @@
+trunk_cli_version: 1.25.0
+title: grype exited with exit_code=1
+report:
+  - grype exited with exit_code=1
+  - linter:
+      command: |
+        'C:\Users\Praveen P\AppData\Local\trunk\tools\grype\0.112.0-c96339754454d289a73b4396ee953ddf\grype.exe' 'file:tests\mcp_tests\weather\requirements.txt' -o sarif --quiet
+      stdin_path: (none)
+      run_from: C:\dodo\
+      timeout: 10m
+      rerun: (cd C:\dodo\; env -i 'PATH=C:\Users\Praveen P\AppData\Local\trunk\tools\grype\0.112.0-c96339754454d289a73b4396ee953ddf;C:/Users/Praveen P/AppData/Local/trunk/tools/git-bash/2.40.1-da0c3e1526d36e62bf43d06ec46c5052/bin;C:/Users/Praveen P/AppData/Local/trunk/tools/git-bash/2.40.1-da0c3e1526d36e62bf43d06ec46c5052/usr/bin;C:\Users\Praveen P\AppData\Local\trunk\tools\grype\0.112.0-c96339754454d289a73b4396ee953ddf;C:\Users\Praveen P\AppData\Local\trunk\tools\git-bash\2.40.1-da0c3e1526d36e62bf43d06ec46c5052/bin;C:\Users\Praveen P\AppData\Local\trunk\tools\git-bash\2.40.1-da0c3e1526d36e62bf43d06ec46c5052/usr/bin;C:\Program Files\Python311\Scripts\;C:\Program Files\Python311\;C:\Program Files\Common Files\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\dotnet\;C:\Program Files\cursor\resources\app\bin;C:\Program Files\Git\cmd;C:\Program Files\nodejs\;C:\ProgramData\chocolatey\bin;C:\Program Files\NVIDIA Corporation\NVIDIA App\NvDLISR;C:\Program Files\Go\bin;C:\Program Files\Qoder\bin;C:\Users\Praveen P\AppData\Roaming\Python\Python311\Scripts;;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files\Python311\Scripts\;C:\Program Files\Python311\;C:\Program Files\Common Files\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\dotnet\;C:\Program Files\cursor\resources\app\bin;C:\Program Files\Git\cmd;C:\Program Files\nodejs\;C:\ProgramData\chocolatey\bin;C:\Program Files\NVIDIA Corporation\NVIDIA App\NvDLISR;C:\Program Files\Go\bin;C:\Program Files\Qoder\bin;C:\Users\Praveen P\AppData\Roaming\Python\Python311\Scripts;c:\Users\Praveen P\AppData\Local\Programs\Trae\bin;C:\Users\Praveen P\AppData\Local\Microsoft\WindowsApps;C:\Users\Praveen P\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\Praveen P\AppData\Local\GitHubDesktop\bin;C:\Users\Praveen P\AppData\Roaming\npm;C:\intelFPGA\18.1\modelsim_ase\win32aloem;C:\Users\Praveen P\AppData\Local\Python\bin;C:\Users\Praveen P\.dotnet\tools;C:\Users\Praveen P\AppData\Local\gitkraken\bin;C:\Users\Praveen P\go\bin;C:\Users\Praveen P\AppData\Local\Programs\Windsurf\bin;C:\Users\Praveen P\AppData\Local\Programs\Ollama;C:\Users\Praveen P\.dotnet\tools;C:\Users\Praveen P\AppData\Local\Programs\Antigravity\bin;C:\Users\Praveen P\.local\bin' 'GRYPE_DB_CACHE_DIR=C:/Users/Praveen P/AppData/Local/trunk/repos/2dc9780374c0d9ce2ae173098a7c86d5/results/grype/grype/db' 'C:\Users\Praveen P\AppData\Local\trunk\tools\grype\0.112.0-c96339754454d289a73b4396ee953ddf\grype.exe' 'file:tests\mcp_tests\weather\requirements.txt' -o sarif --quiet)
+      affects_cache:
+        []
+      direct_configs:
+        []
+      exit_status: exited
+      exit_code: 1
+      stdout: (none)
+      stderr: (none)
+    parser: |
+      (none)

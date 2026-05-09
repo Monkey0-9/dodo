@@ -1,0 +1,14 @@
+action_id: trunk-share-with-everyone
+date: 2026-05-09 00:19:16
+run: trunk config share --notify --allow-daemon-start=false
+run_from: ""
+trigger: schedule 24h
+result:
+  exit_code: 127
+  out: ""
+  err: "trunk-share-with-everyone: line 1: C:/Users/Praveen: No such file or directory\n"
+timestamp: 1778285956
+full_timestamp:
+  nanos: 28206000
+  seconds: 1778285956
+trunk_version: 1.25.0
