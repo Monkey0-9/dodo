@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es2023",
+    "target": "ESNext",
     "module": "esnext",
-    "lib": ["ES2023", "DOM"],
+    "lib": ["ESNext", "DOM"],
     "types": ["vite/client"],
     "skipLibCheck": true,
 
@@ -12,6 +12,8 @@
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
 
     /* Linting */
     "noUnusedLocals": true,

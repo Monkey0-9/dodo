@@ -1,9 +1,9 @@
-﻿import asyncio
+import asyncio
 import uuid
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from sqlalchemy import NullPool
+from sqlalchemy import NullPool, text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -13,12 +13,20 @@ from sqlalchemy.ext.asyncio import (
 
 from dodo.database_utils import get_database_uri_for_context
 from dodo.log import get_logger
-from dodo.settings import settings
+from dodo.settings import settings, DatabaseChoice
 
 logger = get_logger(__name__)
 
-# Convert PostgreSQL URI to async format using common utility
-async_pg_uri = get_database_uri_for_context(settings.dodo_pg_uri, "async")
+# Determine the database URI based on the configured engine
+if settings.database_engine == DatabaseChoice.SQLITE:
+    # Use the local sqlite database in .dodo directory
+    sqlite_path = settings.dodo_dir / "sqlite.db"
+    async_db_uri = f"sqlite+aiosqlite:///{sqlite_path}"
+    logger.info(f"Using SQLite database at {sqlite_path}")
+else:
+    # Convert PostgreSQL URI to async format using common utility
+    async_db_uri = get_database_uri_for_context(settings.dodo_pg_uri, "async")
+    logger.info("Using PostgreSQL database")
 
 # Build engine configuration based on settings
 engine_args = {
@@ -49,13 +57,13 @@ if not settings.disable_sqlalchemy_pooling:
         "prepared_statement_cache_size": 0,
     }
     # Only add SSL if not already specified in connection string
-    if "sslmode" not in async_pg_uri and "ssl" not in async_pg_uri:
+    if "sslmode" not in async_db_uri and "ssl" not in async_db_uri:
         connect_args["ssl"] = "require"
 
     engine_args["connect_args"] = connect_args
 
 # Create the engine once at module level
-engine: AsyncEngine = create_async_engine(async_pg_uri, **engine_args)
+engine: AsyncEngine = create_async_engine(async_db_uri, **engine_args)
 
 # Create session factory once at module level
 async_session_factory = async_sessionmaker(
@@ -72,37 +80,20 @@ class DatabaseRegistry:
 
     @asynccontextmanager
     async def async_session(self) -> AsyncGenerator[AsyncSession, None]:
-        """Get an async database session.
-
-        Note: We explicitly handle asyncio.CancelledError separately because it's
-        a BaseException (not Exception) in Python 3.8+. Without this, cancelled
-        tasks would skip rollback() and return connections to the pool with
-        uncommitted transactions, causing "idle in transaction" connection leaks.
-
-        Implements retry logic for transient connection errors (e.g., SSL handshake failures).
-        """
+        """Get an async database session."""
         max_retries = 3
         retry_delay = 0.1
+        session = None
 
         for attempt in range(max_retries):
             try:
-                async with async_session_factory() as session:
-                    try:
-                        yield session
-                        await session.commit()
-                    except asyncio.CancelledError:
-                        # Task was cancelled (client disconnect, timeout, explicit cancellation)
-                        # Must rollback to avoid returning connection with open transaction
-                        await session.rollback()
-                        raise
-                    except Exception:
-                        await session.rollback()
-                        raise
-                    finally:
-                        session.expunge_all()
-                        await session.close()
-                return
-            except ConnectionError as e:
+                session = async_session_factory()
+                # Test connection implicitly or explicitly
+                await session.execute(text("SELECT 1"))
+                break
+            except (ConnectionError, Exception) as e:
+                if session:
+                    await session.close()
                 if attempt < max_retries - 1:
                     logger.warning(f"Database connection error (attempt {attempt + 1}/{max_retries}): {e}. Retrying in {retry_delay}s...")
                     await asyncio.sleep(retry_delay)
@@ -110,10 +101,19 @@ class DatabaseRegistry:
                 else:
                     logger.error(f"Database connection failed after {max_retries} attempts: {e}")
                     from dodo.errors import dodoServiceUnavailableError
-
                     raise dodoServiceUnavailableError(
                         "Database connection temporarily unavailable. Please retry your request.", service_name="database"
                     ) from e
+
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            if session:
+                await session.close()
 
 
 # Create singleton instance to match existing interface

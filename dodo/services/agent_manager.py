@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal, Optional, Set, Tuple
 from zoneinfo import ZoneInfo
@@ -2474,6 +2474,49 @@ class AgentManager:
 
                     # Return full tuples with metadata
                     return passages_with_scores
+
+                # Use Pinecone for vector search if archive is configured for PINECONE
+                elif archive.vector_db_provider == VectorDBProvider.PINECONE:
+                    from dodo.helpers.pinecone_utils import (
+                        search_pinecone_index,
+                        should_use_pinecone,
+                    )
+                    from dodo.settings import settings
+
+                    if should_use_pinecone():
+                        # Build filter for Pinecone
+                        search_filter = {"archive_id": {"$eq": target_archive_id}}
+                        # TODO: Add tag filtering to Pinecone search if supported
+                        # TODO: Add date filtering to Pinecone search if supported
+
+                        search_results = await search_pinecone_index(
+                            query=query_text,
+                            limit=limit,
+                            filter=search_filter,
+                            actor=actor,
+                            index_name=settings.pinecone_agent_index,
+                        )
+
+                        # Format results into expected format
+                        # Pinecone returns matches with id, score, and metadata (which contains the text)
+                        passages_with_scores = []
+
+                        for match in search_results.get("matches", []):
+                            passage_id = match["id"]
+                            score = match["score"]
+                            metadata = match.get("metadata", {})
+
+                            # Fetch full passage from SQL to ensure we have all fields
+                            try:
+                                passage = await self.passage_manager.get_agent_passage_by_id_async(
+                                    passage_id=passage_id, actor=actor
+                                )
+                                if passage:
+                                    passages_with_scores.append((passage, score, metadata))
+                            except Exception as e:
+                                logger.warning(f"Failed to fetch passage {passage_id} from SQL after Pinecone search: {e}")
+
+                        return passages_with_scores
 
         # Fall back to SQL-based search for non-vector queries or NATIVE archives
         async with db_registry.async_session() as session:

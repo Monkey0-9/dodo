@@ -1,4 +1,4 @@
-﻿from dodo.server.rest_api.routers.v1.agents import router as agents_router
+from dodo.server.rest_api.routers.v1.agents import router as agents_router
 from dodo.server.rest_api.routers.v1.anthropic import router as anthropic_router
 from dodo.server.rest_api.routers.v1.archives import router as archives_router
 from dodo.server.rest_api.routers.v1.blocks import router as blocks_router
@@ -20,6 +20,7 @@ from dodo.server.rest_api.routers.v1.llms import router as llm_router
 from dodo.server.rest_api.routers.v1.mcp_servers import router as mcp_servers_router
 from dodo.server.rest_api.routers.v1.messages import router as messages_router
 from dodo.server.rest_api.routers.v1.passages import router as passages_router
+from dodo.server.rest_api.routers.v1.portal import router as portal_router
 from dodo.server.rest_api.routers.v1.providers import router as providers_router
 from dodo.server.rest_api.routers.v1.runs import router as runs_router
 from dodo.server.rest_api.routers.v1.sandbox_configs import router as sandbox_configs_router
@@ -62,6 +63,7 @@ ROUTERS = [
     telemetry_router,
     messages_router,
     passages_router,
+    portal_router,
     voice_router,
     embeddings_router,
     openai_chat_completions_router,

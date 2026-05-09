@@ -1,8 +1,8 @@
-﻿import asyncio
+import asyncio
 import random
 import time
 from functools import wraps
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from dodo.otel.tracing import trace_method
 
@@ -238,14 +238,15 @@ async def delete_source_records_from_pinecone_index(source_id: str, actor: User)
 
 @pinecone_retry()
 @trace_method
-async def upsert_records_to_pinecone_index(records: List[dict], actor: User):
+async def upsert_records_to_pinecone_index(records: List[dict], actor: User, index_name: Optional[str] = None):
     if not PINECONE_AVAILABLE:
         raise ImportError("Pinecone is not available. Please install pinecone to use this feature.")
 
-    logger.info(f"[Pinecone] Upserting {len(records)} records to index {settings.pinecone_source_index} for org {actor.organization_id}")
+    index_name = index_name or settings.pinecone_source_index
+    logger.info(f"[Pinecone] Upserting {len(records)} records to index {index_name} for org {actor.organization_id}")
 
     async with PineconeAsyncio(api_key=settings.pinecone_api_key) as pc:
-        description = await pc.describe_index(name=settings.pinecone_source_index)
+        description = await pc.describe_index(name=index_name)
         async with pc.IndexAsyncio(host=description.index.host) as dense_index:
             # process records in batches to avoid exceeding pinecone limits
             total_batches = (len(records) + PINECONE_MAX_BATCH_SIZE - 1) // PINECONE_MAX_BATCH_SIZE
@@ -260,7 +261,7 @@ async def upsert_records_to_pinecone_index(records: List[dict], actor: User):
 
                 # throttle between batches (except the last one)
                 if batch_num < total_batches:
-                    jitter = random.uniform(0, PINECONE_THROTTLE_DELAY * 0.2)  # Â±20% jitter
+                    jitter = random.uniform(0, PINECONE_THROTTLE_DELAY * 0.2)  # ±20% jitter
                     throttle_delay = PINECONE_THROTTLE_DELAY + jitter
                     logger.debug(f"[Pinecone] Throttling for {throttle_delay:.3f}s before next batch")
                     await asyncio.sleep(throttle_delay)
@@ -270,18 +271,19 @@ async def upsert_records_to_pinecone_index(records: List[dict], actor: User):
 
 @pinecone_retry()
 @trace_method
-async def search_pinecone_index(query: str, limit: int, filter: Dict[str, Any], actor: User) -> Dict[str, Any]:
+async def search_pinecone_index(query: str, limit: int, filter: Dict[str, Any], actor: User, index_name: Optional[str] = None) -> Dict[str, Any]:
     if not PINECONE_AVAILABLE:
         raise ImportError("Pinecone is not available. Please install pinecone to use this feature.")
 
+    index_name = index_name or settings.pinecone_source_index
     namespace = actor.organization_id
     logger.info(
-        f"[Pinecone] Searching index {settings.pinecone_source_index} namespace {namespace} with query length {len(query)} chars, limit {limit}"
+        f"[Pinecone] Searching index {index_name} namespace {namespace} with query length {len(query)} chars, limit {limit}"
     )
     logger.debug(f"[Pinecone] Search filter: {filter}")
 
     async with PineconeAsyncio(api_key=settings.pinecone_api_key) as pc:
-        description = await pc.describe_index(name=settings.pinecone_source_index)
+        description = await pc.describe_index(name=index_name)
         async with pc.IndexAsyncio(host=description.index.host) as dense_index:
             try:
                 # search the dense index with reranking

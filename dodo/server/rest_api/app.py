@@ -418,10 +418,10 @@ def create_application() -> "FastAPI":
         default_response_class=SafeORJSONResponse,  # Use orjson for 10x faster JSON serialization, with surrogate safety
     )
 
-    from fastapi.middleware.gzip import GzipMiddleware
+    from fastapi.middleware.gzip import GZipMiddleware
 
     # Add Gzip compression for all responses > 500 bytes
-    app.add_middleware(GzipMiddleware, minimum_size=500)
+    app.add_middleware(GZipMiddleware, minimum_size=500)
 
     # === Global Exception Handlers ===
     # Set up handlers for exceptions outside of request context (background tasks, threads, etc.)
@@ -797,6 +797,8 @@ def create_application() -> "FastAPI":
         )
 
     settings.cors_origins.append("https://app.dodo.com")
+    settings.cors_origins.append("http://localhost:5173")
+    settings.cors_origins.append("http://localhost:5174")
 
     if (os.getenv("dodo_SERVER_SECURE") == "true") or "--secure" in sys.argv:
         print(f"â–¶ Using secure mode with password: {random_password}")
@@ -989,4 +991,5 @@ def start_server(
                 timeout_keep_alive=settings.uvicorn_timeout_keep_alive,
                 access_log=False,
             )
-
+if __name__ == "__main__":
+    start_server()
