@@ -1005,3 +1005,7 @@ tests/test_tool_sandbox/restaurant_management_system/venv
 ## custom scripts
 test
 
+certs/
+scratch/
+stitch_extracted*/
+test_watchdog_hang.py
