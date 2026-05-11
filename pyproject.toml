@@ -13,7 +13,6 @@ dependencies = [
     "questionary>=2.0.1",
     "pytz>=2023.3.post1",
     "tqdm>=4.66.1",
-    "black[jupyter]>=24.2.0",
     "setuptools>=70",
     "prettytable>=3.9.0",
     "docstring-parser>=0.16,<0.17",
@@ -50,7 +49,6 @@ dependencies = [
     "opentelemetry-instrumentation-requests==0.51b0",
     "opentelemetry-instrumentation-sqlalchemy==0.51b0",
     "opentelemetry-exporter-otlp==1.30.0",
-    "faker>=36.1.0",
     "colorama>=0.4.6",
     "marshmallow-sqlalchemy>=1.4.1",
     "datamodel-code-generator[http]>=0.25.0",
@@ -58,7 +56,6 @@ dependencies = [
     "exa-py>=1.15.4",
     "apscheduler>=3.11.0",
     "aiomultiprocess>=0.9.1",
-    "matplotlib>=3.10.1",
     "tavily-python>=0.7.2",
     "temporalio>=1.8.0",
     "mistralai>=1.8.1",
@@ -66,7 +63,6 @@ dependencies = [
     "certifi>=2025.6.15",
     "markitdown[docx,pdf,pptx]>=0.1.2",
     "orjson>=3.11.1",
-    "ruff>=0.12.10",
     "ty>=0.0.17",
     "trafilatura",
     "readability-lxml",
@@ -126,6 +122,10 @@ dev = [
     "pyright>=1.1.347",
     "ipykernel>=6.29.5",
     "ipdb>=0.13.13",
+    "black[jupyter]>=24.2.0",
+    "faker>=36.1.0",
+    "matplotlib>=3.10.1",
+    "ruff>=0.12.10",
 ]
 
 # ====== Other ======

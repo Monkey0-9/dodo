@@ -7,7 +7,7 @@ export const MemoryExplorer = () => {
       <section className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface-container border border-outline-variant p-6 rounded-xl relative overflow-hidden">
         <div className="relative z-10">
           <h2 className="text-2xl font-bold text-primary">Memory Intelligence</h2>
-          <p className="font-mono text-xs text-on-surface-variant mt-1">4.2TB indexed across 12,000 entities. Real-time retrieval enabled.</p>
+          <p className="font-mono text-xs text-on-surface-variant mt-1">4.2TB indexed across 12,000 entities. Demo retrieval enabled.</p>
         </div>
         <div className="flex gap-2 relative z-10">
           <button className="flex items-center gap-2 bg-surface-container-high border border-outline-variant px-3 py-2 rounded-lg text-xs hover:border-primary transition-colors text-on-surface">
@@ -113,7 +113,7 @@ export const MemoryExplorer = () => {
               {Array.from({ length: 7 }).map((_, j) => (
                 <div 
                   key={j} 
-                  className={`w-full rounded-sm ${Math.random() > 0.8 ? 'bg-primary' : Math.random() > 0.6 ? 'bg-primary/40' : 'bg-surface-container-highest'}`}
+                  className={`w-full rounded-sm ${((i * 7 + j) % 5) === 0 ? 'bg-primary' : ((i * 7 + j) % 3) === 0 ? 'bg-primary/40' : 'bg-surface-container-highest'}`}
                 />
               ))}
             </div>

@@ -1,4 +1,4 @@
-﻿services:
+services:
   dodo_db:
     image: ankane/pgvector:v0.5.1
     networks:
@@ -33,7 +33,7 @@
       - .env
     environment:
       - dodo_PG_URI=${dodo_PG_URI:-postgresql://${dodo_PG_USER:-dodo}:${dodo_PG_PASSWORD:-dodo}@${dodo_DB_HOST:-dodo-db}:${dodo_PG_PORT:-5432}/${dodo_PG_DB:-dodo}}
-      - dodo_DEBUG=True
+      - dodo_DEBUG=False
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GROQ_API_KEY=${GROQ_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}

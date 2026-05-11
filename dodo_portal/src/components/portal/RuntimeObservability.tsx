@@ -57,7 +57,7 @@ export const RuntimeObservability = () => {
         <div className="glass-panel rounded-xl overflow-hidden flex flex-col">
           <div className="px-6 py-4 bg-surface-container-high border-b border-outline-variant flex justify-between items-center">
             <h4 className="text-lg font-medium text-on-surface">Latency Breakdown</h4>
-            <span className="font-mono text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded">REAL-TIME</span>
+            <span className="font-mono text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded">DEMO</span>
           </div>
           <div className="p-6 flex-1 flex flex-col justify-end gap-1 min-h-[300px]">
             <div className="flex items-end gap-1 h-48 w-full">

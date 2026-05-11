@@ -796,9 +796,15 @@ def create_application() -> "FastAPI":
             },
         )
 
-    settings.cors_origins.append("https://app.dodo.com")
-    settings.cors_origins.append("http://localhost:5173")
-    settings.cors_origins.append("http://localhost:5174")
+    if debug_mode or os.getenv("dodo_DEBUG", "").lower() == "true":
+        settings.cors_origins.extend(["http://localhost:5173", "http://localhost:5174"])
+    
+    additional_origins = os.getenv("dodo_CORS_ORIGINS", "")
+    if additional_origins:
+        settings.cors_origins.extend([origin.strip() for origin in additional_origins.split(",") if origin.strip()])
+        
+    if "https://app.dodo.com" not in settings.cors_origins:
+        settings.cors_origins.append("https://app.dodo.com")
 
     if (os.getenv("dodo_SERVER_SECURE") == "true") or "--secure" in sys.argv:
         print(f"â–¶ Using secure mode with password: {random_password}")

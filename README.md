@@ -91,5 +91,6 @@ if __name__ == "__main__":
 This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
 
 <div align="center">
-  <sub>Built with ❤️ by the Dodo Intelligence Team</sub>
+  <sub>Built with ❤️ by the Dodo Intelligence Team</sub><br/>
+  <sub>This project is a fork of <a href="https://github.com/letta-ai/letta">Letta (formerly MemGPT)</a>. We thank the original authors for their open-source contributions under the Apache 2.0 License.</sub>
 </div>

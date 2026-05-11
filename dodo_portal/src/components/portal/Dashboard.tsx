@@ -30,7 +30,7 @@ export const Dashboard = ({ onNavigate }: { onNavigate: (path: string) => void }
         {/* Charts Panel */}
         <div className="lg:col-span-8 glass-panel rounded-xl overflow-hidden flex flex-col">
           <div className="bg-surface-container-high px-6 py-4 border-b border-outline-variant flex justify-between items-center">
-            <h3 className="font-headline-sm text-lg font-medium">Real-time Execution Throughput</h3>
+            <h3 className="font-headline-sm text-lg font-medium">Execution Throughput (Demo)</h3>
             <div className="flex gap-4">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-primary"></span>

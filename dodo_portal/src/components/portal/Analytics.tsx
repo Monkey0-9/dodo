@@ -25,7 +25,7 @@ export const Analytics = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold text-on-surface">Analytics Overview</h2>
-          <p className="text-on-surface-variant font-body-md">Real-time telemetry and resource orchestration metrics.</p>
+          <p className="text-on-surface-variant font-body-md">Telemetry and resource orchestration metrics (Demo Data).</p>
         </div>
         <div className="flex bg-surface-container-high rounded-lg p-1 border border-outline-variant">
           <button className="px-4 py-1.5 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors">24h</button>
