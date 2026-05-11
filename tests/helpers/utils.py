@@ -1,9 +1,13 @@
-﻿import functools
+import functools
 import os
 import time
 from typing import Any, Optional, Union
 
-from dodo_client import Asyncdodo, dodo
+try:
+    from dodo_client import Asyncdodo, dodo
+except ImportError:
+    Asyncdodo = None
+    dodo = None
 
 from dodo.functions.functions import parse_source_code
 from dodo.functions.schema_generator import generate_schema

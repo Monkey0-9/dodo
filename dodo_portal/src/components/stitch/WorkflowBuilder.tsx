@@ -1,6 +1,27 @@
-
+import { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 
 export const WorkflowBuilder = () => {
+  const constraintsRef = useRef(null);
+  const [nodes, setNodes] = useState([
+    { id: '1', x: 100, y: 240, type: 'Input', title: 'API Request', icon: 'login' },
+    { id: '2', x: 500, y: 380, type: 'Agent', title: 'Data Scribe', icon: 'smart_toy', active: true },
+    { id: '3', x: 1000, y: 280, type: 'Tool', title: 'SQL Query', icon: 'database' },
+    { id: '4', x: 1000, y: 480, type: 'Branch', title: 'Condition', icon: 'alt_route' },
+  ]);
+
+  const addNode = (type: string, icon: string, title: string) => {
+    const newNode = {
+      id: Math.random().toString(36).substr(2, 9),
+      x: 100 + Math.random() * 100,
+      y: 100 + Math.random() * 100,
+      type,
+      title,
+      icon,
+    };
+    setNodes([...nodes, newNode]);
+  };
+
   return (
     <div className="h-full flex flex-col relative overflow-hidden bg-background -m-6">
       {/* Canvas Header / Toolbar */}
@@ -23,7 +44,10 @@ export const WorkflowBuilder = () => {
           </div>
         </div>
         <div className="pointer-events-auto flex flex-col items-end gap-2">
-          <button className="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 shadow-xl hover:scale-105 transition-transform">
+          <button 
+            onClick={() => alert('Workflow deployed successfully!')}
+            className="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 shadow-xl hover:scale-105 transition-transform"
+          >
             <span className="material-symbols-outlined material-fill">rocket_launch</span>
             Deploy Workflow
           </button>
@@ -43,28 +67,39 @@ export const WorkflowBuilder = () => {
       </div>
 
       {/* The Visual Graph Area */}
-      <div className="absolute inset-0 z-10 overflow-auto cursor-grab active:cursor-grabbing canvas-grid">
+      <div 
+        ref={constraintsRef}
+        className="absolute inset-0 z-10 overflow-auto cursor-grab active:cursor-grabbing canvas-grid"
+      >
         <div className="w-[2000px] h-[2000px] relative">
           <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            {/* Dynamic connections could be added here, currently static lines for aesthetics */}
             <path className="workflow-path" d="M 300 300 C 400 300, 400 450, 500 450" fill="none" stroke="#4cd7f6" strokeWidth="2" strokeDasharray="10"></path>
             <path d="M 800 450 C 900 450, 900 350, 1000 350" fill="none" stroke="#3d494c" strokeWidth="2"></path>
             <path d="M 800 450 C 900 450, 900 550, 1000 550" fill="none" stroke="#3d494c" strokeWidth="2"></path>
           </svg>
-          
-          <WorkflowNode x={100} y={240} type="Input" title="API Request" icon="login" />
-          <WorkflowNode x={500} y={380} type="Agent" title="Data Scribe" icon="smart_toy" active />
-          <WorkflowNode x={1000} y={280} type="Tool" title="SQL Query" icon="database" />
-          <WorkflowNode x={1000} y={480} type="Branch" title="Condition" icon="alt_route" />
+          {nodes.map((node) => (
+            <WorkflowNode 
+              key={node.id} 
+              x={node.x} 
+              y={node.y} 
+              type={node.type} 
+              title={node.title} 
+              icon={node.icon} 
+              active={node.active}
+              constraintsRef={constraintsRef}
+            />
+          ))}
         </div>
       </div>
 
       {/* Left Palette Sidebar */}
       <div className="absolute top-[180px] left-6 bottom-6 w-14 bg-surface-container/80 backdrop-blur-lg border border-outline-variant rounded-full py-6 flex flex-col items-center gap-6 z-30 shadow-2xl">
-        <PaletteIcon icon="login" label="Trigger" />
-        <PaletteIcon icon="smart_toy" label="Agent" />
-        <PaletteIcon icon="construction" label="Tool" />
-        <PaletteIcon icon="alt_route" label="Logic" />
-        <PaletteIcon icon="logout" label="Output" />
+        <PaletteIcon icon="login" label="Trigger" onClick={() => addNode('Input', 'login', 'New Trigger')} />
+        <PaletteIcon icon="smart_toy" label="Agent" onClick={() => addNode('Agent', 'smart_toy', 'New Agent')} />
+        <PaletteIcon icon="construction" label="Tool" onClick={() => addNode('Tool', 'construction', 'New Tool')} />
+        <PaletteIcon icon="alt_route" label="Logic" onClick={() => addNode('Branch', 'alt_route', 'New Logic')} />
+        <PaletteIcon icon="logout" label="Output" onClick={() => addNode('Output', 'logout', 'New Output')} />
       </div>
 
       {/* Right Inspector Sidebar */}
@@ -132,11 +167,14 @@ export const WorkflowBuilder = () => {
   );
 };
 
-const WorkflowNode = ({ x, y, type, title, icon, active = false }: any) => (
-  <div 
-    className={`absolute w-64 bg-surface-container-high border rounded-xl overflow-hidden shadow-xl transition-all
-      ${active ? 'border-primary shadow-[0_0_30px_rgba(76,215,246,0.3)] scale-105 z-20' : 'border-outline-variant z-10'}`}
-    style={{ left: x, top: y }}
+const WorkflowNode = ({ x, y, type, title, icon, active = false, constraintsRef }: any) => (
+  <motion.div 
+    drag
+    dragConstraints={constraintsRef}
+    dragMomentum={false}
+    initial={{ x, y }}
+    className={`absolute w-64 bg-surface-container-high border rounded-xl overflow-hidden shadow-xl transition-shadow cursor-move
+      ${active ? 'border-primary shadow-[0_0_30px_rgba(76,215,246,0.3)] z-20' : 'border-outline-variant z-10'}`}
   >
     <div className={`p-3 border-b flex items-center justify-between ${active ? 'bg-primary/10 border-primary/20' : 'bg-surface-container-low border-outline-variant'}`}>
       <div className="flex items-center gap-2">
@@ -149,12 +187,17 @@ const WorkflowNode = ({ x, y, type, title, icon, active = false }: any) => (
       <h3 className="text-sm font-bold text-on-surface">{title}</h3>
       <p className="text-[10px] text-on-surface-variant mt-1">Ready for execution</p>
     </div>
-  </div>
+  </motion.div>
 );
 
-const PaletteIcon = ({ icon, label }: { icon: string, label: string }) => (
+const PaletteIcon = ({ icon, label, onClick }: { icon: string, label: string, onClick: () => void }) => (
   <div className="group relative">
-    <span className="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-move transition-colors">{icon}</span>
+    <button 
+      onClick={onClick}
+      className="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors"
+    >
+      {icon}
+    </button>
     <span className="absolute left-16 bg-surface p-2 rounded border border-outline-variant text-[10px] font-mono uppercase tracking-widest invisible group-hover:visible whitespace-nowrap text-on-surface shadow-xl">
       {label}
     </span>

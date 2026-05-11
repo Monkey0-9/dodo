@@ -1,4 +1,4 @@
-﻿"""
+"""
 Shared fixtures for all manager tests.
 
 This conftest.py makes fixtures available to all test files in the tests/managers/ directory.
@@ -6,9 +6,15 @@ This conftest.py makes fixtures available to all test files in the tests/manager
 
 import os
 import time
+
+# Set a dummy encryption key for tests
+os.environ.setdefault("dodo_ENCRYPTION_KEY", "test-key-123456789012345678901234")
+
+from datetime import datetime
 from typing import Tuple
 
 import pytest
+import sqlalchemy
 from anthropic.types.beta import BetaMessage
 from anthropic.types.beta.messages import BetaMessageBatchIndividualResponse, BetaMessageBatchSucceededResult
 from sqlalchemy import text
@@ -67,12 +73,22 @@ async def _clear_tables(async_session):
     if engine_name == "sqlite":
         await async_session.execute(text("PRAGMA foreign_keys = OFF"))
 
-    for table in reversed(Base.metadata.sorted_tables):  # Reverse to avoid FK issues
-        # If this is the block_history table, skip it
-        if table.name == "block_history":
-            continue
-        await async_session.execute(table.delete())  # Truncate table
-    await async_session.commit()
+    log_file = "c:/dodo/clear_tables.log"
+    with open(log_file, "a") as f:
+        f.write(f"\n--- Clearing tables at {datetime.now()} ---\n")
+        for table in reversed(Base.metadata.sorted_tables):  # Reverse to avoid FK issues
+            # If this is the block_history table, skip it
+            if table.name == "block_history":
+                continue
+            try:
+                f.write(f"Clearing table: {table.name}\n")
+                await async_session.execute(table.delete())  # Truncate table
+            except sqlalchemy.exc.OperationalError as e:
+                # Table might not exist in the database
+                f.write(f"Skipping table {table.name} (not found or error): {e}\n")
+                continue
+        await async_session.commit()
+        f.write("--- Commit finished ---\n")
 
     # Re-enable foreign key constraints for SQLite only
     if engine_name == "sqlite":

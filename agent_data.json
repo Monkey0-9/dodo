@@ -1,0 +1,6 @@
+{
+  "name": "TestAgent",
+  "system": "You are a test agent.",
+  "agent_type": "dodo_v1_agent",
+  "model": "openai/gpt-4o"
+}

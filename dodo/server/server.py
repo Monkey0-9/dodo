@@ -1531,13 +1531,20 @@ class SyncServer(object):
                 # Graceful fallback for missing models in dev environments
                 logger.warning(f"Handle {handle} not found in DB, providing mock fallback config")
                 from dodo.schemas.enums import ProviderCategory
+                provider_name = handle.split("/")[0] if "/" in handle else "mock"
+                model_endpoint_type = "openai"
+                if provider_name == "anthropic":
+                    model_endpoint_type = "anthropic"
+                elif provider_name in ["google_ai", "gemini"]:
+                    model_endpoint_type = "google_ai"
+
                 return LLMConfig(
                     model=handle.split("/")[-1] if "/" in handle else handle,
-                    model_endpoint_type="openai",
+                    model_endpoint_type=model_endpoint_type,
                     model_endpoint="http://localhost:8283/v1/mock",
                     context_window=16384,
                     handle=handle,
-                    provider_name="mock",
+                    provider_name=provider_name,
                     provider_category=ProviderCategory.base,
                     max_tokens=4096,
                 )

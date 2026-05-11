@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import json
 import logging
 import os
@@ -20,6 +20,7 @@ from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMe
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 from sqlalchemy.orm.exc import StaleDataError
+import sqlalchemy
 
 from dodo.config import dodoConfig
 from dodo.constants import (
@@ -125,7 +126,12 @@ async def _clear_tables(async_session):
         # If this is the block_history table, skip it
         if table.name == "block_history":
             continue
-        await async_session.execute(table.delete())  # Truncate table
+        try:
+            await async_session.execute(table.delete())  # Truncate table
+        except sqlalchemy.exc.OperationalError:
+            # Table might not exist in the database
+            await async_session.rollback()
+            continue
     await async_session.commit()
 
     # Re-enable foreign key constraints for SQLite only
@@ -592,7 +598,6 @@ async def default_archive(server, default_user):
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def agent_passages_setup(server, default_archive, default_source, default_file, default_user, sarah_agent):
     """Setup fixture for agent passages tests"""
     agent_id = sarah_agent.id

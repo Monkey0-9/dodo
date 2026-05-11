@@ -36,7 +36,7 @@ function App() {
       {currentPath === 'memory' && <MemoryExplorer />}
       {currentPath === 'runtime' && <RuntimeObservability />}
       {currentPath === 'workflows' && <WorkflowBuilder />}
-      {currentPath === 'tools' && <ToolRegistry onNavigate={setCurrentPath} />}
+      {currentPath === 'tools' && <ToolRegistry />}
       {currentPath === 'logs' && <LiveLogs />}
       {currentPath === 'analytics' && <Analytics />}
       {currentPath === 'settings' && <Settings />}

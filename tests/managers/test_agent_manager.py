@@ -1,4 +1,4 @@
-﻿import time
+import time
 import uuid
 from datetime import datetime, timezone
 from unittest.mock import patch
@@ -257,8 +257,7 @@ async def test_compaction_settings_model_uses_separate_llm_config_for_summarizat
     from dodo.schemas.message import Message as PydanticMessage
     from dodo.schemas.model import OpenAIModelSettings, OpenAIReasoning
     from dodo.services.summarizer.compact import build_summarizer_llm_config
-
-    await server.init_async(init_with_default_org_and_user=True)
+    from unittest.mock import AsyncMock
 
     # Base agent LLM config
     base_llm_config = LLMConfig.default_config("gpt-4o-mini")
@@ -346,11 +345,19 @@ async def test_compaction_settings_model_uses_separate_llm_config_for_summarizat
     )
 
     # Use the shared function to derive summarizer llm_config
-    summarizer_llm_config = await build_summarizer_llm_config(
-        agent_llm_config=agent_state.llm_config,
-        summarizer_config=agent_state.compaction_settings,
-        actor=default_user,
-    )
+    # Mock ProviderManager to return a predictable LLMConfig for the summarizer model
+    with patch("dodo.services.provider_manager.ProviderManager.get_llm_config_from_handle", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = LLMConfig(
+            handle=summarizer_handle,
+            model="gpt-5-nano",
+            model_endpoint_type="openai",
+            context_window=128000,
+        )
+        summarizer_llm_config = await build_summarizer_llm_config(
+            agent_llm_config=agent_state.llm_config,
+            summarizer_config=agent_state.compaction_settings,
+            actor=default_user,
+        )
 
     # Agent model remains the base model
     assert agent_state.llm_config.model == "gpt-4o-mini"

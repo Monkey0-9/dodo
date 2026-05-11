@@ -9,9 +9,10 @@ export const AgentManagement = ({ onSelectAgent }: { onSelectAgent: (id: string)
     const fetchAgents = async () => {
       try {
         const data = await api.agents.list();
-        setAgents(data);
+        setAgents(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to fetch agents:', error);
+        setAgents([]);
       } finally {
         setLoading(false);
       }
@@ -90,13 +91,19 @@ export const AgentManagement = ({ onSelectAgent }: { onSelectAgent: (id: string)
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/50">
-              {agents.map((agent) => (
+              {agents.length > 0 ? agents.map((agent) => (
                 <AgentRow 
                   key={agent.id} 
                   agent={agent} 
                   onSelect={() => onSelectAgent(agent.id)} 
                 />
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={7} className="px-6 py-20 text-center text-on-surface-variant font-mono-label uppercase text-xs tracking-widest">
+                    No agents detected in active grid
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -142,7 +149,7 @@ const AgentRow = ({ agent, onSelect }: { agent: any, onSelect: () => void }) => 
     </td>
     <td className="px-6 py-5">
       <span className="px-2 py-1 rounded bg-surface-container-high border border-outline-variant font-mono text-[10px] text-primary">
-        {agent.agent_type.replace('_agent', '')}
+        {(agent.agent_type || 'v1').replace('_agent', '')}
       </span>
     </td>
     <td className="px-6 py-5">
@@ -152,10 +159,10 @@ const AgentRow = ({ agent, onSelect }: { agent: any, onSelect: () => void }) => 
       </div>
     </td>
     <td className="px-6 py-5 text-xs font-mono">
-      1.2k <span className="text-on-surface-variant text-[10px]">blocks</span>
+      {agent.blocks?.length || 0} <span className="text-on-surface-variant text-[10px]">blocks</span>
     </td>
     <td className="px-6 py-5 text-xs font-mono text-on-surface-variant">
-      2m ago
+      {agent.last_run_completion ? new Date(agent.last_run_completion).toLocaleTimeString() : 'Never'}
     </td>
     <td className="px-6 py-5 text-right opacity-0 group-hover:opacity-100 transition-opacity">
       <div className="flex gap-2 justify-end">

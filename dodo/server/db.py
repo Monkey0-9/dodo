@@ -90,6 +90,7 @@ class DatabaseRegistry:
                 session = async_session_factory()
                 # Test connection implicitly or explicitly
                 await session.execute(text("SELECT 1"))
+                await session.commit()
                 break
             except (ConnectionError, Exception) as e:
                 if session:

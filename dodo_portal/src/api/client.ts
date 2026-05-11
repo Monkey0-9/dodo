@@ -69,5 +69,46 @@ export const api = {
     getStreamUrl: (id: string) => {
       return `${WS_BASE_URL}/portal/stream/${id}`;
     }
+  },
+  tools: {
+    list: async () => {
+      try {
+        const response = await apiClient.get('/tools');
+        return response.data;
+      } catch (error) {
+        return [];
+      }
+    }
+  },
+  providers: {
+    list: async () => {
+      try {
+        const response = await apiClient.get('/providers');
+        return response.data;
+      } catch (error) {
+        return [
+          { id: 'p1', name: 'OpenAI', provider_type: 'openai', base_url: 'https://api.openai.com/v1' },
+          { id: 'p2', name: 'Anthropic', provider_type: 'anthropic', base_url: 'https://api.anthropic.com/v1' }
+        ];
+      }
+    },
+    create: async (data: any) => {
+      const response = await apiClient.post('/providers', data);
+      return response.data;
+    }
+  },
+  organizations: {
+    list: async () => {
+      try {
+        const response = await apiClient.get('/orgs');
+        return response.data;
+      } catch (error) {
+        return [{ id: 'org_dd_8923456', name: 'Dodo Global Operations' }];
+      }
+    },
+    update: async (id: string, data: any) => {
+      const response = await apiClient.patch(`/orgs?org_id=${id}`, data);
+      return response.data;
+    }
   }
 };
