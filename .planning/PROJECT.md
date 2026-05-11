@@ -21,9 +21,9 @@ Achieve "Top 1%" status by eliminating architectural debt, optimizing latency-cr
 - ✓ UI/UX Excellence: Upgraded Dodo Portal with Framer Motion animations.
 
 ### Active
-- [ ] Architectural Modularization: Decompose AgentManager into domain services.
-- [ ] Quant Hardening: Add high-resolution latency tracking for reasoning-to-action hot paths.
-- [ ] Reliability: Implement Payload Snapshot Testing for LLM interactions.
+- ✓ Architectural Modularization: Decompose AgentManager into domain services.
+- ✓ Quant Hardening: Add high-resolution latency tracking for reasoning-to-action hot paths.
+- ✓ Reliability: Implement Payload Snapshot Testing for LLM interactions.
 
 ### Out of Scope
 - [Non-Dodo Platforms] — Focus is exclusively on the Dodo ecosystem.
