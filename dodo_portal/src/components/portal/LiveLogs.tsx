@@ -142,7 +142,7 @@ export const LiveLogs = () => {
   );
 };
 
-const LogEntry = ({ time, source, level, levelColor, content, active = false }: any) => (
+const LogEntry = ({ time, source, level, levelColor, content, active = false }: { time: string, source: string, level: string, levelColor: string, content: React.ReactNode, active?: boolean }) => (
   <div className={`group flex items-start gap-4 p-2 rounded-sm cursor-pointer border-l-2 transition-all
     ${active ? 'bg-surface-container border-primary' : 'hover:bg-surface-container/50 border-transparent hover:border-primary'}`}>
     <span className="text-on-surface-variant opacity-40 select-none whitespace-nowrap text-xs">{time}</span>
@@ -152,7 +152,7 @@ const LogEntry = ({ time, source, level, levelColor, content, active = false }: 
   </div>
 );
 
-const MetadataRow = ({ label, value, valueColor = "text-on-surface" }: any) => (
+const MetadataRow = ({ label, value, valueColor = "text-on-surface" }: { label: string, value: string, valueColor?: string }) => (
   <div className="flex justify-between border-b border-outline-variant/30 pb-2 text-xs">
     <span className="text-on-surface-variant">{label}</span>
     <span className={`font-mono ${valueColor}`}>{value}</span>

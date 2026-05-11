@@ -132,7 +132,7 @@ export const Governance = () => {
   );
 };
 
-const QuotaCard = ({ label, percent, active, limit, color }: any) => (
+const QuotaCard = ({ label, percent, active, limit, color }: { label: string, percent: number, active?: boolean | string, limit?: string | number, color: string }) => (
   <div className="col-span-4 p-4 bg-surface-container border border-outline-variant flex flex-col gap-4 rounded-lg">
     <div className="flex justify-between items-center">
       <span className="text-[11px] font-mono text-on-surface font-bold">{label}</span>
@@ -148,7 +148,7 @@ const QuotaCard = ({ label, percent, active, limit, color }: any) => (
   </div>
 );
 
-const EntityRow = ({ name, type, status, cpu, mem, policies, active, icon, color }: any) => (
+const EntityRow = ({ name, type, status, cpu, mem, policies, active, icon, color }: { name: string, type: string, status: string, cpu: string, mem: string, policies: string, active?: boolean | string, icon: React.ReactNode, color: string }) => (
   <tr className="hover:bg-surface-container transition-colors group">
     <td className="px-6 py-3 flex items-center gap-2">
       <span className={`material-symbols-outlined text-[16px] ${color}`}>{icon}</span>
@@ -171,7 +171,7 @@ const EntityRow = ({ name, type, status, cpu, mem, policies, active, icon, color
   </tr>
 );
 
-const TraceLog = ({ label, time, color }: any) => (
+const TraceLog = ({ label, time, color }: { label: string, time: string, color: string }) => (
   <div className="flex items-center justify-between p-2 border-b border-outline-variant/30 hover:bg-surface-container transition-colors rounded">
     <span className={`text-[10px] font-mono font-bold ${color}`}>{label}</span>
     <span className="text-[10px] font-mono text-on-surface-variant">{time}</span>

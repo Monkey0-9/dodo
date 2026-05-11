@@ -70,7 +70,7 @@ export const ToolRegistry = () => {
   );
 };
 
-const ToolCard = ({ title, category, icon, status, version, success, latency, active, iconColor = "text-primary", statusColor = "bg-secondary/10 text-secondary" }: any) => (
+const ToolCard = ({ title, category, icon, status, version, success, latency, active, iconColor = "text-primary", statusColor = "bg-secondary/10 text-secondary" }: { title: string, category: string, icon: React.ReactNode, status: string, version: string, success: string, latency: string, active?: boolean, iconColor?: string, statusColor?: string }) => (
   <div className="glass-panel rounded-xl p-5 hover:border-primary/50 transition-all group relative">
     <div className="flex justify-between items-start mb-6">
       <div className="flex items-center gap-4">

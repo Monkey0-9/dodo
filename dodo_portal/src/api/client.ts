@@ -30,7 +30,7 @@ export const api = {
         return MOCK_AGENTS;
       }
     },
-    create: async (data: any) => {
+    create: async (data: Record<string, unknown>) => {
       try {
         const response = await apiClient.post('/agents', data);
         return response.data;
@@ -92,7 +92,7 @@ export const api = {
         ];
       }
     },
-    create: async (data: any) => {
+    create: async (data: Record<string, unknown>) => {
       const response = await apiClient.post('/providers', data);
       return response.data;
     }
@@ -106,7 +106,7 @@ export const api = {
         return [{ id: 'org_dd_8923456', name: 'Dodo Global Operations' }];
       }
     },
-    update: async (id: string, data: any) => {
+    update: async (id: string, data: Record<string, unknown>) => {
       const response = await apiClient.patch(`/orgs?org_id=${id}`, data);
       return response.data;
     }

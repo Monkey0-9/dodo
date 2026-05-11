@@ -153,7 +153,7 @@ export const RuntimeObservability = () => {
   );
 };
 
-const MetricCard = ({ label, value, unit, subValue, icon, color, bgColor }: any) => (
+const MetricCard = ({ label, value, unit, subValue, icon, color, bgColor }: { label: string, value: string | number, unit?: string, subValue?: string, icon: React.ReactNode, color: string, bgColor: string }) => (
   <div className="glass-panel p-6 rounded-xl flex items-center justify-between group cursor-default">
     <div>
       <p className="font-mono text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">{label}</p>
@@ -175,7 +175,7 @@ const LegendItem = ({ color, label }: { color: string, label: string }) => (
   </div>
 );
 
-const SaturationBar = ({ label, value, color, subValue }: any) => (
+const SaturationBar = ({ label, value, color, subValue }: { label: string, value: number | string, color: string, subValue?: string }) => (
   <div className="space-y-2">
     <div className="flex justify-between items-center text-xs">
       <span className="text-on-surface-variant">{label}</span>
@@ -187,7 +187,7 @@ const SaturationBar = ({ label, value, color, subValue }: any) => (
   </div>
 );
 
-const StreamRow = ({ id, agent, protocol, throughput, status, statusColor = "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" }: any) => (
+const StreamRow = ({ id, agent, protocol, throughput, status, statusColor = "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" }: { id: string, agent: string, protocol: string, throughput: string, status: string, statusColor?: string }) => (
   <tr className="hover:bg-surface-bright/20 transition-colors">
     <td className="px-6 py-4 font-mono text-sm text-on-surface">{id}</td>
     <td className="px-6 py-4">

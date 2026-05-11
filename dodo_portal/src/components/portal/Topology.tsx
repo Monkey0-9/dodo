@@ -163,28 +163,28 @@ export const Topology = () => {
   );
 };
 
-const StreamItem = ({ id, latency, logs, active = false }: any) => (
+const StreamItem = ({ id, latency, logs, active = false }: { id: string, latency: string, logs?: any[], active?: boolean }) => (
   <div className={`p-4 bg-surface-container border border-outline-variant rounded-xl transition-all ${active ? 'ring-1 ring-primary/30' : 'opacity-60'}`}>
     <div className="flex justify-between mb-2">
       <span className={`font-mono text-[11px] font-bold ${active ? 'text-primary' : 'text-on-surface-variant'}`}>{id}</span>
       <span className="font-mono text-[9px] text-on-surface-variant uppercase">{latency}</span>
     </div>
     <div className="font-mono text-[10px] text-on-surface-variant/80 leading-tight space-y-1">
-      {logs.map((log: string, i: number) => (
+      {(logs || []).map((log: string, i: number) => (
         <div key={i}>&gt; {log}</div>
       ))}
     </div>
   </div>
 );
 
-const Indicator = ({ color, label }: any) => (
+const Indicator = ({ color, label }: { color: string, label: React.ReactNode }) => (
   <div className="flex items-center gap-2">
     <div className={`w-3 h-3 ${color} border border-white/10 rounded-sm`}></div>
     <span className="text-[9px] font-bold uppercase tracking-widest text-on-surface font-mono">{label}</span>
   </div>
 );
 
-const TableRow = ({ id, p50, p99, throughput, error, sync, color = "text-primary" }: any) => (
+const TableRow = ({ id, p50, p99, throughput, error, sync, color = "text-primary" }: { id: string, p50: string, p99: string, throughput: string, error: string, sync: string, color?: string }) => (
   <tr className="hover:bg-surface-container-high transition-colors group">
     <td className="p-4 border-r border-outline-variant font-bold text-on-surface">{id}</td>
     <td className="p-4 border-r border-outline-variant">{p50}</td>
@@ -195,14 +195,14 @@ const TableRow = ({ id, p50, p99, throughput, error, sync, color = "text-primary
   </tr>
 );
 
-const MetadataBox = ({ label, value }: any) => (
+const MetadataBox = ({ label, value }: { label: string, value: React.ReactNode }) => (
   <div className="bg-surface p-3 border border-outline-variant rounded-lg">
     <div className="text-[8px] font-bold uppercase tracking-widest text-on-surface-variant font-mono mb-1">{label}</div>
     <div className="font-mono text-xs font-bold text-on-surface">{value}</div>
   </div>
 );
 
-const LogLine = ({ time, content }: any) => (
+const LogLine = ({ time, content }: { time: string, content: React.ReactNode }) => (
   <div className="text-on-surface-variant border-b border-outline-variant/10 pb-1">
     <span className="opacity-40">[{time}]</span> {content}
   </div>

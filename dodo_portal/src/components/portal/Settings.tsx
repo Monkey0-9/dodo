@@ -224,7 +224,7 @@ export const Settings = () => {
   );
 };
 
-const SettingsNavItem = ({ icon, label, active = false, onClick }: any) => (
+const SettingsNavItem = ({ icon, label, active = false, onClick }: { icon: React.ReactNode, label: string, active?: boolean, onClick?: () => void }) => (
   <button 
     className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-left ${active ? 'bg-primary/10 text-primary font-medium' : 'text-on-surface-variant hover:bg-surface-bright/50'}`}
     onClick={onClick}
@@ -234,7 +234,7 @@ const SettingsNavItem = ({ icon, label, active = false, onClick }: any) => (
   </button>
 );
 
-const ProviderCard = ({ name, status, icon, iconColor = "text-on-surface", validated, setup, active }: any) => (
+const ProviderCard = ({ name, status, icon, iconColor = "text-on-surface", validated, setup, active }: { name: string, status: string, icon: React.ReactNode, iconColor?: string, validated?: boolean, setup?: boolean, active?: boolean }) => (
   <div className={`flex items-center justify-between p-4 bg-surface-container rounded-lg border transition-all ${active ? 'border-primary/30' : 'border-outline-variant/30'}`}>
     <div className="flex items-center gap-4">
       <div className="w-10 h-10 bg-white/5 rounded flex items-center justify-center border border-white/10">
@@ -256,14 +256,14 @@ const ProviderCard = ({ name, status, icon, iconColor = "text-on-surface", valid
   </div>
 );
 
-const ThemeBtn = ({ icon, label, active }: any) => (
+const ThemeBtn = ({ icon, label, active }: { icon: React.ReactNode, label: string, active?: boolean }) => (
   <button className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${active ? 'bg-surface-container-lowest border-primary text-primary' : 'bg-surface-container-high border-outline-variant hover:border-primary text-on-surface-variant'}`}>
     <span className="material-symbols-outlined">{icon}</span>
     <span className="text-[10px] font-bold uppercase tracking-widest">{label}</span>
   </button>
 );
 
-const SecurityLog = ({ time, type, typeColor, content }: any) => (
+const SecurityLog = ({ time, type, typeColor, content }: { time: string, type: string, typeColor: string, content: React.ReactNode }) => (
   <p className="opacity-80">
     <span className="text-on-surface-variant/40">[{time}]</span> <span className={typeColor}>{type}:</span> <span className="text-on-surface-variant">{content}</span>
   </p>

@@ -1,4 +1,4 @@
-﻿import json
+import json
 from typing import Dict, Optional, Union
 
 from dodo.agents.dodo_agent import dodoAgent

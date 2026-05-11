@@ -184,7 +184,7 @@ export const Analytics = () => {
   );
 };
 
-const StatCard = ({ title, value, trend, subValue, color, progress, isMono, isSuccessGrid }: any) => (
+const StatCard = ({ title, value, trend, subValue, color, progress, isMono, isSuccessGrid }: { title: string, value: string | number, trend?: string, subValue?: string, color: string, progress?: number, isMono?: boolean, isSuccessGrid?: boolean }) => (
   <div className="glass-panel p-6 rounded-xl flex flex-col gap-2">
     <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-widest font-medium">{title}</span>
     <div className="flex items-baseline gap-2">
@@ -207,7 +207,7 @@ const StatCard = ({ title, value, trend, subValue, color, progress, isMono, isSu
   </div>
 );
 
-const AgentRow = ({ name, id, eff, rel, relColor, load }: any) => (
+const AgentRow = ({ name, id, eff, rel, relColor, load }: { name: string, id: string, eff: string, rel: string, relColor: string, load: string }) => (
   <tr className="hover:bg-surface-variant/20 transition-colors">
     <td className="px-6 py-4 flex items-center gap-3">
       <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-xs font-bold text-on-surface">
@@ -226,7 +226,7 @@ const AgentRow = ({ name, id, eff, rel, relColor, load }: any) => (
   </tr>
 );
 
-const ToolUsage = ({ name, calls, progress, icon, color }: any) => (
+const ToolUsage = ({ name, calls, progress, icon, color }: { name: string, calls: string | number, progress: number, icon: React.ReactNode, color: string }) => (
   <div className="flex items-center gap-4">
     <div className={`w-10 h-10 rounded bg-surface-container flex items-center justify-center border border-outline-variant ${color}`}>
       <span className="material-symbols-outlined">{icon}</span>

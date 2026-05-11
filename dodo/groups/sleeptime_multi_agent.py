@@ -1,292 +1,290 @@
-﻿import asyncio
-import threading
+from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
-from typing import List, Optional
 
-from dodo.agents.base_agent import BaseAgent
-from dodo.agents.dodo_agent import dodoAgent
+from dodo.agents.dodo_agent_v3 import dodoAgentV3
+from dodo.constants import DEFAULT_MAX_STEPS
 from dodo.groups.helpers import stringify_message
-from dodo.interface import AgentInterface
-from dodo.orm import User
+from dodo.otel.tracing import trace_method
 from dodo.schemas.agent import AgentState
-from dodo.schemas.enums import JobStatus
-from dodo.schemas.job import JobUpdate
+from dodo.schemas.enums import RunStatus
+from dodo.schemas.group import Group, ManagerType
+from dodo.schemas.dodo_message import MessageType
 from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.dodo_request import ClientToolSchema
+from dodo.schemas.dodo_response import dodoResponse
+from dodo.schemas.dodo_stop_reason import StopReasonType
 from dodo.schemas.message import Message, MessageCreate
-from dodo.schemas.run import Run
-from dodo.schemas.usage import dodoUsageStatistics
-from dodo.server.rest_api.interface import StreamingServerInterface
+from dodo.schemas.provider_trace import BillingContext
+from dodo.schemas.run import Run, RunUpdate
+from dodo.schemas.user import User
 from dodo.services.group_manager import GroupManager
-from dodo.services.job_manager import JobManager
-from dodo.services.message_manager import MessageManager
+from dodo.utils import safe_create_task
 
 
-class SleeptimeMultiAgent(BaseAgent):
+class SleeptimeMultiAgent(dodoAgentV3):
     def __init__(
         self,
-        interface: AgentInterface,
         agent_state: AgentState,
-        user: User,
-        # mcp_clients: Optional[Dict[str, BaseMCPClient]] = None,
-        # custom
-        group_id: str = "",
-        agent_ids: List[str] = [],
-        description: str = "",
-        sleeptime_agent_frequency: Optional[int] = None,
+        actor: User,
+        group: Group,
     ):
-        super().__init__(interface, agent_state, user)
-        self.group_id = group_id
-        self.agent_ids = agent_ids
-        self.description = description
-        self.sleeptime_agent_frequency = sleeptime_agent_frequency
+        super().__init__(agent_state, actor)
+        assert group.manager_type == ManagerType.sleeptime, f"Expected group type to be 'sleeptime', got {group.manager_type}"
+        self.group = group
+        self.run_ids = []
+
+        # Additional manager classes
         self.group_manager = GroupManager()
-        self.message_manager = MessageManager()
-        self.job_manager = JobManager()
-        # TODO: add back MCP support with new agent loop
-        self.mcp_clients = {}
 
-    def _run_async_in_new_thread(self, coro):
-        """Run an async coroutine in a new thread with its own event loop"""
+        # Preserve the request billing context for follow-up sleeptime runs that are
+        # triggered entirely within core and therefore never traverse cloud-api.
+        self._billing_context: BillingContext | None = None
 
-        def run_async():
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                loop.run_until_complete(coro)
-            finally:
-                loop.close()
-                asyncio.set_event_loop(None)
-
-        thread = threading.Thread(target=run_async)
-        thread.daemon = True
-        thread.start()
-
-    def _issue_background_task(
+    @trace_method
+    async def step(
         self,
-        participant_agent_id: str,
-        messages: List[Message],
-        chaining: bool,
-        max_chaining_steps: Optional[int],
-        token_streaming: bool,
-        metadata: Optional[dict],
-        put_inner_thoughts_first: bool,
+        input_messages: list[MessageCreate],
+        max_steps: int = DEFAULT_MAX_STEPS,
+        run_id: str | None = None,
+        use_assistant_message: bool = True,
+        include_return_message_types: list[MessageType] | None = None,
+        request_start_timestamp_ns: int | None = None,
+        conversation_id: str | None = None,
+        client_tools: list[ClientToolSchema] | None = None,
+        client_skills=None,
+        override_system: str | None = None,
+        include_compaction_messages: bool = False,
+        billing_context: "BillingContext | None" = None,
+    ) -> dodoResponse:
+        self.run_ids = []
+        self._billing_context = billing_context
+
+        for i in range(len(input_messages)):
+            input_messages[i].group_id = self.group.id
+
+        response = await super().step(
+            input_messages=input_messages,
+            max_steps=max_steps,
+            run_id=run_id,
+            use_assistant_message=use_assistant_message,
+            include_return_message_types=include_return_message_types,
+            request_start_timestamp_ns=request_start_timestamp_ns,
+            conversation_id=conversation_id,
+            client_tools=client_tools,
+            client_skills=client_skills,
+            override_system=override_system,
+            include_compaction_messages=include_compaction_messages,
+            billing_context=billing_context,
+        )
+
+        run_ids = await self.run_sleeptime_agents(billing_context=billing_context)
+        response.usage.run_ids = run_ids
+        return response
+
+    @trace_method
+    async def stream(
+        self,
+        input_messages: list[MessageCreate],
+        max_steps: int = DEFAULT_MAX_STEPS,
+        stream_tokens: bool = True,
+        run_id: str | None = None,
+        use_assistant_message: bool = True,
+        request_start_timestamp_ns: int | None = None,
+        include_return_message_types: list[MessageType] | None = None,
+        conversation_id: str | None = None,
+        client_tools: list[ClientToolSchema] | None = None,
+        client_skills=None,
+        override_system: str | None = None,
+        include_compaction_messages: bool = False,
+        billing_context: "BillingContext | None" = None,
+        openai_responses_websocket: bool = False,
+    ) -> AsyncGenerator[str, None]:
+        self.run_ids = []
+        self._billing_context = billing_context
+
+        for i in range(len(input_messages)):
+            input_messages[i].group_id = self.group.id
+
+        # Perform foreground agent step
+        try:
+            async for chunk in super().stream(
+                input_messages=input_messages,
+                max_steps=max_steps,
+                stream_tokens=stream_tokens,
+                run_id=run_id,
+                use_assistant_message=use_assistant_message,
+                include_return_message_types=include_return_message_types,
+                request_start_timestamp_ns=request_start_timestamp_ns,
+                conversation_id=conversation_id,
+                client_tools=client_tools,
+                client_skills=client_skills,
+                override_system=override_system,
+                include_compaction_messages=include_compaction_messages,
+                billing_context=billing_context,
+            ):
+                yield chunk
+        finally:
+            # For some reason, stream is throwing a GeneratorExit even though it appears the that client
+            # is getting the whole stream. This pattern should work to ensure sleeptime agents run despite this.
+            await self.run_sleeptime_agents(billing_context=billing_context)
+
+    @trace_method
+    async def run_sleeptime_agents(self, billing_context: BillingContext | None = None) -> list[str]:
+        # Get response messages
+        last_response_messages = self.response_messages
+
+        billing_context = billing_context or self._billing_context
+
+        # Update turns counter
+        turns_counter = None
+        if self.group.sleeptime_agent_frequency is not None and self.group.sleeptime_agent_frequency > 0:
+            turns_counter = await self.group_manager.bump_turns_counter_async(group_id=self.group.id, actor=self.actor)
+
+        # Perform participant steps
+        if self.group.sleeptime_agent_frequency is None or (
+            turns_counter is not None and turns_counter % self.group.sleeptime_agent_frequency == 0
+        ):
+            # Skip sleeptime processing if no response messages were generated
+            if not last_response_messages:
+                self.logger.warning("No response messages generated, skipping sleeptime agent processing")
+                return self.run_ids
+
+            last_processed_message_id = await self.group_manager.get_last_processed_message_id_and_update_async(
+                group_id=self.group.id, last_processed_message_id=last_response_messages[-1].id, actor=self.actor
+            )
+            for sleeptime_agent_id in self.group.agent_ids:
+                try:
+                    sleeptime_run_id = await self._issue_background_task(
+                        sleeptime_agent_id,
+                        last_response_messages,
+                        last_processed_message_id,
+                        billing_context,
+                    )
+                    self.run_ids.append(sleeptime_run_id)
+                except Exception as e:
+                    # Individual task failures
+                    print(f"Sleeptime agent processing failed: {e!s}")
+                    raise e
+            return self.run_ids
+
+    @trace_method
+    async def _issue_background_task(
+        self,
+        sleeptime_agent_id: str,
+        response_messages: list[Message],
         last_processed_message_id: str,
+        billing_context: BillingContext | None,
     ) -> str:
         run = Run(
-            user_id=self.user.id,
-            status=JobStatus.created,
+            agent_id=sleeptime_agent_id,
+            status=RunStatus.created,
             metadata={
-                "job_type": "background_agent_send_message_async",
-                "agent_id": participant_agent_id,
+                "run_type": "sleeptime_agent_send_message_async",  # is this right?
+                "agent_id": sleeptime_agent_id,
             },
         )
-        run = self.job_manager.create_job(pydantic_job=run, actor=self.user)
+        run = await self.run_manager.create_run(pydantic_run=run, actor=self.actor)
 
-        self._run_async_in_new_thread(
-            self._perform_background_agent_step(
-                participant_agent_id=participant_agent_id,
-                messages=messages,
-                chaining=chaining,
-                max_chaining_steps=max_chaining_steps,
-                token_streaming=token_streaming,
-                metadata=metadata,
-                put_inner_thoughts_first=put_inner_thoughts_first,
+        safe_create_task(
+            self._participant_agent_step(
+                foreground_agent_id=self.agent_state.id,
+                sleeptime_agent_id=sleeptime_agent_id,
+                response_messages=response_messages,
                 last_processed_message_id=last_processed_message_id,
                 run_id=run.id,
-            )
+                billing_context=billing_context,
+            ),
+            label=f"participant_agent_step_{sleeptime_agent_id}",
         )
-
         return run.id
 
-    async def _perform_background_agent_step(
+    @trace_method
+    async def _participant_agent_step(
         self,
-        participant_agent_id: str,
-        messages: List[Message],
-        chaining: bool,
-        max_chaining_steps: Optional[int],
-        token_streaming: bool,
-        metadata: Optional[dict],
-        put_inner_thoughts_first: bool,
+        foreground_agent_id: str,
+        sleeptime_agent_id: str,
+        response_messages: list[Message],
         last_processed_message_id: str,
         run_id: str,
-    ) -> dodoUsageStatistics:
+        billing_context: BillingContext | None,
+    ) -> dodoResponse:
         try:
-            job_update = JobUpdate(status=JobStatus.running)
-            self.job_manager.update_job_by_id(job_id=run_id, job_update=job_update, actor=self.user)
+            # Update run status
+            run_update = RunUpdate(status=RunStatus.running)
+            await self.run_manager.update_run_by_id_async(run_id=run_id, update=run_update, actor=self.actor)
 
-            participant_agent_state = self.agent_manager.get_agent_by_id(participant_agent_id, actor=self.user)
-            participant_agent = dodoAgent(
-                agent_state=participant_agent_state,
-                interface=StreamingServerInterface(),
-                user=self.user,
-                mcp_clients=self.mcp_clients,
+            # Create conversation transcript
+            prior_messages = []
+            if self.group.sleeptime_agent_frequency:
+                try:
+                    prior_messages = await self.message_manager.list_messages(
+                        agent_id=foreground_agent_id,
+                        actor=self.actor,
+                        after=last_processed_message_id,
+                        before=response_messages[0].id,
+                    )
+                except Exception:
+                    pass  # continue with just latest messages
+
+            message_strings = [stringify_message(message) for message in prior_messages + response_messages]
+            message_strings = [s for s in message_strings if s is not None]
+            messages_text = "\n".join(message_strings)
+
+            message_text = (
+                "<system-reminder>\n"
+                "You are a sleeptime agent - a background agent that asynchronously processes conversations after they occur.\n\n"
+                "IMPORTANT: You are NOT the primary agent. You are reviewing a conversation that already happened between a primary agent and its user:\n"
+                '- Messages labeled "assistant" are from the primary agent (not you)\n'
+                '- Messages labeled "user" are from the primary agent\'s user\n\n'
+                "Your primary role is memory management. Review the conversation and use your memory tools to update any relevant memory blocks with information worth preserving. "
+                "Check your memory_persona block for any additional instructions or policies.\n"
+                "</system-reminder>\n\n"
+                f"Messages:\n{messages_text}"
             )
 
-            prior_messages = []
-            if self.sleeptime_agent_frequency:
-                try:
-                    prior_messages = self.message_manager.list_messages_for_agent(
-                        agent_id=self.agent_state.id,
-                        actor=self.user,
-                        after=last_processed_message_id,
-                        before=messages[0].id,
-                    )
-                except Exception as e:
-                    print(f"Error fetching prior messages: {str(e)}")
-                    # continue with just latest messages
-
-            transcript_summary = [stringify_message(message) for message in prior_messages + messages]
-            transcript_summary = [summary for summary in transcript_summary if summary is not None]
-            message_text = "\n".join(transcript_summary)
-
-            participant_agent_messages = [
-                Message(
-                    id=Message.generate_id(),
-                    agent_id=participant_agent.agent_state.id,
+            sleeptime_agent_messages = [
+                MessageCreate(
                     role="user",
                     content=[TextContent(text=message_text)],
-                    group_id=self.group_id,
+                    id=Message.generate_id(),
+                    agent_id=sleeptime_agent_id,
+                    group_id=self.group.id,
                 )
             ]
 
-            # Convert Message objects to MessageCreate objects
-            message_creates = [
-                MessageCreate(
-                    role=m.role,
-                    content=m.content[0].text if m.content and len(m.content) == 1 else m.content,
-                    name=m.name,
-                    otid=m.otid,
-                    sender_id=m.sender_id,
-                )
-                for m in participant_agent_messages
-            ]
-
-            result = participant_agent.step(
-                input_messages=message_creates,
-                chaining=chaining,
-                max_chaining_steps=max_chaining_steps,
-                stream=token_streaming,
-                skip_verify=True,
-                metadata=metadata,
-                put_inner_thoughts_first=put_inner_thoughts_first,
+            # Load sleeptime agent
+            sleeptime_agent_state = await self.agent_manager.get_agent_by_id_async(agent_id=sleeptime_agent_id, actor=self.actor)
+            sleeptime_agent = dodoAgentV3(
+                agent_state=sleeptime_agent_state,
+                actor=self.actor,
             )
-            job_update = JobUpdate(
-                status=JobStatus.completed,
-                completed_at=datetime.now(timezone.utc),
+
+            # Perform sleeptime agent step
+            result = await sleeptime_agent.step(
+                input_messages=sleeptime_agent_messages,
+                run_id=run_id,
+                billing_context=billing_context,
+            )
+
+            # Update run status
+            run_update = RunUpdate(
+                status=RunStatus.completed,
+                completed_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                stop_reason=result.stop_reason.stop_reason if result.stop_reason else StopReasonType.end_turn,
                 metadata={
                     "result": result.model_dump(mode="json"),
-                    "agent_id": participant_agent.agent_state.id,
+                    "agent_id": sleeptime_agent_state.id,
                 },
             )
-            self.job_manager.update_job_by_id(job_id=run_id, job_update=job_update, actor=self.user)
+            await self.run_manager.update_run_by_id_async(run_id=run_id, update=run_update, actor=self.actor)
             return result
         except Exception as e:
-            job_update = JobUpdate(
-                status=JobStatus.failed,
-                completed_at=datetime.now(timezone.utc),
+            run_update = RunUpdate(
+                status=RunStatus.failed,
+                completed_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                stop_reason=StopReasonType.error,
                 metadata={"error": str(e)},
             )
-            self.job_manager.update_job_by_id(job_id=run_id, job_update=job_update, actor=self.user)
+            await self.run_manager.update_run_by_id_async(run_id=run_id, update=run_update, actor=self.actor)
             raise
-
-    def step(
-        self,
-        input_messages: List[MessageCreate],
-        chaining: bool = True,
-        max_chaining_steps: Optional[int] = None,
-        put_inner_thoughts_first: bool = True,
-        **kwargs,
-    ) -> dodoUsageStatistics:
-        run_ids = []
-
-        # Load settings
-        token_streaming = self.interface.streaming_mode if hasattr(self.interface, "streaming_mode") else False
-        metadata = self.interface.metadata if hasattr(self.interface, "metadata") else None
-
-        # Prepare new messages
-        new_messages = []
-        for message in input_messages:
-            if isinstance(message.content, str):
-                message.content = [TextContent(text=message.content)]
-            message.group_id = self.group_id
-            new_messages.append(message)
-
-        try:
-            # Load main agent
-            main_agent = dodoAgent(
-                agent_state=self.agent_state,
-                interface=self.interface,
-                user=self.user,
-                mcp_clients=self.mcp_clients,
-            )
-            # Perform main agent step
-            usage_stats = main_agent.step(
-                input_messages=new_messages,
-                chaining=chaining,
-                max_chaining_steps=max_chaining_steps,
-                stream=token_streaming,
-                skip_verify=True,
-                metadata=metadata,
-                put_inner_thoughts_first=put_inner_thoughts_first,
-            )
-
-            # Update turns counter
-            turns_counter = None
-            if self.sleeptime_agent_frequency is not None and self.sleeptime_agent_frequency > 0:
-                turns_counter = self.group_manager.bump_turns_counter(group_id=self.group_id, actor=self.user)
-
-            # Perform participant steps
-            if self.sleeptime_agent_frequency is None or (
-                turns_counter is not None and turns_counter % self.sleeptime_agent_frequency == 0
-            ):
-                last_response_messages = [message for sublist in usage_stats.steps_messages for message in sublist]
-                last_processed_message_id = self.group_manager.get_last_processed_message_id_and_update(
-                    group_id=self.group_id, last_processed_message_id=last_response_messages[-1].id, actor=self.user
-                )
-                for participant_agent_id in self.agent_ids:
-                    try:
-                        run_id = self._issue_background_task(
-                            participant_agent_id,
-                            last_response_messages,
-                            chaining,
-                            max_chaining_steps,
-                            token_streaming,
-                            metadata,
-                            put_inner_thoughts_first,
-                            last_processed_message_id,
-                        )
-                        run_ids.append(run_id)
-
-                    except Exception as e:
-                        # Handle individual task failures
-                        print(f"Agent processing failed: {str(e)}")
-                        raise e
-
-        except Exception as e:
-            raise e
-        finally:
-            self.interface.step_yield()
-
-        self.interface.step_complete()
-
-        usage_stats.run_ids = run_ids
-        return dodoUsageStatistics(**usage_stats.model_dump())
-
-    async def step_stream(
-        self,
-        input_messages: List[MessageCreate],
-        max_steps: int = 10,
-    ):
-        """
-        Streaming is not currently supported for SleeptimeMultiAgent.
-        This method is required by the BaseAgent abstract class but not yet implemented.
-        """
-        from dodo.log import get_logger
-
-        logger = get_logger(__name__)
-        logger.error(
-            f"step_stream called on SleeptimeMultiAgent (agent_id={self.agent_state.id}, "
-            f"group_id={self.group_id}). Streaming is not supported for multi-agent groups."
-        )
-        raise NotImplementedError("Streaming is not supported for SleeptimeMultiAgent. Use the non-streaming step() method instead.")
 

@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import json
 import os
 import uuid
@@ -860,9 +860,9 @@ async def capture_and_persist_messages(
         )
 
         if sleeptime_group:
-            from dodo.groups.sleeptime_multi_agent_v4 import SleeptimeMultiAgentV4
+            from dodo.groups.sleeptime_multi_agent import SleeptimeMultiAgent
 
-            sleeptime_agent_loop = SleeptimeMultiAgentV4(agent_state=agent, actor=actor, group=sleeptime_group)
+            sleeptime_agent_loop = SleeptimeMultiAgent(agent_state=agent, actor=actor, group=sleeptime_group)
             sleeptime_agent_loop.response_messages = response_messages
             run_ids = await sleeptime_agent_loop.run_sleeptime_agents(billing_context=billing_context)
             logger.info(f"Triggered sleeptime agents, run_ids: {run_ids}")

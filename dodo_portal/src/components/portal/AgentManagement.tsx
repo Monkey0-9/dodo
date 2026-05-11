@@ -122,7 +122,7 @@ const StatBadge = ({ icon, label, value, color }: { icon: string, label: string,
   </div>
 );
 
-const AgentRow = ({ agent, onSelect }: { agent: any, onSelect: () => void }) => (
+const AgentRow = ({ agent, onSelect }: { agent: {id: string, name: string, persona?: string, human?: string, status?: string, agent_type?: string, blocks?: unknown[], last_run_completion?: string | number}, onSelect: () => void }) => (
   <tr 
     onClick={onSelect}
     className="group hover:bg-surface-bright/20 transition-colors cursor-pointer"

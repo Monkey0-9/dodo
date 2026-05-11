@@ -159,7 +159,7 @@ export const Playground = () => {
   );
 };
 
-const Toggle = ({ label, active }: any) => (
+const Toggle = ({ label, active }: { label: string, active?: boolean }) => (
   <div className="flex items-center justify-between">
     <span className="text-sm text-on-surface">{label}</span>
     <div className={`w-10 h-5 rounded-full relative flex items-center px-0.5 transition-colors border ${active ? 'bg-primary border-primary' : 'bg-surface-container-highest border-outline-variant'}`}>
@@ -168,7 +168,7 @@ const Toggle = ({ label, active }: any) => (
   </div>
 );
 
-const Message = ({ sender, role, content, icon, isUser, badges }: any) => (
+const Message = ({ sender, role, content, icon, isUser, badges }: { sender?: string, role?: string, content: React.ReactNode, icon: React.ReactNode, isUser?: boolean, badges?: {text?: string, color?: string, label?: string, icon?: React.ReactNode}[] }) => (
   <div className={`flex gap-4 ${isUser ? 'flex-row-reverse' : ''} group`}>
     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${isUser ? 'bg-primary-container border-primary/20' : 'bg-surface-container-high border-outline-variant'}`}>
       <span className={`material-symbols-outlined text-lg ${isUser ? 'text-on-primary-container' : 'text-primary'}`}>{icon}</span>
@@ -177,7 +177,7 @@ const Message = ({ sender, role, content, icon, isUser, badges }: any) => (
       <div className="flex items-center gap-2">
         <span className="font-bold text-sm text-on-surface">{sender}</span>
         {role && <span className="text-[10px] text-on-surface-variant font-mono bg-surface-container-highest px-1.5 py-0.5 rounded font-bold uppercase">{role}</span>}
-        {badges?.map((badge: any, i: number) => (
+        {badges?.map((badge: {text?: string, color?: string, label?: string, icon?: React.ReactNode}, i: number) => (
           <span key={i} className={`text-[9px] font-mono border px-1.5 py-0.5 rounded flex items-center gap-1 font-bold uppercase tracking-wider ${badge.color}`}>
             <span className="material-symbols-outlined text-[10px]">{badge.icon}</span> {badge.label}
           </span>
@@ -190,7 +190,7 @@ const Message = ({ sender, role, content, icon, isUser, badges }: any) => (
   </div>
 );
 
-const TraceStep = ({ time, title, subtitle, active, animate, pending, color = "bg-outline-variant" }: any) => (
+const TraceStep = ({ time, title, subtitle, active, animate, pending, color = "bg-outline-variant" }: { time?: string, title: string, subtitle?: string, active?: boolean, animate?: boolean, pending?: boolean, color?: string }) => (
   <div className={`relative ${pending ? 'opacity-30' : ''}`}>
     <div className={`absolute left-[-29px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-surface-container-low ${color} ${animate ? 'animate-ping' : ''}`}></div>
     {animate && <div className={`absolute left-[-29px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-surface-container-low ${color}`}></div>}

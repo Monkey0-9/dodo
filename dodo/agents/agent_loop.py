@@ -1,10 +1,9 @@
-﻿from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from dodo.agents.base_agent_v2 import BaseAgentV2
 from dodo.agents.dodo_agent_v2 import dodoAgentV2
 from dodo.agents.dodo_agent_v3 import dodoAgentV3
-from dodo.groups.sleeptime_multi_agent_v3 import SleeptimeMultiAgentV3
-from dodo.groups.sleeptime_multi_agent_v4 import SleeptimeMultiAgentV4
+from dodo.groups.sleeptime_multi_agent import SleeptimeMultiAgent
 from dodo.schemas.agent import AgentState
 from dodo.schemas.enums import AgentType
 
@@ -32,7 +31,7 @@ class AgentLoop:
                         agent_state=agent_state,
                         actor=actor,
                     )
-                return SleeptimeMultiAgentV4(
+                return SleeptimeMultiAgent(
                     agent_state=agent_state,
                     actor=actor,
                     group=agent_state.multi_agent_group,
@@ -55,7 +54,7 @@ class AgentLoop:
                     agent_state=agent_state,
                     actor=actor,
                 )
-            return SleeptimeMultiAgentV3(agent_state=agent_state, actor=actor, group=agent_state.multi_agent_group)
+            return SleeptimeMultiAgent(agent_state=agent_state, actor=actor, group=agent_state.multi_agent_group)
         else:
             return dodoAgentV2(
                 agent_state=agent_state,

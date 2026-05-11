@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 export const WorkflowBuilder = () => {
-  const constraintsRef = useRef(null);
+  const constraintsRef = useRef<HTMLDivElement>(null);
   const [nodes, setNodes] = useState([
     { id: '1', x: 100, y: 240, type: 'Input', title: 'API Request', icon: 'login' },
     { id: '2', x: 500, y: 380, type: 'Agent', title: 'Data Scribe', icon: 'smart_toy', active: true },
@@ -167,7 +167,7 @@ export const WorkflowBuilder = () => {
   );
 };
 
-const WorkflowNode = ({ x, y, type, title, icon, active = false, constraintsRef }: any) => (
+const WorkflowNode = ({ x, y, type, title, icon, active = false, constraintsRef }: { x: number, y: number, type: string, title: string, icon: React.ReactNode, active?: boolean, constraintsRef?: React.RefObject<HTMLDivElement | null> }) => (
   <motion.div 
     drag
     dragConstraints={constraintsRef}

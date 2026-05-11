@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import json
 from datetime import datetime
 from typing import Annotated, Any, Dict, List, Literal, Optional, Union
@@ -21,7 +21,7 @@ from dodo.errors import (
     NoActiveRunsToCancelError,
     PendingApprovalError,
 )
-from dodo.groups.sleeptime_multi_agent_v4 import SleeptimeMultiAgentV4
+from dodo.groups.sleeptime_multi_agent import SleeptimeMultiAgent
 from dodo.helpers.datetime_helpers import get_utc_time, get_utc_timestamp_ns
 from dodo.log import get_logger
 from dodo.orm.errors import NoResultFound
@@ -2562,7 +2562,7 @@ async def capture_messages(
     run_ids = []
     sleeptime_group = agent.multi_agent_group if agent.multi_agent_group and agent.multi_agent_group.manager_type == "sleeptime" else None
     if sleeptime_group:
-        sleeptime_agent_loop = SleeptimeMultiAgentV4(agent_state=agent, actor=actor, group=sleeptime_group)
+        sleeptime_agent_loop = SleeptimeMultiAgent(agent_state=agent, actor=actor, group=sleeptime_group)
         sleeptime_agent_loop.response_messages = response_messages
         run_ids = await sleeptime_agent_loop.run_sleeptime_agents(billing_context=headers.billing_context)
 
