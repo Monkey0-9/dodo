@@ -220,7 +220,7 @@ class ToolExecutionSandbox:
                 agent_state=agent_state,
                 stdout=[stdout] if stdout else [],
                 stderr=[result.stderr] if result.stderr else [],
-                sandbox_config_fingerprint=sbx_config.fingerprint(),
+                sandbox_config_fingerprint=sbx_config.fingerlogger.info(),
             )
 
         except subprocess.CalledProcessError as e:
@@ -242,7 +242,7 @@ class ToolExecutionSandbox:
                 agent_state=None,
                 stdout=[e.stdout] if e.stdout else [],
                 stderr=[e.stderr] if e.stderr else [],
-                sandbox_config_fingerprint=sbx_config.fingerprint(),
+                sandbox_config_fingerprint=sbx_config.fingerlogger.info(),
             )
 
         except subprocess.TimeoutExpired:
@@ -312,7 +312,7 @@ class ToolExecutionSandbox:
             agent_state=agent_state,
             stdout=stdout_output,
             stderr=stderr_output,
-            sandbox_config_fingerprint=sbx_config.fingerprint(),
+            sandbox_config_fingerprint=sbx_config.fingerlogger.info(),
         )
 
     def parse_out_function_results_markers(self, text: str):
@@ -409,7 +409,7 @@ class ToolExecutionSandbox:
             agent_state=agent_state,
             stdout=execution.logs.stdout,
             stderr=execution.logs.stderr,
-            sandbox_config_fingerprint=sbx_config.fingerprint(),
+            sandbox_config_fingerprint=sbx_config.fingerlogger.info(),
         )
 
     def parse_exception_from_e2b_execution(self, e2b_execution: "Execution") -> Exception:
@@ -425,7 +425,7 @@ class ToolExecutionSandbox:
         running_sandboxes = self.list_running_e2b_sandboxes()
 
         # Hash the config to check the state
-        state_hash = sandbox_config.fingerprint()
+        state_hash = sandbox_config.fingerlogger.info()
         for sandbox in running_sandboxes:
             if self.METADATA_CONFIG_STATE_KEY in sandbox.metadata and sandbox.metadata[self.METADATA_CONFIG_STATE_KEY] == state_hash:
                 return Sandbox.connect(sandbox.sandbox_id)
@@ -436,7 +436,7 @@ class ToolExecutionSandbox:
     def create_e2b_sandbox_with_metadata_hash(self, sandbox_config: SandboxConfig) -> "Sandbox":
         from e2b_code_interpreter import Sandbox
 
-        state_hash = sandbox_config.fingerprint()
+        state_hash = sandbox_config.fingerlogger.info()
         e2b_config = sandbox_config.get_e2b_config()
         log_event(
             "e2b_sandbox_create_started",

@@ -21,6 +21,9 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, ORJSONResponse
 from marshmallow import ValidationError
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from sqlalchemy.exc import DBAPIError, IntegrityError, OperationalError
 from starlette.middleware.cors import CORSMiddleware
 
@@ -38,6 +41,16 @@ from dodo.errors import (
     ConversationBusyError,
     EmbeddingConfigRequiredError,
     HandleNotFoundError,
+    LLMAuthenticationError,
+    LLMBadRequestError,
+    LLMError,
+    LLMInsufficientCreditsError,
+    LLMProviderOverloaded,
+    LLMRateLimitError,
+    LLMTimeoutError,
+    MemoryRepoBusyError,
+    NoActiveRunsToCancelError,
+    PendingApprovalError,
     dodoAgentNotFoundError,
     dodoExpiredError,
     dodoImageFetchError,
@@ -50,16 +63,6 @@ from dodo.errors import (
     dodoToolNameConflictError,
     dodoUnsupportedFileUploadError,
     dodoUserNotFoundError,
-    LLMAuthenticationError,
-    LLMBadRequestError,
-    LLMError,
-    LLMInsufficientCreditsError,
-    LLMProviderOverloaded,
-    LLMRateLimitError,
-    LLMTimeoutError,
-    MemoryRepoBusyError,
-    NoActiveRunsToCancelError,
-    PendingApprovalError,
 )
 from dodo.helpers.json_helpers import sanitize_unicode_surrogates
 from dodo.helpers.pinecone_utils import get_pinecone_indices, should_use_pinecone, upsert_pinecone_indices
@@ -107,12 +110,14 @@ class SafeORJSONResponse(ORJSONResponse):
             )
 
 
+from starlette.middleware.base import BaseHTTPMiddleware
+
 from dodo.server.global_exception_handler import setup_global_exception_handlers
 
 # Mount necessary routes for backwards compatibility and extension support
 from dodo.server.rest_api.auth.index import setup_auth_router
 from dodo.server.rest_api.interface import StreamingServerInterface
-from dodo.server.rest_api.middleware import CheckPasswordMiddleware, LoggingMiddleware, RequestIdMiddleware
+from dodo.server.rest_api.middleware import LoggingMiddleware, RequestIdMiddleware
 from dodo.server.rest_api.routers.v1 import ROUTERS as v1_routes
 from dodo.server.rest_api.routers.v1.organizations import router as organizations_router
 from dodo.server.rest_api.routers.v1.users import router as users_router
@@ -127,8 +132,11 @@ if SENTRY_ENABLED:
 
 IS_WINDOWS = platform.system() == "Windows"
 
+from dodo.server.rest_api.state import get_server, set_server
+
 interface: type = StreamingServerInterface
-server = SyncServer(default_interface_factory=lambda: interface())
+set_server(SyncServer(default_interface_factory=lambda: interface()))
+server = get_server()
 logger = get_logger(__name__)
 
 
@@ -168,7 +176,7 @@ def generate_password():
     return secrets.token_urlsafe(16)
 
 
-random_password = os.getenv("dodo_SERVER_PASSWORD") or generate_password()
+random_password = os.getenv("DODO_SERVER_PASSWORD", "dodo-secret")
 
 
 @asynccontextmanager
@@ -217,9 +225,10 @@ async def lifespan(app_: FastAPI):
             logger.info(f"[Worker {worker_id}] DB pool monitoring initialized")
 
         async with db_registry.async_session() as session:
-            result = await session.execute(text("SHOW statement_timeout"))
-            statement_timeout = result.scalar()
-            logger.warning(f"[Worker {worker_id}] PostgreSQL statement_timeout: {statement_timeout}")
+            if session.bind and session.bind.dialect.name == "postgresql":
+                result = await session.execute(text("SHOW statement_timeout"))
+                statement_timeout = result.scalar()
+                logger.warning(f"[Worker {worker_id}] PostgreSQL statement_timeout: {statement_timeout}")
     except Exception as e:
         logger.warning(f"[Worker {worker_id}] Failed to query statement_timeout: {e}")
 
@@ -234,8 +243,8 @@ async def lifespan(app_: FastAPI):
         logger.info(f"[Worker {worker_id}] Disabled pinecone")
 
     logger.info(f"[Worker {worker_id}] Starting scheduler with leader election")
-    global server
-    await server.init_async(init_with_default_org_and_user=not settings.no_default_actor)
+    current_server = get_server()
+    await current_server.init_async(init_with_default_org_and_user=not settings.no_default_actor)
 
     # Set server instance for git HTTP endpoints
     try:
@@ -287,14 +296,14 @@ async def lifespan(app_: FastAPI):
         except Exception as e:
             logger.warning(f"[Worker {worker_id}] SQLAlchemy instrumentation shutdown failed: {e}")
 
-    logger.info(f"[Worker {worker_id}] Lifespan shutdown completed")
+            logger.info(f"[Worker {worker_id}] Lifespan shutdown completed")
 
 
 def create_application() -> "FastAPI":
     """the application start routine"""
     # global server
     # server = SyncServer(default_interface_factory=lambda: interface())
-    print(f"\n[[ dodo server // v{dodo_version} ]]")
+    logger.info(f"\n[[ dodo server // v{dodo_version} ]]")
 
     if SENTRY_ENABLED:
         sentry_sdk.init(
@@ -306,10 +315,22 @@ def create_application() -> "FastAPI":
             },
         )
 
+    debug_mode = "--debug" in sys.argv
+    app = FastAPI(
+        swagger_ui_parameters={"docExpansion": "none"},
+        # openapi_tags=TAGS_METADATA,
+        title="dodo",
+        summary="Unified Agent Framework with Persistent Memory and Cognitive Tools",
+        version=dodo_version,
+        debug=debug_mode,  # if True, the stack trace will be printed in the response
+        lifespan=lifespan,
+        default_response_class=SafeORJSONResponse,  # Use orjson for 10x faster JSON serialization, with surrogate safety
+    )
+
     if telemetry_settings.enable_datadog:
         try:
             dd_env = settings.environment or "development"
-            print(f"â–¶ Initializing Datadog tracing (env={dd_env})")
+            logger.info(f"â–¶ Initializing Datadog tracing (env={dd_env})")
 
             # Configure environment variables before importing ddtrace (must be set in environment before importing ddtrace)
             os.environ.setdefault("DD_ENV", dd_env)
@@ -342,15 +363,14 @@ def create_application() -> "FastAPI":
                     def _dodo_set_tags(self, span, args, kwargs, response=None, operation=""):
                         original_set_tags(self, span, args, kwargs, response=response, operation=operation)
 
-                        base_url = span.get_tag("openai.api_base")
-                        if not base_url:
-                            try:
-                                client = getattr(self, "_client", None)
-                                base_url = str(getattr(client, "_base_url", "") or "")
-                            except Exception:
-                                base_url = ""
+                        base_url = ""
+                        try:
+                            client = getattr(self, "_client", None)
+                            base_url = str(getattr(client, "_base_url", "") or "")
+                        except Exception as e:
+                            logger.exception(f"Unexpected error retrieving base_url: {e}")
 
-                        u = (base_url or "").lower()
+                        u = base_url.lower()
                         provider = None
                         if "openrouter" in u:
                             provider = "openrouter"
@@ -363,7 +383,8 @@ def create_application() -> "FastAPI":
 
                     OpenAIIntegration._llmobs_set_tags = _dodo_set_tags
                     OpenAIIntegration._dodo_provider_patch_done = True
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 logger.exception("Failed to patch ddtrace OpenAI LLMObs provider detection")
 
             if llmobs_flag:
@@ -405,18 +426,7 @@ def create_application() -> "FastAPI":
             if SENTRY_ENABLED:
                 sentry_sdk.capture_exception(e)
             # Don't fail application startup if Datadog initialization fails
-
-    debug_mode = "--debug" in sys.argv
-    app = FastAPI(
-        swagger_ui_parameters={"docExpansion": "none"},
-        # openapi_tags=TAGS_METADATA,
-        title="dodo",
-        summary="Unified Agent Framework with Persistent Memory and Cognitive Tools",
-        version=dodo_version,
-        debug=debug_mode,  # if True, the stack trace will be printed in the response
-        lifespan=lifespan,
-        default_response_class=SafeORJSONResponse,  # Use orjson for 10x faster JSON serialization, with surrogate safety
-    )
+            pass
 
     from fastapi.middleware.gzip import GZipMiddleware
 
@@ -426,6 +436,24 @@ def create_application() -> "FastAPI":
     # === Global Exception Handlers ===
     # Set up handlers for exceptions outside of request context (background tasks, threads, etc.)
     setup_global_exception_handlers()
+
+    # === Rate Limiting ===
+    limiter = Limiter(key_func=get_remote_address)
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    # === Security Headers ===
+    class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request, call_next):
+            response = await call_next(request)
+            response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:;"
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["X-Frame-Options"] = "DENY"
+            response.headers["X-XSS-Protection"] = "1; mode=block"
+            return response
+
+    app.add_middleware(SecurityHeadersMiddleware)
 
     # === Exception Handlers ===
 
@@ -526,7 +554,8 @@ def create_application() -> "FastAPI":
                                 examples_set.add(ex)
                         else:
                             examples_set.add(f"{primitive}-123e4567-e89b-42d3-8456-426614174000")
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         examples_set.add(f"{primitive}-123e4567-e89b-42d3-8456-426614174000")
 
         # Preserve current API contract: stringified list of errors
@@ -796,19 +825,18 @@ def create_application() -> "FastAPI":
             },
         )
 
-    if debug_mode or os.getenv("dodo_DEBUG", "").lower() == "true":
+    if debug_mode or os.getenv("DODO_DEBUG", "").lower() == "true":
         settings.cors_origins.extend(["http://localhost:5173", "http://localhost:5174"])
-    
-    additional_origins = os.getenv("dodo_CORS_ORIGINS", "")
+
+    additional_origins = os.getenv("DODO_CORS_ORIGINS", "")
     if additional_origins:
         settings.cors_origins.extend([origin.strip() for origin in additional_origins.split(",") if origin.strip()])
-        
+
     if "https://app.dodo.com" not in settings.cors_origins:
         settings.cors_origins.append("https://app.dodo.com")
 
-    if (os.getenv("dodo_SERVER_SECURE") == "true") or "--secure" in sys.argv:
-        print(f"â–¶ Using secure mode with password: {random_password}")
-        app.add_middleware(CheckPasswordMiddleware, password=random_password)
+    if (os.getenv("DODO_SERVER_SECURE") == "true") or "--secure" in sys.argv:
+        logger.info("â–¶ Using secure mode with JWT authentication")
 
     # Add reverse proxy middleware to handle X-Forwarded-* headers
     # app.add_middleware(ReverseProxyMiddleware, base_path=settings.server_base_path)
@@ -861,18 +889,35 @@ def create_application() -> "FastAPI":
         # Ensure our validation handler overrides tracing's handler when tracing is enabled
         app.add_exception_handler(RequestValidationError, custom_request_validation_handler)
 
+    from fastapi import Depends
+
+    from dodo.server.rest_api.auth.jwt_handler import get_current_user
+
+    # Include public routers (no global auth dependency)
+    from dodo.server.rest_api.routers.v1.auth import router as auth_v1_router
+    from dodo.server.rest_api.routers.v1.health import router as health_v1_router
+    app.include_router(auth_v1_router, prefix=API_PREFIX)
+    app.include_router(health_v1_router, prefix=API_PREFIX)
+
+    # Use optional auth in debug mode
+    auth_deps = [Depends(get_current_user)] if not settings.debug else []
+
     for route in v1_routes:
-        app.include_router(route, prefix=API_PREFIX)
+        app.include_router(route, prefix=API_PREFIX, dependencies=auth_deps)
         # this gives undocumented routes for "latest" and bare api calls.
         # we should always tie this to the newest version of the api.
         # app.include_router(route, prefix="", include_in_schema=False)
-        app.include_router(route, prefix="/latest", include_in_schema=False)
+        app.include_router(route, prefix="/latest", include_in_schema=False, dependencies=auth_deps)
 
     # admin/users
-    app.include_router(users_router, prefix=ADMIN_PREFIX)
-    app.include_router(organizations_router, prefix=ADMIN_PREFIX)
+    app.include_router(users_router, prefix=ADMIN_PREFIX, dependencies=[Depends(get_current_user)])
+    app.include_router(organizations_router, prefix=ADMIN_PREFIX, dependencies=[Depends(get_current_user)])
 
-    # /api/auth endpoints
+    # Add our new auth router
+    from dodo.server.rest_api.routers.auth import router as new_auth_router
+    app.include_router(new_auth_router)
+
+    # /api/auth endpoints (legacy)
     app.include_router(setup_auth_router(server, interface, random_password), prefix=API_PREFIX)
 
     # / static files
@@ -913,18 +958,19 @@ def start_server(
     # Experimental UV Loop Support
     try:
         if settings.use_uvloop:
-            print("Running server asyncio loop on uvloop...")
+            logger.info("Running server asyncio loop on uvloop...")
             import asyncio
 
             import uvloop
 
             asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-    except Exception:
+    except Exception as e:
+        logger.exception(f"Unexpected error: {e}")
         pass
 
     if (os.getenv("LOCAL_HTTPS") == "true") or "--localhttps" in sys.argv:
-        print(f"â–¶ Server running at: https://{host or 'localhost'}:{port or REST_DEFAULT_PORT}")
-        print("â–¶ View using ADE at: https://app.dodo.com/development-servers/local/dashboard\n")
+        logger.info(f"â–¶ Server running at: https://{host or 'localhost'}:{port or REST_DEFAULT_PORT}")
+        logger.info("â–¶ View using ADE at: https://app.dodo.com/development-servers/local/dashboard\n")
         if importlib.util.find_spec("granian") is not None and settings.use_granian:
             from granian import Granian
 
@@ -962,11 +1008,11 @@ def start_server(
     else:
         if IS_WINDOWS:
             # Windows doesn't those the fancy unicode characters
-            print(f"Server running at: http://{host or 'localhost'}:{port or REST_DEFAULT_PORT}")
-            print("View using ADE at: https://app.dodo.com/development-servers/local/dashboard\n")
+            logger.info(f"Server running at: http://{host or 'localhost'}:{port or REST_DEFAULT_PORT}")
+            logger.info("View using ADE at: https://app.dodo.com/development-servers/local/dashboard\n")
         else:
-            print(f"â–¶ Server running at: http://{host or 'localhost'}:{port or REST_DEFAULT_PORT}")
-            print("â–¶ View using ADE at: https://app.dodo.com/development-servers/local/dashboard\n")
+            logger.info(f"â–¶ Server running at: http://{host or 'localhost'}:{port or REST_DEFAULT_PORT}")
+            logger.info("â–¶ View using ADE at: https://app.dodo.com/development-servers/local/dashboard\n")
 
         if importlib.util.find_spec("granian") is not None and settings.use_granian:
             # Experimental Granian engine
@@ -997,5 +1043,6 @@ def start_server(
                 timeout_keep_alive=settings.uvicorn_timeout_keep_alive,
                 access_log=False,
             )
-if __name__ == "__main__":
+
+if __name__ == "__main__":
     start_server()

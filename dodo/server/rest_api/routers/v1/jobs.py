@@ -13,7 +13,7 @@ from dodo.validators import JobId
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 
-@router.get("/", response_model=List[Job], operation_id="list_jobs")
+@router.get("", response_model=List[Job], operation_id="list_jobs")
 async def list_jobs(
     server: "SyncServer" = Depends(get_dodo_server),
     source_id: Optional[str] = Query(

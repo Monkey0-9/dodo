@@ -4,9 +4,9 @@ import time
 from typing import Any, Optional, Union
 
 try:
-    from dodo_client import Asyncdodo, dodo
+    from dodo.client import DodoClient, dodo
 except ImportError:
-    Asyncdodo = None
+    DodoClient = None
     dodo = None
 
 from dodo.functions.functions import parse_source_code
@@ -281,7 +281,7 @@ def upload_test_agentfile_from_disk(client: dodo, filename: str) -> ImportedAgen
         return client.agents.import_file(file=f, append_copy_suffix=True, override_existing_tools=False)
 
 
-async def upload_test_agentfile_from_disk_async(client: Asyncdodo, filename: str) -> ImportedAgentsResponse:
+async def upload_test_agentfile_from_disk_async(client: DodoClient, filename: str) -> ImportedAgentsResponse:
     """
     Upload a given .af file to live FastAPI server.
     """

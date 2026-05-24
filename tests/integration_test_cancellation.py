@@ -6,7 +6,7 @@ from typing import Any, List
 
 import pytest
 from dotenv import load_dotenv
-from dodo_client import Asyncdodo
+from dodo.client import DodoClient
 from dodo.client.types import MessageCreateParam
 
 from dodo.log import get_logger
@@ -82,7 +82,7 @@ async def accumulate_chunks(chunks: Any) -> List[Any]:
     return [m for m in messages if m is not None]
 
 
-async def cancel_run_after_delay(client: Asyncdodo, agent_id: str, delay: float = 0.5):
+async def cancel_run_after_delay(client: DodoClient, agent_id: str, delay: float = 0.5):
     await asyncio.sleep(delay)
     await client.agents.messages.cancel(agent_id=agent_id)
 
@@ -131,16 +131,16 @@ def server_url() -> str:
 
 
 @pytest.fixture(scope="function")
-async def client(server_url: str) -> Asyncdodo:
+async def client(server_url: str) -> DodoClient:
     """
     Creates and returns an asynchronous dodo REST client for testing.
     """
-    client_instance = Asyncdodo(base_url=server_url)
+    client_instance = DodoClient(base_url=server_url)
     yield client_instance
 
 
 @pytest.fixture(scope="function")
-async def agent_state(client: Asyncdodo) -> AgentState:
+async def agent_state(client: DodoClient) -> AgentState:
     """
     Creates and returns an agent state for testing with a pre-configured agent.
     The agent is configured with the roll_dice tool.
@@ -170,7 +170,7 @@ async def agent_state(client: Asyncdodo) -> AgentState:
 @pytest.mark.asyncio(loop_scope="function")
 async def test_background_streaming_cancellation(
     disable_e2b_api_key: Any,
-    client: Asyncdodo,
+    client: DodoClient,
     agent_state: AgentState,
     llm_config: LLMConfig,
 ) -> None:

@@ -21,13 +21,13 @@ from typing import Any, List, Optional, Tuple
 
 import pytest
 from dotenv import load_dotenv
-from dodo_client import Asyncdodo
+from dodo.client import DodoClient
 from dodo.client.types import (
     AgentState,
     MessageCreateParam,
 )
-from dodo_client.types.agents import Run
-from dodo_client.types.agents.dodo_streaming_response import dodoUsageStatistics
+from dodo.client.types import Run
+from dodo.client.types import dodoUsageStatistics
 
 logger = logging.getLogger(__name__)
 
@@ -92,10 +92,10 @@ def base_url() -> str:
 
 
 @pytest.fixture
-async def async_client(base_url: str) -> Asyncdodo:
+async def async_client(base_url: str) -> DodoClient:
     """Create an async dodo client."""
     token = os.getenv("dodo_SERVER_TOKEN")
-    return Asyncdodo(base_url=base_url, token=token)
+    return DodoClient(base_url=base_url, token=token)
 
 
 # ------------------------------
@@ -104,7 +104,7 @@ async def async_client(base_url: str) -> Asyncdodo:
 
 
 async def create_test_agent(
-    client: Asyncdodo,
+    client: DodoClient,
     model_handle: str,
     model_settings: dict,
     name_suffix: str = "",
@@ -119,7 +119,7 @@ async def create_test_agent(
     return agent
 
 
-async def cleanup_agent(client: Asyncdodo, agent_id: str) -> None:
+async def cleanup_agent(client: DodoClient, agent_id: str) -> None:
     """Delete a test agent."""
     try:
         await client.agents.delete(agent_id)
@@ -143,7 +143,7 @@ def extract_usage_from_stream(messages: List[Any]) -> Optional[dodoUsageStatisti
 @pytest.mark.asyncio
 @pytest.mark.parametrize("model_handle,model_settings", CACHE_TEST_CONFIGS)
 async def test_cache_tokens_streaming(
-    async_client: Asyncdodo,
+    async_client: DodoClient,
     model_handle: str,
     model_settings: dict,
 ) -> None:
@@ -207,7 +207,7 @@ async def test_cache_tokens_streaming(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("model_handle,model_settings", CACHE_TEST_CONFIGS)
 async def test_cache_tokens_non_streaming(
-    async_client: Asyncdodo,
+    async_client: DodoClient,
     model_handle: str,
     model_settings: dict,
 ) -> None:
@@ -257,7 +257,7 @@ async def test_cache_tokens_non_streaming(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("model_handle,model_settings", REASONING_TEST_CONFIGS)
 async def test_reasoning_tokens_streaming(
-    async_client: Asyncdodo,
+    async_client: DodoClient,
     model_handle: str,
     model_settings: dict,
 ) -> None:
@@ -298,7 +298,7 @@ async def test_reasoning_tokens_streaming(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("model_handle,model_settings", REASONING_TEST_CONFIGS)
 async def test_reasoning_tokens_non_streaming(
-    async_client: Asyncdodo,
+    async_client: DodoClient,
     model_handle: str,
     model_settings: dict,
 ) -> None:
@@ -339,7 +339,7 @@ async def test_reasoning_tokens_non_streaming(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("model_handle,model_settings", CACHE_TEST_CONFIGS[:1])  # Test with one config
 async def test_step_level_usage_details(
-    async_client: Asyncdodo,
+    async_client: DodoClient,
     model_handle: str,
     model_settings: dict,
 ) -> None:
@@ -389,7 +389,7 @@ async def test_step_level_usage_details(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("model_handle,model_settings", CACHE_TEST_CONFIGS[:1])  # Test with one config
 async def test_run_level_usage_aggregation(
-    async_client: Asyncdodo,
+    async_client: DodoClient,
     model_handle: str,
     model_settings: dict,
 ) -> None:
@@ -438,7 +438,7 @@ async def test_run_level_usage_aggregation(
 
 
 @pytest.mark.asyncio
-async def test_usage_tracking_end_to_end(async_client: Asyncdodo) -> None:
+async def test_usage_tracking_end_to_end(async_client: DodoClient) -> None:
     """
     End-to-end test that verifies the complete usage tracking flow:
     1. Create agent with a model that supports caching

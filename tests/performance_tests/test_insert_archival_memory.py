@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 from dotenv import load_dotenv
 from faker import Faker
-from dodo_client import Asyncdodo
+from dodo.client import DodoClient
 from tqdm import tqdm
 
 from dodo.schemas.embedding_config import EmbeddingConfig
@@ -51,7 +51,7 @@ def server_url():
 @pytest.fixture(scope="session")
 def client(server_url):
     """Creates a REST client for testing."""
-    client = Asyncdodo(base_url=server_url)
+    client = DodoClient(base_url=server_url)
     yield client
 
 

@@ -12,7 +12,7 @@ import pytest
 from dotenv import load_dotenv
 from dodo.client import dodo
 from dodo.client.types import MessageCreateParam, Tool, ToolReturnMessage
-from dodo_client.types.agents import ToolCallMessage
+from dodo.client.types import ToolCallMessage
 
 from dodo.functions.mcp_client.types import SSEServerConfig, StdioServerConfig, StreamableHTTPServerConfig
 from dodo.schemas.embedding_config import EmbeddingConfig

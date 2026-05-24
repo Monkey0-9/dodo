@@ -1,11 +1,14 @@
-﻿import os
+import os
 import re
 from logging import CRITICAL, DEBUG, ERROR, INFO, NOTSET, WARN, WARNING
 
-dodo_DIR = os.path.join(os.path.expanduser("~"), ".dodo")
-dodo_TOOL_EXECUTION_DIR = os.path.join(dodo_DIR, "tool_execution_dir")
+DODO_DIR = os.path.join(os.path.expanduser("~"), ".dodo")
+dodo_DIR = DODO_DIR
+DODO_TOOL_EXECUTION_DIR = os.path.join(DODO_DIR, "tool_execution_dir")
+dodo_TOOL_EXECUTION_DIR = DODO_TOOL_EXECUTION_DIR
 
-dodo_MODEL_ENDPOINT = "https://inference.dodo.com/v1/"
+DODO_MODEL_ENDPOINT = "https://inference.dodo.com/v1/"
+dodo_MODEL_ENDPOINT = DODO_MODEL_ENDPOINT
 DEFAULT_TIMEZONE = "UTC"
 
 # Provider ordering for model listing (matches original _enabled_providers list order)
@@ -38,19 +41,25 @@ MCP_CONFIG_NAME = "mcp_config.json"
 MCP_TOOL_TAG_NAME_PREFIX = "mcp"  # full format, mcp:server_name
 SUBAGENT_ROLE_TAG = "role:subagent"
 
-dodo_CORE_TOOL_MODULE_NAME = "dodo.functions.function_sets.base"
-dodo_MULTI_AGENT_TOOL_MODULE_NAME = "dodo.functions.function_sets.multi_agent"
-dodo_VOICE_TOOL_MODULE_NAME = "dodo.functions.function_sets.voice"
-dodo_BUILTIN_TOOL_MODULE_NAME = "dodo.functions.function_sets.builtin"
-dodo_FILES_TOOL_MODULE_NAME = "dodo.functions.function_sets.files"
+DODO_CORE_TOOL_MODULE_NAME = "dodo.functions.function_sets.base"
+dodo_CORE_TOOL_MODULE_NAME = DODO_CORE_TOOL_MODULE_NAME
+DODO_MULTI_AGENT_TOOL_MODULE_NAME = "dodo.functions.function_sets.multi_agent"
+dodo_MULTI_AGENT_TOOL_MODULE_NAME = DODO_MULTI_AGENT_TOOL_MODULE_NAME
+DODO_VOICE_TOOL_MODULE_NAME = "dodo.functions.function_sets.voice"
+dodo_VOICE_TOOL_MODULE_NAME = DODO_VOICE_TOOL_MODULE_NAME
+DODO_BUILTIN_TOOL_MODULE_NAME = "dodo.functions.function_sets.builtin"
+dodo_BUILTIN_TOOL_MODULE_NAME = DODO_BUILTIN_TOOL_MODULE_NAME
+DODO_FILES_TOOL_MODULE_NAME = "dodo.functions.function_sets.files"
+dodo_FILES_TOOL_MODULE_NAME = DODO_FILES_TOOL_MODULE_NAME
 
-dodo_TOOL_MODULE_NAMES = [
-    dodo_CORE_TOOL_MODULE_NAME,
-    dodo_MULTI_AGENT_TOOL_MODULE_NAME,
-    dodo_VOICE_TOOL_MODULE_NAME,
-    dodo_BUILTIN_TOOL_MODULE_NAME,
-    dodo_FILES_TOOL_MODULE_NAME,
+DODO_TOOL_MODULE_NAMES = [
+    DODO_CORE_TOOL_MODULE_NAME,
+    DODO_MULTI_AGENT_TOOL_MODULE_NAME,
+    DODO_VOICE_TOOL_MODULE_NAME,
+    DODO_BUILTIN_TOOL_MODULE_NAME,
+    DODO_FILES_TOOL_MODULE_NAME,
 ]
+dodo_TOOL_MODULE_NAMES = DODO_TOOL_MODULE_NAMES
 
 DEFAULT_ORG_ID = "org-00000000-0000-4000-8000-000000000000"
 DEFAULT_ORG_NAME = "default_org"
@@ -101,7 +110,8 @@ EMBEDDING_TO_TOKENIZER_MAP = {
 EMBEDDING_TO_TOKENIZER_DEFAULT = "cl100k_base"
 
 
-DEFAULT_dodo_MODEL = "gpt-4"  # TODO: fixme
+DEFAULT_DODO_MODEL = "gpt-4"  # TODO: fixme
+DEFAULT_dodo_MODEL = DEFAULT_DODO_MODEL
 DEFAULT_PERSONA = "sam_pov"
 DEFAULT_HUMAN = "basic"
 DEFAULT_PRESET = "dodo_chat"
@@ -113,7 +123,8 @@ SEND_MESSAGE_TOOL_NAME = "send_message"
 # Base tools that cannot be edited, as they access agent state directly
 # Note that we don't include "conversation_search_date" for now
 BASE_TOOLS = [SEND_MESSAGE_TOOL_NAME, "conversation_search", "archival_memory_insert", "archival_memory_search"]
-DEPRECATED_dodo_TOOLS = ["archival_memory_insert", "archival_memory_search"]
+DEPRECATED_DODO_TOOLS = ["archival_memory_insert", "archival_memory_search"]
+DEPRECATED_dodo_TOOLS = DEPRECATED_DODO_TOOLS
 # Base memory tools CAN be edited, and are added by default by the server
 BASE_MEMORY_TOOLS = ["core_memory_append", "core_memory_replace", "memory", "memory_apply_patch"]
 # New v2 collection of the base memory tools (effecitvely same as sleeptime set), to pair with dodo_v2 prompt
@@ -175,7 +186,7 @@ FILE_MEMORY_EMPTY_MESSAGE = (
 )
 
 # Set of all built-in dodo tools
-dodo_TOOL_SET = set(
+DODO_TOOL_SET = set(
     BASE_TOOLS
     + BASE_MEMORY_TOOLS
     + MULTI_AGENT_TOOLS
@@ -185,8 +196,9 @@ dodo_TOOL_SET = set(
     + BUILTIN_TOOLS
     + FILES_TOOLS
 )
+dodo_TOOL_SET = DODO_TOOL_SET
 
-dodo_PARALLEL_SAFE_TOOLS = {
+DODO_PARALLEL_SAFE_TOOLS = {
     "conversation_search",
     "archival_memory_search",
     "run_code",
@@ -195,6 +207,7 @@ dodo_PARALLEL_SAFE_TOOLS = {
     "grep_files",
     "semantic_search_files",
 }
+dodo_PARALLEL_SAFE_TOOLS = DODO_PARALLEL_SAFE_TOOLS
 
 
 def FUNCTION_RETURN_VALUE_TRUNCATED(return_str, return_char: int, return_char_limit: int):
@@ -467,7 +480,7 @@ WEB_SEARCH_SEPARATOR = "\n" + "-" * 40 + "\n"
 REDIS_INCLUDE = "include"
 REDIS_EXCLUDE = "exclude"
 REDIS_SET_DEFAULT_VAL = "None"
-REDIS_DEFAULT_CACHE_PREFIX = "dodo_cache"
+REDIS_DEFAULT_CACHE_PREFIX = "DODO_CACHE"
 REDIS_RUN_ID_PREFIX = "agent:send_message:run_id"
 
 # Conversation lock constants
@@ -509,7 +522,7 @@ PINECONE_RETRY_BACKOFF_FACTOR = 2.0
 PINECONE_THROTTLE_DELAY = 0.75  # seconds base delay between batches
 
 # builtin web search
-WEB_SEARCH_MODEL_ENV_VAR_NAME = "dodo_BUILTIN_WEBSEARCH_OPENAI_MODEL_NAME"
+WEB_SEARCH_MODEL_ENV_VAR_NAME = "DODO_BUILTIN_WEBSEARCH_OPENAI_MODEL_NAME"
 WEB_SEARCH_MODEL_ENV_VAR_DEFAULT_VALUE = "gpt-4.1-mini-2025-04-14"
 
 # Excluded model keywords from base tool rules

@@ -1,9 +1,9 @@
-﻿from enum import Enum
+from enum import Enum
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from dodo.schemas.enums import RunStatus
+from dodo.schemas.enums import MessageStreamStatus, RunStatus
 
 
 class StopReasonType(str, Enum):

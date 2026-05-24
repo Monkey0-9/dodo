@@ -39,15 +39,17 @@ class SimpleLLMStreamAdapter(dodoLLMStreamAdapter):
                 calls = self.interface.get_tool_call_objects()
                 if calls:
                     return calls
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 pass
 
         # fallback to single-call api
         try:
             single = self.interface.get_tool_call_object()
             return [single] if single else []
-        except Exception:
-            return []
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        return []
 
     async def invoke_llm(
         self,
@@ -169,7 +171,7 @@ class SimpleLLMStreamAdapter(dodoLLMStreamAdapter):
                 raise
             raise self.llm_client.handle_llm_error(e, llm_config=self.llm_config)
 
-        stream_started = True
+            stream_started = True
 
         try:
             # Process the stream and yield chunks immediately for TTFT
@@ -206,9 +208,10 @@ class SimpleLLMStreamAdapter(dodoLLMStreamAdapter):
             # extract tool calls from interface (supports both single and parallel calls)
             try:
                 self.tool_calls = self._extract_tool_calls()
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 self.tool_calls = []
-            self.tool_call = self.tool_calls[-1] if self.tool_calls else None
+                self.tool_call = self.tool_calls[-1] if self.tool_calls else None
 
             # Extract reasoning content from the interface
             # TODO this should probably just be called "content"?
@@ -217,21 +220,24 @@ class SimpleLLMStreamAdapter(dodoLLMStreamAdapter):
             # Extract all content parts
             try:
                 self.content = self.interface.get_content()
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 self.content = []
 
             # Extract usage statistics from the interface
             # Each interface implements get_usage_statistics() with provider-specific logic
             try:
                 self.usage = self.interface.get_usage_statistics()
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 pass
-            self.usage.step_count = 1
+                self.usage.step_count = 1
 
             # Store any additional data from the interface
             try:
                 self.message_id = self.interface.dodo_message_id
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 self.message_id = None
 
             # Populate finish_reason for downstream continuation logic.

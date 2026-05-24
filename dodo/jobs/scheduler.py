@@ -94,8 +94,9 @@ async def _try_acquire_lock_and_start_scheduler(server: SyncServer) -> bool:
         if scheduler.running:
             try:
                 scheduler.shutdown(wait=False)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
+        pass
         return False
     finally:
         if lock_session:

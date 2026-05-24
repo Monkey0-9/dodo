@@ -233,8 +233,8 @@ class VoiceAgent(BaseAgent):
             except json.JSONDecodeError:
                 tool_args = {}
 
-            tool_call_id = streaming_interface.tool_call_id or f"call_{uuid.uuid4().hex[:8]}"
-            assistant_tool_call_msg = AssistantMessage(
+                tool_call_id = streaming_interface.tool_call_id or f"call_{uuid.uuid4().hex[:8]}"
+                assistant_tool_call_msg = AssistantMessage(
                 content=None,
                 tool_calls=[
                     ToolCall(

@@ -1,4 +1,4 @@
-﻿import json
+import json
 import logging
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type, Union
 
@@ -13,6 +13,9 @@ from pydantic import BaseModel, Field, create_model
 
 from dodo.constants import DEFAULT_MESSAGE_TOOL, DEFAULT_MESSAGE_TOOL_KWARG
 from dodo.schemas.message import Message
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 # TODO needed?
@@ -63,7 +66,7 @@ def _assert_code_gen_compilable(code_str):
     try:
         compile(code_str, "<string>", "exec")
     except SyntaxError as e:
-        print(f"Syntax error in code: {e}")
+        logger.error(f"Syntax error in code: {e}")
 
 
 def _assert_all_classes_are_imported(tool: Union["LangChainBaseTool"], additional_imports_module_attr_map: dict[str, str]) -> None:
@@ -76,7 +79,7 @@ def _assert_all_classes_are_imported(tool: Union["LangChainBaseTool"], additiona
 
     if not current_class_imports.issuperset(required_class_imports):
         err_msg = f"[ERROR] You are missing module_attr pairs in `additional_imports_module_attr_map`. Currently, you have imports for {current_class_imports}, but the required classes for import are {required_class_imports}"
-        print(err_msg)
+        logger.error(err_msg)
         raise RuntimeError(err_msg)
 
 
@@ -173,13 +176,13 @@ def generate_imported_tool_instantiation_call_str(obj: Any) -> Optional[str]:
         # We cannot stringify this easily, but WikipediaAPIWrapper handles the setting of this parameter internally
         # This assumption seems fair to me, since usually they are external imports, and LangChain should be bundling those as module-level imports within the tool
         # We throw a warning here anyway and provide the class name
-        print(
-            f"[WARNING] Skipping parsing unknown class {obj.__class__.__name__} (does not inherit from the Pydantic BaseModel and is not a basic Python type)"
+        logger.warning(
+            f"Skipping parsing unknown class {obj.__class__.__name__} (does not inherit from the Pydantic BaseModel and is not a basic Python type)"
         )
         if obj.__class__.__name__ == "function":
             import inspect
 
-            print(inspect.getsource(obj))
+            logger.warning(inspect.getsource(obj))
 
         return None
 

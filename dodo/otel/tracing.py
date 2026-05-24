@@ -119,8 +119,9 @@ async def _update_trace_attributes(request: Request):
                 body = await request.json()
                 for key, value in body.items():
                     span.set_attribute(f"http.request.body.{key}", str(value))
-        except Exception:
-            # Ignore JSON parsing errors (empty body, invalid JSON, etc.)
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        # Ignore JSON parsing errors (empty body, invalid JSON, etc.)
             pass
 
 
@@ -181,8 +182,9 @@ def setup_tracing(
                     commenter_options={},
                     enable_attribute_commenter=True,
                 )
-            except Exception:
-                # Fall back to instrumenting without specifying an engine
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
+        # Fall back to instrumenting without specifying an engine
                 # This will still capture some SQL operations
                 SQLAlchemyInstrumentor().instrument(
                     enable_commenter=True,
@@ -323,7 +325,7 @@ def trace_method(func):
                         except (TypeError, AttributeError, ValueError):
                             pass
 
-                        param_value = f"<{type_name} (excluded{id_info})>"
+                            param_value = f"<{type_name} (excluded{id_info})>"
                         span.set_attribute(f"parameter.{name}", param_value)
                         total_size += len(param_value)
                         continue
@@ -342,8 +344,9 @@ def trace_method(func):
                                 str(value)
                                 # If str() works and is reasonable, use repr
                                 str_value = repr(value)
-                            except Exception:
-                                # If str() fails, mark as serialization failed
+                            except Exception as e:
+                                logger.exception(f"Unexpected error: {e}")
+        # If str() fails, mark as serialization failed
                                 raise ValueError("str() failed")
 
                             # If repr is already too long, try to be smarter
@@ -376,8 +379,9 @@ def trace_method(func):
                         error_msg = f"<serialization failed: {type(e).__name__}>"
                         span.set_attribute(f"parameter.{name}", error_msg)
                         total_size += len(error_msg)
-                    except Exception:
-                        # If even the fallback fails, skip this parameter
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
+        # If even the fallback fails, skip this parameter
                         pass
 
         except (TypeError, ValueError, AttributeError) as e:

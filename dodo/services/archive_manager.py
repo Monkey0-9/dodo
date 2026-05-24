@@ -368,7 +368,7 @@ class ArchiveManager:
                 # Don't fail the entire operation if Turbopuffer upload fails
                 # The passage is already saved to SQL
 
-        logger.info(f"Created passage {created_passage.id} in archive {archive_id}")
+                logger.info(f"Created passage {created_passage.id} in archive {archive_id}")
         return created_passage
 
     @enforce_types
@@ -454,7 +454,7 @@ class ArchiveManager:
             except Exception as e:
                 logger.error(f"Failed to upload passages to Turbopuffer: {e}")
 
-        logger.info(f"Created {len(created_passages)} passages in archive {archive_id}")
+                logger.info(f"Created {len(created_passages)} passages in archive {archive_id}")
         return created_passages
 
     @enforce_types

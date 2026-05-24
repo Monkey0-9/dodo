@@ -67,7 +67,7 @@ def validate_mcp_server_url(url: str, *, resolve_hostname: bool = True) -> str:
     except socket.gaierror as exc:
         raise ValueError(f"Cannot resolve hostname: {parsed.hostname}") from exc
 
-    seen_ips = set()
+        seen_ips = set()
     for _, _, _, _, sockaddr in infos:
         ip_text = sockaddr[0]
         if ip_text in seen_ips:

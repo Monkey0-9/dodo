@@ -217,7 +217,8 @@ class ResilientRoutingClient:
                                 m.handle, actor
                             )
                             return resolved_config, False, m.handle
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             pass
 
         raise RuntimeError(

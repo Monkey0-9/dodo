@@ -20,7 +20,8 @@ class LineChunker:
         if file_metadata.file_type:
             try:
                 return self.file_type_registry.get_chunking_strategy_by_mime_type(file_metadata.file_type)
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 pass
 
         # Fallback to filename extension
@@ -32,7 +33,8 @@ class LineChunker:
                 _, ext = os.path.splitext(file_metadata.file_name)
                 if ext:
                     return self.file_type_registry.get_chunking_strategy_by_extension(ext)
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 pass
 
         # Default fallback

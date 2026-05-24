@@ -21,20 +21,35 @@ def upgrade() -> None:
     connection = op.get_bind()
     connection.commit()
     autocommit_connection = connection.execution_options(isolation_level="AUTOCOMMIT")
-    autocommit_connection.exec_driver_sql(
-        """
-        CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_agents_organization_id_created_by_id
-        ON agents USING btree (organization_id, _created_by_id)
-        """
-    )
+    if connection.dialect.name == "sqlite":
+        autocommit_connection.exec_driver_sql(
+            """
+            CREATE INDEX IF NOT EXISTS ix_agents_organization_id_created_by_id
+            ON agents (organization_id, _created_by_id)
+            """
+        )
+    else:
+        autocommit_connection.exec_driver_sql(
+            """
+            CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_agents_organization_id_created_by_id
+            ON agents USING btree (organization_id, _created_by_id)
+            """
+        )
 
 
 def downgrade() -> None:
     connection = op.get_bind()
     connection.commit()
     autocommit_connection = connection.execution_options(isolation_level="AUTOCOMMIT")
-    autocommit_connection.exec_driver_sql(
-        """
-        DROP INDEX CONCURRENTLY IF EXISTS ix_agents_organization_id_created_by_id
-        """
-    )
+    if connection.dialect.name == "sqlite":
+        autocommit_connection.exec_driver_sql(
+            """
+            DROP INDEX IF EXISTS ix_agents_organization_id_created_by_id
+            """
+        )
+    else:
+        autocommit_connection.exec_driver_sql(
+            """
+            DROP INDEX CONCURRENTLY IF EXISTS ix_agents_organization_id_created_by_id
+            """
+        )

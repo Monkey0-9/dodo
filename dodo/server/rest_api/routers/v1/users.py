@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 router = APIRouter(prefix="/users", tags=["users", "admin"])
 
 
-@router.get("/", tags=["admin"], response_model=List[User], operation_id="list_users")
+@router.get("", tags=["admin"], response_model=List[User], operation_id="list_users")
 async def list_users(
     after: Optional[str] = Query(None),
     limit: Optional[int] = Query(50),
@@ -26,7 +26,7 @@ async def list_users(
     return await server.user_manager.list_actors_async(after=after, limit=limit)
 
 
-@router.post("/", tags=["admin"], response_model=User, operation_id="create_user")
+@router.post("", tags=["admin"], response_model=User, operation_id="create_user")
 async def create_user(
     request: UserCreate = Body(...),
     server: "SyncServer" = Depends(get_dodo_server),
@@ -39,7 +39,7 @@ async def create_user(
     return user
 
 
-@router.put("/", tags=["admin"], response_model=User, operation_id="update_user")
+@router.put("", tags=["admin"], response_model=User, operation_id="update_user")
 async def update_user(
     user: UserUpdate = Body(...),
     server: "SyncServer" = Depends(get_dodo_server),
@@ -51,7 +51,7 @@ async def update_user(
     return user
 
 
-@router.delete("/", tags=["admin"], response_model=User, operation_id="delete_user")
+@router.delete("", tags=["admin"], response_model=User, operation_id="delete_user")
 async def delete_user(
     user_id: UserIdQueryRequired,
     server: "SyncServer" = Depends(get_dodo_server),

@@ -1,4 +1,4 @@
-﻿import os
+import os
 from typing import Any, Optional
 
 from composio.constants import DEFAULT_ENTITY_ID
@@ -13,6 +13,8 @@ from composio.exceptions import (
 from dodo.constants import COMPOSIO_ENTITY_ENV_VAR_KEY
 from dodo.functions.async_composio_toolset import AsyncComposioToolSet
 from dodo.utils import run_async_task
+from dodo.log import get_logger
+logger = get_logger(__name__)
 
 
 # TODO: This is kind of hacky, as this is used to search up the action later on composio's side
@@ -76,7 +78,7 @@ async def execute_composio_action_async(
     except ComposioSDKError as e:
         raise RuntimeError(f"Composio SDK error while executing action '{action_name}': {str(e)}")
     except Exception as e:
-        print(type(e))
+        logger.exception(f"Unexpected error in Composio SDK while executing action '{action_name}': {e}")
         raise RuntimeError(f"An unexpected error occurred in Composio SDK while executing action '{action_name}': {str(e)}")
 
     if "error" in response and response["error"]:
@@ -93,5 +95,5 @@ def _assert_code_gen_compilable(code_str):
     try:
         compile(code_str, "<string>", "exec")
     except SyntaxError as e:
-        print(f"Syntax error in code: {e}")
+        logger.error(f"Syntax error in code: {e}")
 

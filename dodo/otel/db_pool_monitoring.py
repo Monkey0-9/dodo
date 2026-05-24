@@ -334,8 +334,9 @@ class DatabasePoolMonitor:
             if waiters is None:
                 return 0
             return len(waiters)
-        except Exception:
-            return 0
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        return 0
 
 
 # Global instance

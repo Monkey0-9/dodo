@@ -571,8 +571,9 @@ class OpenAIClient(LLMClientBase):
         if is_openrouter:
             try:
                 model = llm_config.handle.split("/", 1)[-1]
-            except Exception:
-                # don't raise error since this isn't robust against edge cases
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
+        # don't raise error since this isn't robust against edge cases
                 pass
 
         # force function calling for reliability, see https://platform.openai.com/docs/api-reference/chat/create#chat-create-tool_choice
@@ -824,8 +825,9 @@ class OpenAIClient(LLMClientBase):
 
         try:
             completion = ChatCompletion.model_validate(response_data)
-        except Exception:
-            return dodoUsageStatistics()
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        return dodoUsageStatistics()
 
         if not completion.usage:
             return dodoUsageStatistics()
@@ -1041,8 +1043,8 @@ class OpenAIClient(LLMClientBase):
                 logger.error(f"Error streaming OpenAI Responses WebSocket request: {e}")
                 raise
 
-        kwargs = await self._prepare_client_kwargs_async(llm_config)
-        client = client_manager.get_async_openai_client(**kwargs)
+                kwargs = await self._prepare_client_kwargs_async(llm_config)
+                client = client_manager.get_async_openai_client(**kwargs)
 
         # Route based on payload shape: Responses uses 'input', Chat Completions uses 'messages'
         if is_responses_request:

@@ -34,11 +34,15 @@ def sanitize_unicode_surrogates(value: Any) -> Any:
         # which was blocking the asyncio event loop on large LLM payloads.
         try:
             return _SURROGATE_RE.sub("", value)
-        except Exception:
-            # Fallback: try encode with errors="replace" which replaces surrogates with �
+        except Exception as e:
+            from dodo.log import get_logger
+            get_logger(__name__).exception(f"Unexpected error: {e}")
+        # Fallback: try encode with errors="replace" which replaces surrogates with �
             try:
                 return value.encode("utf-8", errors="replace").decode("utf-8")
-            except Exception:
+            except Exception as e:
+                from dodo.log import get_logger
+                get_logger(__name__).exception(f"Unexpected error: {e}")
                 # Last resort: return original (should never reach here)
                 return value
     elif isinstance(value, dict):
@@ -119,7 +123,9 @@ def json_dumps(data, indent=2) -> str:
                 decoded = obj.decode("utf-8")
                 # Also sanitize decoded bytes
                 return decoded.replace("\x00", "")
-            except Exception:
+            except Exception as e:
+                from dodo.log import get_logger
+                get_logger(__name__).exception(f"Unexpected error: {e}")
                 # TODO: this is to handle Gemini thought signatures, b64 decode this back to bytes when sending back to Gemini
                 return base64.b64encode(obj).decode("utf-8")
         raise TypeError(f"Type {type(obj)} not serializable")

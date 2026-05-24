@@ -19,6 +19,9 @@ from dodo.services.helpers.tool_parser_helper import convert_param_to_str_value,
 from dodo.services.sandbox_config_manager import SandboxConfigManager
 from dodo.services.tool_manager import ToolManager
 from dodo.types import JsonDict, JsonValue
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 class AsyncToolSandboxBase(ABC):
@@ -445,8 +448,9 @@ class AsyncToolSandboxBase(ABC):
                 if isinstance(node, ast.AsyncFunctionDef) and node.name == self.tool.name:
                     return True
             return False
-        except Exception:
-            return False
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        return False
 
     def use_top_level_await(self) -> bool:
         """

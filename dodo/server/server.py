@@ -384,7 +384,7 @@ class SyncServer(object):
         # unfortunately we must always create default org/user
         self.default_org = await self.organization_manager.create_default_organization_async()
         self.default_user = await self.user_manager.create_default_actor_async()
-        print(f"Default user: {self.default_user} and org: {self.default_org}")
+        logger.info(f"Default user: {self.default_user} and org: {self.default_org}")
 
         # Sync environment-based providers to database (idempotent, safe for multi-pod startup)
         await self.provider_manager.sync_base_providers(base_providers=self._enabled_providers, actor=self.default_user)
@@ -528,7 +528,7 @@ class SyncServer(object):
                 logger.error(e)
                 self.mcp_clients.pop(server_name)
 
-        logger.info(f"MCP clients initialized: {len(self.mcp_clients)} active connections")
+                logger.info(f"MCP clients initialized: {len(self.mcp_clients)} active connections")
 
         # Print out the tools that are connected
         for server_name, client in self.mcp_clients.items():
@@ -645,7 +645,8 @@ class SyncServer(object):
             try:
                 main_agent.tags = list(request.tags or [])
                 main_agent.memory.git_enabled = True
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 pass
 
             # Recompile the system prompt now that git_enabled=True, so the
@@ -757,7 +758,8 @@ class SyncServer(object):
             # Preserve the user's requested tags in the response model.
             try:
                 updated_agent.tags = list(request.tags or [])
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 pass
 
         return updated_agent
@@ -1187,7 +1189,8 @@ class SyncServer(object):
             return None
         try:
             block = await self.agent_manager.get_block_with_label_async(agent_id=main_agent.id, block_label=source.name, actor=actor)
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             block = await self.block_manager.create_or_update_block_async(Block(label=source.name, value=""), actor=actor)
             await self.agent_manager.attach_block_async(agent_id=main_agent.id, block_id=block.id, actor=actor)
 
@@ -1862,7 +1865,8 @@ class SyncServer(object):
             await new_mcp_client.connect_to_server()
         except dodoMCPConnectionError:
             raise
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             logger.exception(f"Failed to connect to MCP server: {server_config.server_name}")
             raise dodoMCPConnectionError(
                 message=f"Failed to connect to MCP server: {server_config.server_name}",

@@ -414,8 +414,9 @@ class ProviderManager:
             try:
                 provider_model = await ProviderModel.read_async(db_session=session, identifier=provider_id, actor=actor)
                 return provider_model.to_pydantic()
-            except Exception:
-                # If not found, try to get as global provider (organization_id=NULL)
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
+        # If not found, try to get as global provider (organization_id=NULL)
                 from sqlalchemy import select
 
                 stmt = select(ProviderModel).where(

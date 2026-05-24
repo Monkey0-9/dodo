@@ -78,7 +78,7 @@ async def _clear_tables(async_session):
         f.write(f"\n--- Clearing tables at {datetime.now()} ---\n")
         for table in reversed(Base.metadata.sorted_tables):  # Reverse to avoid FK issues
             # If this is the block_history table, skip it
-            if table.name == "block_history":
+            if table.name in ("block_history", "organizations", "users"):
                 continue
             try:
                 f.write(f"Clearing table: {table.name}\n")
@@ -799,5 +799,20 @@ def set_dodo_environment(request, monkeypatch):
     yield request.param
     # Restore original environment
     monkeypatch.setattr(settings, "environment", original)
+
+
+@pytest.fixture(autouse=True)
+def mock_llm_client_embeddings(monkeypatch):
+    """Globally mock request_embeddings to avoid making real API calls during tests."""
+    from dodo.llm_api.llm_client_base import LLMClientBase
+    from dodo.llm_api.openai_client import OpenAIClient
+
+    async def mock_request_embeddings(self, texts, embedding_config):
+        dim = getattr(embedding_config, "embedding_dim", 1536) or 1536
+        return [[0.1] * dim for _ in texts]
+
+    monkeypatch.setattr(LLMClientBase, "request_embeddings", mock_request_embeddings)
+    monkeypatch.setattr(OpenAIClient, "request_embeddings", mock_request_embeddings)
+
 
 

@@ -2,6 +2,9 @@
 from dodo.helpers.json_helpers import json_dumps, json_loads
 from dodo.local_llm.json_parser import clean_json
 from dodo.local_llm.llm_chat_completion_wrappers.wrapper_base import LLMChatCompletionWrapper
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 PREFIX_HINT = """# Reminders:
 # Important information about yourself and the user is stored in (limited) core memory
@@ -162,7 +165,8 @@ class LLaMA3InnerMonologueWrapper(LLMChatCompletionWrapper):
             try:
                 user_msg_json = json_loads(message["content"])
                 user_msg_str = user_msg_json["message"]
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 user_msg_str = message["content"]
         else:
             # Otherwise just dump the full json
@@ -172,7 +176,8 @@ class LLaMA3InnerMonologueWrapper(LLMChatCompletionWrapper):
                     user_msg_json,
                     indent=self.json_indent,
                 )
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 user_msg_str = message["content"]
 
         prompt += user_msg_str
@@ -190,7 +195,8 @@ class LLaMA3InnerMonologueWrapper(LLMChatCompletionWrapper):
                 function_return_dict,
                 indent=self.json_indent,
             )
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             function_return_str = message["content"]
 
         prompt += function_return_str
@@ -223,7 +229,8 @@ class LLaMA3InnerMonologueWrapper(LLMChatCompletionWrapper):
                         msg_json = json_loads(message["content"])
                         if msg_json["type"] != "user_message":
                             role_str = "system"
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         pass
                 prompt += f"\n<|start_header_id|>{role_str}<|end_header_id|>\n\n{msg_str.strip()}<|eot_id|>"
 

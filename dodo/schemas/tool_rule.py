@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from dodo.schemas.enums import PrimitiveType, ToolRuleType
 from dodo.schemas.dodo_base import dodoBase
+from dodo.log import get_logger
 
 logger = logging.getLogger(__name__)
 

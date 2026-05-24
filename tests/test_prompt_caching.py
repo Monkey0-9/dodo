@@ -22,7 +22,7 @@ import os
 import uuid
 
 import pytest
-from dodo_client import Asyncdodo
+from dodo.client import DodoClient
 from dodo.client.types import MessageCreateParam
 
 logger = logging.getLogger(__name__)
@@ -249,9 +249,9 @@ def base_url() -> str:
 
 
 @pytest.fixture
-async def async_client(base_url: str) -> Asyncdodo:
+async def async_client(base_url: str) -> DodoClient:
     """Create an async dodo client."""
-    return Asyncdodo(base_url=base_url)
+    return DodoClient(base_url=base_url)
 
 
 # ------------------------------
@@ -259,7 +259,7 @@ async def async_client(base_url: str) -> Asyncdodo:
 # ------------------------------
 
 
-async def create_agent_with_large_memory(client: Asyncdodo, model: str, model_settings: dict, suffix: str):
+async def create_agent_with_large_memory(client: DodoClient, model: str, model_settings: dict, suffix: str):
     """
     Create an agent with a large memory block to exceed caching thresholds.
 
@@ -289,7 +289,7 @@ async def create_agent_with_large_memory(client: Asyncdodo, model: str, model_se
     return agent
 
 
-async def cleanup_agent(client: Asyncdodo, agent_id: str):
+async def cleanup_agent(client: DodoClient, agent_id: str):
     """Delete a test agent."""
     try:
         await client.agents.delete(agent_id)
@@ -352,7 +352,7 @@ def assert_usage_sanity(usage, context: str = ""):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("model,model_settings,min_tokens,read_field,write_field", CACHING_TEST_CONFIGS)
 async def test_prompt_caching_cache_write_then_read(
-    async_client: Asyncdodo,
+    async_client: DodoClient,
     model: str,
     model_settings: dict,
     min_tokens: int,
@@ -459,7 +459,7 @@ async def test_prompt_caching_cache_write_then_read(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("model,model_settings,min_tokens,read_field,write_field", CACHING_TEST_CONFIGS)
 async def test_prompt_caching_multiple_messages(
-    async_client: Asyncdodo,
+    async_client: DodoClient,
     model: str,
     model_settings: dict,
     min_tokens: int,
@@ -520,7 +520,7 @@ async def test_prompt_caching_multiple_messages(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("model,model_settings,min_tokens,read_field,write_field", CACHING_TEST_CONFIGS)
 async def test_prompt_caching_cache_invalidation_on_memory_update(
-    async_client: Asyncdodo,
+    async_client: DodoClient,
     model: str,
     model_settings: dict,
     min_tokens: int,
@@ -602,7 +602,7 @@ async def test_prompt_caching_cache_invalidation_on_memory_update(
 
 
 @pytest.mark.asyncio
-async def test_anthropic_system_prompt_stability(async_client: Asyncdodo):
+async def test_anthropic_system_prompt_stability(async_client: DodoClient):
     """
     Check if Anthropic system prompt is actually stable between REAL requests.
 
@@ -694,7 +694,7 @@ async def test_anthropic_system_prompt_stability(async_client: Asyncdodo):
 
 
 @pytest.mark.asyncio
-async def test_anthropic_inspect_raw_request(async_client: Asyncdodo):
+async def test_anthropic_inspect_raw_request(async_client: DodoClient):
     """
     Debug test to inspect the raw Anthropic request and see where cache_control is placed.
     """
@@ -771,7 +771,7 @@ async def test_anthropic_inspect_raw_request(async_client: Asyncdodo):
 
 
 @pytest.mark.asyncio
-async def test_anthropic_cache_control_breakpoints(async_client: Asyncdodo):
+async def test_anthropic_cache_control_breakpoints(async_client: DodoClient):
     """
     Anthropic-specific test to verify we're adding cache_control breakpoints.
 
@@ -837,7 +837,7 @@ async def test_anthropic_cache_control_breakpoints(async_client: Asyncdodo):
 
 
 @pytest.mark.asyncio
-async def test_openai_automatic_caching(async_client: Asyncdodo):
+async def test_openai_automatic_caching(async_client: DodoClient):
     """
     OpenAI-specific test to verify automatic caching works.
 
@@ -878,7 +878,7 @@ async def test_openai_automatic_caching(async_client: Asyncdodo):
 
 
 @pytest.mark.asyncio
-async def test_gemini_2_5_flash_implicit_caching(async_client: Asyncdodo):
+async def test_gemini_2_5_flash_implicit_caching(async_client: DodoClient):
     """
     Gemini-specific test to verify implicit caching works on 2.5 Flash.
 
@@ -915,7 +915,7 @@ async def test_gemini_2_5_flash_implicit_caching(async_client: Asyncdodo):
 
 
 @pytest.mark.asyncio
-async def test_gemini_3_pro_preview_implicit_caching(async_client: Asyncdodo):
+async def test_gemini_3_pro_preview_implicit_caching(async_client: DodoClient):
     """
     Gemini-specific test to verify implicit caching works on 3 Pro Preview.
 
@@ -971,7 +971,7 @@ async def test_gemini_3_pro_preview_implicit_caching(async_client: Asyncdodo):
 
 
 @pytest.mark.asyncio
-async def test_gemini_request_prefix_stability(async_client: Asyncdodo):
+async def test_gemini_request_prefix_stability(async_client: DodoClient):
     """
     Check if Gemini requests have stable prefixes between REAL requests.
 

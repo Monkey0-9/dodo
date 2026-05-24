@@ -1,23 +1,29 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api/client';
+import type { AnalyticsStats } from '../../api/types';
 
 export const StatsGrid = () => {
   const [agentCount, setAgentCount] = useState<number | null>(null);
+  const [stats, setStats] = useState<AnalyticsStats | null>(null);
 
   useEffect(() => {
-    const fetchAgentCount = async () => {
+    const fetchData = async () => {
       try {
-        const agents = await api.agents.list();
+        const [agents, analyticsData] = await Promise.all([
+          api.agents.list(),
+          api.analytics.getStats()
+        ]);
         setAgentCount(Array.isArray(agents) ? agents.length : 0);
+        setStats(analyticsData);
       } catch (error) {
         console.error('Failed to fetch stats:', error);
         setAgentCount(0);
       }
     };
-    fetchAgentCount();
+    fetchData();
   }, []);
 
-  const stats = [
+  const statsItems = [
     { 
       label: 'Active Agents', 
       value: agentCount !== null ? agentCount.toString() : '--', 
@@ -25,40 +31,40 @@ export const StatsGrid = () => {
       icon: 'smart_toy', 
       color: 'text-primary',
       trend: 'neutral',
-      data: [2, 3, 5, 6, 4, 7, (agentCount || 0) % 10]
+      data: [2, 3, 5, 6, 4, 7, agentCount || 0]
     },
     { 
-      label: 'Running Tasks', 
-      value: '112', 
-      change: 'Stable', 
+      label: 'Active Threads', 
+      value: stats ? stats.active_threads : '--', 
+      change: stats ? stats.changes.active_threads : '--', 
       icon: 'account_tree', 
       color: 'text-secondary',
-      trend: 'neutral',
-      data: [4, 6, 8, 5, 7, 6, 8]
+      trend: stats ? stats.trends.active_threads : 'neutral',
+      data: [4, 6, 8, 5, 7, 6, stats ? parseInt(stats.active_threads) % 10 : 8]
     },
     { 
-      label: 'Memory Recall Hits', 
-      value: '98.4%', 
-      change: '+0.2%', 
+      label: 'Neural Entropy', 
+      value: stats ? stats.neural_entropy : '--', 
+      change: stats ? stats.changes.neural_entropy : '--', 
       icon: 'psychology', 
       color: 'text-tertiary',
-      trend: 'up',
-      data: [7, 8, 7, 8, 8, 8, 8]
+      trend: stats ? stats.trends.neural_entropy : 'neutral',
+      data: [7, 8, 7, 8, 8, 8, stats ? Math.round(parseFloat(stats.neural_entropy) * 100) % 10 : 8]
     },
     { 
       label: 'Avg Latency', 
-      value: '142ms', 
-      change: '+12ms', 
+      value: stats ? `${stats.global_latency}ms` : '--', 
+      change: stats ? stats.changes.global_latency : '--', 
       icon: 'timer', 
       color: 'text-primary',
-      trend: 'down',
-      data: [3, 2, 4, 6, 8, 7, 5]
+      trend: stats ? stats.trends.global_latency : 'neutral',
+      data: [3, 2, 4, 6, 8, 7, stats ? parseInt(stats.global_latency) % 10 : 5]
     },
   ];
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      {stats.map((stat) => (
+      {statsItems.map((stat) => (
         <div key={stat.label} className="glass-panel p-5 rounded-xl">
           <div className="flex justify-between items-start mb-4">
             <span className="font-mono-label uppercase text-on-surface-variant text-[11px]">{stat.label}</span>
@@ -75,7 +81,7 @@ export const StatsGrid = () => {
               <div 
                 key={i} 
                 className={`w-full rounded-t-sm ${i === stat.data.length - 1 ? (stat.label === 'Avg Latency' ? 'bg-error' : 'bg-primary') : (stat.color.replace('text-', 'bg-') + '/20')}`}
-                style={{ height: `${(h / 8) * 100}%` }}
+                style={{ height: `${Math.max(1, Math.min(8, h)) / 8 * 100}%` }}
               />
             ))}
           </div>
@@ -84,3 +90,4 @@ export const StatsGrid = () => {
     </div>
   );
 };
+

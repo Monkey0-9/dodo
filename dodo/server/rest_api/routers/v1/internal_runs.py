@@ -26,7 +26,7 @@ def convert_statuses_to_enum(statuses: Optional[List[str]]) -> Optional[List[Run
     return [RunStatus(status) for status in statuses]
 
 
-@router.get("/", response_model=List[Run], operation_id="list_internal_runs")
+@router.get("", response_model=List[Run], operation_id="list_internal_runs")
 async def list_runs(
     server: "SyncServer" = Depends(get_dodo_server),
     run_id: Optional[str] = Query(None, description="Filter by a specific run ID."),

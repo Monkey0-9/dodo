@@ -1,4 +1,4 @@
-﻿import json
+import json
 import uuid
 from datetime import datetime
 from typing import AsyncGenerator, Optional, Tuple
@@ -72,6 +72,8 @@ from dodo.settings import settings, summarizer_settings
 from dodo.system import package_function_response
 from dodo.types import JsonDict
 from dodo.utils import log_telemetry, safe_create_task, safe_create_task_with_return, united_diff, validate_function_response
+logger = get_logger(__name__)
+
 
 
 class dodoAgentV2(BaseAgentV2):
@@ -417,7 +419,7 @@ class dodoAgentV2(BaseAgentV2):
                     run_id=run_id,
                 )
 
-        except:
+        except Exception:
             if self.stop_reason and not first_chunk:
                 yield f"data: {self.stop_reason.model_dump_json()}\n\n"
             raise

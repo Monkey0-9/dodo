@@ -192,9 +192,9 @@ class LLMTraceWriter:
                 self._client.close()
             except Exception as e:
                 logger.warning(f"LLMTraceWriter: Error closing client: {e}")
-            self._client = None
+                self._client = None
 
-        logger.info("LLMTraceWriter: Shutdown complete")
+                logger.info("LLMTraceWriter: Shutdown complete")
 
     def _sync_shutdown(self) -> None:
         """Synchronous shutdown handler for atexit."""
@@ -221,7 +221,8 @@ class LLMTraceWriter:
         if self._client:
             try:
                 self._client.close()
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 pass
 
 

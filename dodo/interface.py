@@ -1,4 +1,4 @@
-﻿import re
+import re
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
@@ -9,6 +9,9 @@ from dodo.helpers.json_helpers import json_loads
 from dodo.local_llm.constants import ASSISTANT_MESSAGE_CLI_SYMBOL, INNER_THOUGHTS_CLI_SYMBOL
 from dodo.schemas.message import Message
 from dodo.utils import printd
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 init(autoreset=True)
 
@@ -136,10 +139,11 @@ class CLIInterface(AgentInterface):
             else:
                 try:
                     msg_json = json_loads(msg)
-                except Exception:
-                    printd(f"{CLI_WARNING_PREFIX}failed to parse user message into json")
-                    printd_user_message("ðŸ§‘", msg)
-                    return
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
+        printd(f"{CLI_WARNING_PREFIX}failed to parse user message into json")
+        printd_user_message("🧑", msg)
+        return
         if msg_json["type"] == "user_message":
             if dump:
                 print_user_message("ðŸ§‘", msg_json["message"])
@@ -241,9 +245,10 @@ class CLIInterface(AgentInterface):
                     printd_function_message("", str(msg), color=Fore.GREEN)
                 else:
                     printd_function_message("", str(msg), color=Fore.RED)
-            except Exception:
-                print(f"{CLI_WARNING_PREFIX}did not recognize function message {type(msg)} {msg}")
-                printd_function_message("", msg)
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
+            print(f"{CLI_WARNING_PREFIX}did not recognize function message {type(msg)} {msg}")
+            printd_function_message("", msg)
 
     @staticmethod
     def print_messages(message_sequence: List[Message], dump=False):

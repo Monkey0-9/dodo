@@ -356,7 +356,7 @@ class JobManager:
         )
 
         request_config = await self._get_run_request_config(run_id)
-        print("request_config", request_config)
+        logger.info("request_config", request_config)
 
         messages = PydanticMessage.to_dodo_messages_from_list(
             messages=messages,

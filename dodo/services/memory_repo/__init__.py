@@ -9,7 +9,7 @@ try:
 except ImportError:
     from dodo.services.memory_repo.memfs_client_base import MemfsClient
 
-__all__ = [
+    __all__ = [
     "LocalStorageBackend",
     "MemfsClient",
     "StorageBackend",

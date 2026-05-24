@@ -1,4 +1,4 @@
-﻿import json
+import json
 from unittest.mock import patch
 
 import pytest
@@ -199,14 +199,15 @@ def test_array_with_trailing_comma(strict_parser):
     assert result == [1, 2, 3], "Trailing comma should be handled or partially parsed."
 
 
-def test_callback_invocation(strict_parser, capsys):
+def test_callback_invocation(strict_parser, caplog):
     """
-    Verify that on_extra_token callback is invoked and prints expected content.
+    Verify that on_extra_token callback is invoked and logs expected content.
     """
+    import logging
     input_str = '{"a":1} leftover'
-    strict_parser.parse(input_str)
-    captured = capsys.readouterr().out
-    assert "Parsed JSON with extra tokens:" in captured, "Callback default_on_extra_token should print a message."
+    with caplog.at_level(logging.INFO):
+        strict_parser.parse(input_str)
+    assert any("Parsed JSON with extra tokens:" in record.message for record in caplog.records), "Callback default_on_extra_token should log a message."
 
 
 def test_unknown_token(strict_parser):

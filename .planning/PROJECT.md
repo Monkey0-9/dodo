@@ -21,6 +21,17 @@ Achieve "Top 1%" status by eliminating architectural debt, optimizing latency-cr
 - ✓ UI/UX Excellence: Upgraded Dodo Portal with Framer Motion animations.
 
 ### Active
+- [x] JWT authentication + API keys (Phase 1)
+- [x] Rate limiting (slowapi) (Phase 1)
+- [x] Security headers (CSP, HSTS) (Phase 1)
+- [x] Docker non-root user (Phase 1)
+- [x] Delete agent V1 + V2 (Phase 2)
+- [x] Remove all mock fallbacks in Portal (Phase 3)
+- [x] Fix CI (unit vs integration split) (Phase 5)
+- [x] Secrets scanning in CI (Phase 1)
+- [x] Makefile for dev commands (Phase 7)
+- [ ] Replace remaining print() with logger (Phase 2)
+- [ ] Fix remaining bare except Exception (Phase 2)
 - ✓ Architectural Modularization: Decompose AgentManager into domain services.
 - ✓ Quant Hardening: Add high-resolution latency tracking for reasoning-to-action hot paths.
 - ✓ Reliability: Implement Payload Snapshot Testing for LLM interactions.

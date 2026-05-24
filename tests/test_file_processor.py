@@ -1,4 +1,4 @@
-﻿from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import openai
 import pytest
@@ -67,36 +67,42 @@ class TestOpenAIEmbedder:
     @pytest.mark.asyncio
     async def test_token_limit_retry_splits_batch(self, embedder, mock_user):
         """Test that token limit errors trigger batch splitting and retry"""
-        # create a mock token limit error
-        mock_error_body = {"error": {"code": "max_tokens_per_request", "message": "Requested 319270 tokens, max 300000 tokens per request"}}
-        token_limit_error = openai.BadRequestError(message="Token limit exceeded", response=Mock(status_code=400), body=mock_error_body)
+        from dodo.settings import settings
+        original_pg_uri = settings.pg_uri
+        settings.pg_uri = "postgresql://fake"
+        try:
+            # create a mock token limit error
+            mock_error_body = {"error": {"code": "max_tokens_per_request", "message": "Requested 319270 tokens, max 300000 tokens per request"}}
+            token_limit_error = openai.BadRequestError(message="Token limit exceeded", response=Mock(status_code=400), body=mock_error_body)
 
-        # first call fails with token limit, subsequent calls succeed
-        call_count = 0
+            # first call fails with token limit, subsequent calls succeed
+            call_count = 0
 
-        async def mock_request_embeddings(inputs, embedding_config):
-            nonlocal call_count
-            call_count += 1
-            if call_count == 1 and len(inputs) == 4:  # first call with full batch
-                raise token_limit_error
-            elif len(inputs) == 2:  # split batches succeed
-                return [[0.1, 0.2], [0.3, 0.4]] if call_count == 2 else [[0.5, 0.6], [0.7, 0.8]]
-            else:
-                return [[0.1, 0.2]] * len(inputs)
+            async def mock_request_embeddings(inputs, embedding_config):
+                nonlocal call_count
+                call_count += 1
+                if call_count == 1 and len(inputs) == 4:  # first call with full batch
+                    raise token_limit_error
+                elif len(inputs) == 2:  # split batches succeed
+                    return [[0.1, 0.2], [0.3, 0.4]] if call_count == 2 else [[0.5, 0.6], [0.7, 0.8]]
+                else:
+                    return [[0.1, 0.2]] * len(inputs)
 
-        embedder.client.request_embeddings = AsyncMock(side_effect=mock_request_embeddings)
+            embedder.client.request_embeddings = AsyncMock(side_effect=mock_request_embeddings)
 
-        chunks = ["chunk 1", "chunk 2", "chunk 3", "chunk 4"]
-        file_id = "test_file"
-        source_id = "test_source"
+            chunks = ["chunk 1", "chunk 2", "chunk 3", "chunk 4"]
+            file_id = "test_file"
+            source_id = "test_source"
 
-        passages = await embedder.generate_embedded_passages(file_id, source_id, chunks, mock_user)
+            passages = await embedder.generate_embedded_passages(file_id, source_id, chunks, mock_user)
 
-        # should still get all 4 passages despite the retry
-        assert len(passages) == 4
-        assert all(len(p.embedding) == 4096 for p in passages)  # padded to MAX_EMBEDDING_DIM
-        # verify multiple calls were made (original + retries)
-        assert call_count >= 2
+            # should still get all 4 passages despite the retry
+            assert len(passages) == 4
+            assert all(len(p.embedding) == 4096 for p in passages)  # padded to MAX_EMBEDDING_DIM
+            # verify multiple calls were made (original + retries)
+            assert call_count >= 2
+        finally:
+            settings.pg_uri = original_pg_uri
 
     @pytest.mark.asyncio
     async def test_token_limit_error_detection(self, embedder):

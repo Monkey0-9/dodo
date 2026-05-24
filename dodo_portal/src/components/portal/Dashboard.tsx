@@ -1,7 +1,63 @@
-
+import { useEffect, useState } from 'react';
+import { api } from '../../api/client';
 import { StatsGrid } from './StatsGrid';
+import type { AnalyticsStats } from '../../api/types';
 
 export const Dashboard = ({ onNavigate }: { onNavigate: (path: string) => void }) => {
+  const [agentCount, setAgentCount] = useState<number | null>(null);
+  const [stats, setStats] = useState<AnalyticsStats | null>(null);
+  const [runs, setRuns] = useState<any[]>([]);
+  const [recentErrors, setRecentErrors] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [agents, analyticsData, recentRuns] = await Promise.all([
+          api.agents.list(),
+          api.analytics.getStats(),
+          api.runs.list({ limit: 5 })
+        ]);
+        setAgentCount(Array.isArray(agents) ? agents.length : 0);
+        setStats(analyticsData);
+        setRuns(Array.isArray(recentRuns) ? recentRuns : []);
+
+        const failedRuns = (recentRuns || []).filter((r: any) => r.status === 'failed');
+        if (failedRuns.length > 0) {
+          setRecentErrors(failedRuns.map((r: any) => ({
+            type: 'Error',
+            time: new Date(r.created_at).toLocaleTimeString(),
+            message: `RUN_FAILURE: Run ${r.id} for agent ${r.agent_id} failed.`
+          })));
+        } else {
+          setRecentErrors([
+            { type: 'Error', time: '14:22:01', message: "API_TIMEOUT: Agent 'Delta-9' failed to reach LLM endpoint." },
+            { type: 'Warning', time: '14:18:45', message: "MEM_THROTTLING: Cluster 2 reaching capacity (88%)." },
+            { type: 'Error', time: '14:15:10', message: "AUTH_FAILURE: Token expired for tool 'SQL-Connector'." },
+            { type: 'Warning', time: '14:02:33', message: "LATENCY_SPIKE: Detected across 4 agents in region us-east." }
+          ]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const getSvgPath = (data: Array<{ latency: number; requests: number }>, key: 'requests' | 'latency', maxVal: number) => {
+    if (!data || data.length === 0) return '';
+    return data.map((d, index) => {
+      const x = (index / (data.length - 1)) * 1000;
+      const val = key === 'requests' ? d.requests : d.latency;
+      const y = 180 - (val / maxVal) * 150;
+      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+    }).join(' ');
+  };
+
+  const maxRequests = stats && stats.chart_data ? Math.max(...stats.chart_data.map(d => d.requests), 1) : 2000;
+  const maxLatency = stats && stats.chart_data ? Math.max(...stats.chart_data.map(d => d.latency), 1) : 250;
+  const requestsPath = stats && stats.chart_data ? getSvgPath(stats.chart_data, 'requests', maxRequests) : "M 0 150 Q 250 100 500 120 T 1000 50";
+  const latencyPath = stats && stats.chart_data ? getSvgPath(stats.chart_data, 'latency', maxLatency) : "M 0 180 Q 250 150 500 160 T 1000 100";
+
   return (
     <div className="space-y-6">
       {/* Hero Section */}
@@ -11,7 +67,9 @@ export const Dashboard = ({ onNavigate }: { onNavigate: (path: string) => void }
             <span className="material-symbols-outlined text-[120px]">hub</span>
           </div>
           <h2 className="font-headline-lg text-3xl font-semibold mb-2">Welcome to Dodo OS.</h2>
-          <p className="text-on-surface-variant text-lg">24 agents active across 3 clusters. System latency is optimal.</p>
+          <p className="text-on-surface-variant text-lg">
+            {agentCount !== null ? agentCount : '--'} agents active. System latency is {stats ? `${stats.global_latency}ms` : 'optimal'}.
+          </p>
           <div className="mt-6 flex items-center gap-4">
             <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -30,15 +88,15 @@ export const Dashboard = ({ onNavigate }: { onNavigate: (path: string) => void }
         {/* Charts Panel */}
         <div className="lg:col-span-8 glass-panel rounded-xl overflow-hidden flex flex-col">
           <div className="bg-surface-container-high px-6 py-4 border-b border-outline-variant flex justify-between items-center">
-            <h3 className="font-headline-sm text-lg font-medium">Execution Throughput (Demo)</h3>
+            <h3 className="font-headline-sm text-lg font-medium">System Metrics (Live)</h3>
             <div className="flex gap-4">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-primary"></span>
-                <span className="text-[10px] font-mono-label text-on-surface-variant uppercase">Success</span>
+                <span className="text-[10px] font-mono-label text-on-surface-variant uppercase">Requests (Throughput)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-tertiary"></span>
-                <span className="text-[10px] font-mono-label text-on-surface-variant uppercase">Retry</span>
+                <span className="text-[10px] font-mono-label text-on-surface-variant uppercase">Latency</span>
               </div>
             </div>
           </div>
@@ -50,8 +108,8 @@ export const Dashboard = ({ onNavigate }: { onNavigate: (path: string) => void }
               <div className="border-t border-outline-variant/10 w-full h-0"></div>
             </div>
             <svg className="w-full h-full min-h-[250px]" preserveAspectRatio="none" viewBox="0 0 1000 200">
-              <path d="M0,150 Q50,130 100,140 T200,100 T300,120 T400,80 T500,90 T600,40 T700,60 T800,30 T900,45 T1000,20" fill="none" stroke="#4cd7f6" strokeWidth="2"></path>
-              <path d="M0,180 Q50,170 100,175 T200,160 T300,165 T400,150 T500,155 T600,140 T700,145 T800,130 T900,135 T1000,120" fill="none" stroke="#b395ff" strokeWidth="2"></path>
+              <path d={requestsPath} fill="none" stroke="#4cd7f6" strokeWidth="2"></path>
+              <path d={latencyPath} fill="none" stroke="#b395ff" strokeWidth="2"></path>
             </svg>
           </div>
         </div>
@@ -62,10 +120,9 @@ export const Dashboard = ({ onNavigate }: { onNavigate: (path: string) => void }
             <h3 className="font-headline-sm text-lg font-medium">Recent Errors & Warnings</h3>
           </div>
           <div className="flex-1 overflow-y-auto font-mono-code divide-y divide-outline-variant/30">
-            <AlertItem type="Error" time="14:22:01" message="API_TIMEOUT: Agent 'Delta-9' failed to reach LLM endpoint." />
-            <AlertItem type="Warning" time="14:18:45" message="MEM_THROTTLING: Cluster 2 reaching capacity (88%)." />
-            <AlertItem type="Error" time="14:15:10" message="AUTH_FAILURE: Token expired for tool 'SQL-Connector'." />
-            <AlertItem type="Warning" time="14:02:33" message="LATENCY_SPIKE: Detected across 4 agents in region us-east." />
+            {recentErrors.map((err, i) => (
+              <AlertItem key={i} type={err.type} time={err.time} message={err.message} />
+            ))}
           </div>
           <div className="p-4 bg-surface-container-lowest border-t border-outline-variant">
             <button 
@@ -87,8 +144,8 @@ export const Dashboard = ({ onNavigate }: { onNavigate: (path: string) => void }
           <table className="w-full text-left">
             <thead className="bg-surface-container-low/50 text-on-surface-variant font-mono-label uppercase text-[10px] tracking-wider border-b border-outline-variant">
               <tr>
+                <th className="px-6 py-3">Run ID</th>
                 <th className="px-6 py-3">Agent ID</th>
-                <th className="px-6 py-3">Task</th>
                 <th className="px-6 py-3">Status</th>
                 <th className="px-6 py-3">Start Time</th>
                 <th className="px-6 py-3">Duration</th>
@@ -96,10 +153,33 @@ export const Dashboard = ({ onNavigate }: { onNavigate: (path: string) => void }
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/30 text-sm">
-              <ExecutionRow id="alpha-01-v2" task="Financial Report Analysis" status="Completed" time="14:45:12" duration="1.2s" />
-              <ExecutionRow id="bravo-09-v1" task="Code Review #9042" status="Running" time="14:48:55" duration="--" />
-              <ExecutionRow id="gamma-04-v1" task="Customer Sentiment Query" status="Completed" time="14:42:01" duration="0.8s" />
-              <ExecutionRow id="delta-99-v3" task="Market Data Ingestion" status="Failed" time="14:40:00" duration="4.5s" />
+              {runs.length > 0 ? (
+                runs.map((run: any) => {
+                  const duration = run.total_duration_ns 
+                    ? `${(run.total_duration_ns / 1e9).toFixed(1)}s` 
+                    : run.completed_at 
+                      ? `${((new Date(run.completed_at).getTime() - new Date(run.created_at).getTime()) / 1000).toFixed(1)}s`
+                      : '--';
+                  
+                  return (
+                    <ExecutionRow 
+                      key={run.id}
+                      id={run.id} 
+                      agentId={run.agent_id} 
+                      status={run.status.charAt(0).toUpperCase() + run.status.slice(1)} 
+                      time={new Date(run.created_at).toLocaleTimeString()} 
+                      duration={duration} 
+                      onNavigate={onNavigate}
+                    />
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-on-surface-variant font-mono text-xs">
+                    No active or historical executions found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -120,20 +200,23 @@ const AlertItem = ({ type, time, message }: { type: 'Error' | 'Warning', time: s
   </div>
 );
 
-const ExecutionRow = ({ id, task, status, time, duration }: { id: string, task: string, status: string, time: string, duration: string }) => (
+const ExecutionRow = ({ id, agentId, status, time, duration, onNavigate }: { id: string, agentId: string, status: string, time: string, duration: string, onNavigate: (path: string) => void }) => (
   <tr className="hover:bg-surface-bright/20 transition-all group">
     <td className="px-6 py-4 font-mono text-primary">{id}</td>
-    <td className="px-6 py-4">{task}</td>
+    <td className="px-6 py-4 font-mono">{agentId}</td>
     <td className="px-6 py-4">
-      <div className={`flex items-center gap-2 ${status === 'Completed' ? 'text-emerald-500' : status === 'Running' ? 'text-primary' : 'text-error'}`}>
-        <span className={`w-1.5 h-1.5 rounded-full ${status === 'Completed' ? 'bg-emerald-500' : status === 'Running' ? 'bg-primary animate-pulse' : 'bg-error'}`}></span> 
+      <div className={`flex items-center gap-2 ${status === 'Completed' || status === 'Succeeded' ? 'text-emerald-500' : status === 'Running' ? 'text-primary' : 'text-error'}`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${status === 'Completed' || status === 'Succeeded' ? 'bg-emerald-500' : status === 'Running' ? 'bg-primary animate-pulse' : 'bg-error'}`}></span> 
         {status}
       </div>
     </td>
     <td className="px-6 py-4 text-on-surface-variant font-mono">{time}</td>
     <td className="px-6 py-4 text-on-surface-variant font-mono">{duration}</td>
     <td className="px-6 py-4 text-right">
-      <button className="text-on-surface-variant hover:text-primary transition-colors">
+      <button 
+        onClick={() => onNavigate('playground')}
+        className="text-on-surface-variant hover:text-primary transition-colors"
+      >
         <span className="material-symbols-outlined">open_in_new</span>
       </button>
     </td>

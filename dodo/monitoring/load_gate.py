@@ -91,7 +91,8 @@ class LoadGate:
                 self._maybe_degrade_admission(now, wait_ms)
             else:
                 self._maybe_recover_admission(now)
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             pass  # Never let gating crash the request path
 
     # ------------------------------------------------------------------
@@ -114,7 +115,8 @@ class LoadGate:
                 self._maybe_degrade_fg(now, count)
             else:
                 self._maybe_recover_fg(now)
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             pass
 
     def _check_bg(self, count: int) -> None:
@@ -133,7 +135,8 @@ class LoadGate:
                 self._maybe_degrade_bg(now, count)
             else:
                 self._maybe_recover_bg(now)
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             pass
 
     def _maybe_degrade_fg(self, now: float, count: int) -> None:

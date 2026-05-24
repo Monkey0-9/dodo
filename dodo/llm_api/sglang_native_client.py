@@ -80,6 +80,7 @@ class SGLangNativeClient:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.get(f"{self.base_url}/health")
                 return response.status_code == 200
-        except Exception:
-            return False
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        return False
 

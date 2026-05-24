@@ -4,6 +4,9 @@ from ...errors import LLMJSONParsingError
 from ...helpers.json_helpers import json_dumps, json_loads
 from ..json_parser import clean_json
 from .wrapper_base import LLMChatCompletionWrapper
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 # A configurable model agnostic wrapper.
@@ -161,14 +164,16 @@ class ConfigurableJSONWrapper(LLMChatCompletionWrapper):
             try:
                 user_msg_json = json_loads(message["content"])
                 user_msg_str = user_msg_json["message"]
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 user_msg_str = message["content"]
         else:
             # Otherwise just dump the full json
             try:
                 user_msg_json = json_loads(message["content"])
                 user_msg_str = json_dumps(user_msg_json, indent=self.json_indent)
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 user_msg_str = message["content"]
 
         prompt += user_msg_str
@@ -183,7 +188,8 @@ class ConfigurableJSONWrapper(LLMChatCompletionWrapper):
             # indent the function replies
             function_return_dict = json_loads(message["content"])
             function_return_str = json_dumps(function_return_dict, indent=0)
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             function_return_str = message["content"]
 
         prompt += function_return_str

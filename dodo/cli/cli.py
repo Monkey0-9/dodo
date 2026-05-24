@@ -28,6 +28,12 @@ def server(
 
     Optimized for high-concurrency and persistent memory management.
     """
+    if isinstance(type, str):
+        try:
+            type = ServerChoice(type)
+        except ValueError:
+            pass
+
     if type == ServerChoice.rest_api:
         pass
 
@@ -47,6 +53,8 @@ def server(
 
 def version() -> str:
     import dodo
+    import typer
 
-    print(dodo.__version__)
+    typer.echo(dodo.__version__)
+    return dodo.__version__
 

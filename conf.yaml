@@ -1,4 +1,4 @@
-﻿# dodo Configuration File
+# dodo Configuration File
 # Place at ~/.dodo/conf.yaml, ./conf.yaml, or set dodo_CONFIG_PATH
 # Environment variables take precedence over config file values
 #
@@ -365,7 +365,7 @@ tool:
     list_tools_timeout: 30.0
     execute_tool_timeout: 60.0
     read_from_config: false
-    disable_stdio: true
+    disable_stdio: false
 
 # =============================================================================
 # Datadog Agent Settings (-> DD_*)

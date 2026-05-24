@@ -18,7 +18,7 @@ from typing import Generator, List
 import pytest
 import requests
 from dotenv import load_dotenv
-from dodo_client import APIError, Asyncdodo, dodo
+from dodo.client import APIError, DodoClient, dodo
 from dodo.client.types import AgentState, MessageCreateParam
 
 logger = logging.getLogger(__name__)
@@ -86,11 +86,11 @@ def client(server_url: str) -> Generator[dodo, None, None]:
 
 
 @pytest.fixture(scope="function")
-def async_client(server_url: str) -> Generator[Asyncdodo, None, None]:
+def async_client(server_url: str) -> Generator[DodoClient, None, None]:
     """
     Creates and returns an asynchronous dodo REST client for testing.
     """
-    async_client_instance = Asyncdodo(base_url=server_url)
+    async_client_instance = DodoClient(base_url=server_url)
     yield async_client_instance
 
 
@@ -314,7 +314,7 @@ class TestOverrideModelAsync:
     @pytest.mark.asyncio
     async def test_override_model_async(
         self,
-        async_client: Asyncdodo,
+        async_client: DodoClient,
         client: dodo,
         agent_with_gpt4o_mini: AgentState,
     ) -> None:

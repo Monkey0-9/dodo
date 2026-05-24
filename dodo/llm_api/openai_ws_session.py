@@ -26,6 +26,7 @@ from openai.types.responses import (
     ResponseIncompleteEvent,
 )
 from openai.types.responses.response_stream_event import ResponseStreamEvent
+from dodo.log import get_logger
 
 logger = logging.getLogger(__name__)
 
@@ -104,17 +105,19 @@ class OpenAIWSSessionManager:
         if self._connection_manager is not None:
             try:
                 await self._connection_manager.__aexit__(None, None, None)
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 logger.warning("Error closing WebSocket connection", exc_info=True)
-            self._connection_manager = None
-            self._connection = None
+                self._connection_manager = None
+                self._connection = None
 
         if self._client is not None:
             try:
                 await self._client.close()
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 logger.warning("Error closing AsyncOpenAI client", exc_info=True)
-            self._client = None
+                self._client = None
 
     # ------------------------------------------------------------------ #
     #  Streaming

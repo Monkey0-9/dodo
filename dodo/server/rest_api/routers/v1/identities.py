@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 router = APIRouter(prefix="/identities", tags=["identities"])
 
 
-@router.get("/", tags=["identities"], response_model=List[Identity], operation_id="list_identities", deprecated=True)
+@router.get("", tags=["identities"], response_model=List[Identity], operation_id="list_identities", deprecated=True)
 async def list_identities(
     name: Optional[str] = Query(None),
     project_id: Optional[str] = Query(
@@ -93,7 +93,7 @@ async def retrieve_identity(
     return await server.identity_manager.get_identity_async(identity_id=identity_id, actor=actor)
 
 
-@router.post("/", tags=["identities"], response_model=Identity, operation_id="create_identity", deprecated=True)
+@router.post("", tags=["identities"], response_model=Identity, operation_id="create_identity", deprecated=True)
 async def create_identity(
     identity: IdentityCreate = Body(...),
     server: "SyncServer" = Depends(get_dodo_server),
@@ -106,7 +106,7 @@ async def create_identity(
     return await server.identity_manager.create_identity_async(identity=identity, actor=actor)
 
 
-@router.put("/", tags=["identities"], response_model=Identity, operation_id="upsert_identity", deprecated=True)
+@router.put("", tags=["identities"], response_model=Identity, operation_id="upsert_identity", deprecated=True)
 async def upsert_identity(
     identity: IdentityUpsert = Body(...),
     server: "SyncServer" = Depends(get_dodo_server),

@@ -1,18 +1,34 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 import { Maximize2 } from 'lucide-react';
-
-const data = [
-  { time: '00:00', latency: 120, requests: 400 },
-  { time: '04:00', latency: 150, requests: 600 },
-  { time: '08:00', latency: 142, requests: 1200 },
-  { time: '12:00', latency: 180, requests: 1500 },
-  { time: '16:00', latency: 160, requests: 1100 },
-  { time: '20:00', latency: 130, requests: 800 },
-  { time: '23:59', latency: 125, requests: 500 },
-];
+import { useEffect, useState } from 'react';
+import { api } from '../api/client';
+import type { AnalyticsStats } from '../api/types';
 
 export const MainChart = () => {
+  const [chartData, setChartData] = useState<AnalyticsStats['chart_data']>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        const data = await api.analytics.getStats();
+        setChartData(data.chart_data);
+      } catch (error) {
+        console.error('Failed to fetch chart data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchChartData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="glass-panel p-8 h-[450px] animate-pulse bg-white/5" />
+    );
+  }
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.98 }}
@@ -40,7 +56,7 @@ export const MainChart = () => {
       
       <div className="flex-1 w-full min-h-0 -ml-4">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="colorLatency" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.2}/>

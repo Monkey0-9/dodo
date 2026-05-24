@@ -167,17 +167,17 @@ class QueuingInterface(AgentInterface):
         """Handle reception of a user message"""
         assert msg_obj is not None, "QueuingInterface requires msg_obj references for metadata"
         if self.debug:
-            print(msg)
-            print(vars(msg_obj))
-            print(msg_obj.created_at.isoformat())
+            logger.info(msg)
+            logger.info(vars(msg_obj))
+            logger.info(msg_obj.created_at.isoformat())
 
     def internal_monologue(self, msg: str, msg_obj: Optional[Message] = None, chunk_index: Optional[int] = None) -> None:
         """Handle the agent's internal monologue"""
         assert msg_obj is not None, "QueuingInterface requires msg_obj references for metadata"
         if self.debug:
-            print(msg)
-            print(vars(msg_obj))
-            print(msg_obj.created_at.isoformat())
+            logger.info(msg)
+            logger.info(vars(msg_obj))
+            logger.info(msg_obj.created_at.isoformat())
 
         new_message = {"internal_monologue": msg}
 
@@ -194,10 +194,10 @@ class QueuingInterface(AgentInterface):
         # assert msg_obj is not None, "QueuingInterface requires msg_obj references for metadata"
 
         if self.debug:
-            print(msg)
+            logger.info(msg)
             if msg_obj is not None:
-                print(vars(msg_obj))
-                print(msg_obj.created_at.isoformat())
+                logger.info(vars(msg_obj))
+                logger.info(msg_obj.created_at.isoformat())
 
         new_message = {"assistant_message": msg}
 
@@ -223,9 +223,9 @@ class QueuingInterface(AgentInterface):
         assert msg_obj is not None, "QueuingInterface requires msg_obj references for metadata"
 
         if self.debug:
-            print(msg)
-            print(vars(msg_obj))
-            print(msg_obj.created_at.isoformat())
+            logger.info(msg)
+            logger.info(vars(msg_obj))
+            logger.info(msg_obj.created_at.isoformat())
 
         if msg.startswith("Running "):
             msg = msg.replace("Running ", "")
@@ -465,7 +465,7 @@ class StreamingServerInterface(AgentChunkStreamingInterface):
         #                 )
         #             )
         #     except Exception as e:
-        #         print(f"Failed to interpret reasoning content ({self.expect_reasoning_content_buffer}) as JSON: {e}")
+        #         logger.info(f"Failed to interpret reasoning content ({self.expect_reasoning_content_buffer}) as JSON: {e}")
 
     def step_complete(self):
         """Signal from the agent that one 'step' finished (step = LLM response + tool execution)"""
@@ -585,11 +585,11 @@ class StreamingServerInterface(AgentChunkStreamingInterface):
                 )
 
             except json.JSONDecodeError as e:
-                print(f"Failed to interpret reasoning content ({self.expect_reasoning_content_buffer}) as JSON: {e}")
+                logger.info(f"Failed to interpret reasoning content ({self.expect_reasoning_content_buffer}) as JSON: {e}")
 
                 return None
             except demjson.JSONDecodeError as e:
-                print(f"Failed to interpret reasoning content ({self.expect_reasoning_content_buffer}) as JSON: {e}")
+                logger.info(f"Failed to interpret reasoning content ({self.expect_reasoning_content_buffer}) as JSON: {e}")
 
                 return None
             # Else,
@@ -608,7 +608,7 @@ class StreamingServerInterface(AgentChunkStreamingInterface):
             # return processed_chunk
 
             # TODO eventually output as tool call outputs?
-            # print(f"Hiding content delta stream: '{message_delta.content}'")
+            # logger.info(f"Hiding content delta stream: '{message_delta.content}'")
             # return None
         elif message_delta.content is not None:
             if prev_message_type and prev_message_type != "reasoning_message":
@@ -709,7 +709,7 @@ class StreamingServerInterface(AgentChunkStreamingInterface):
                         and tool_call_delta.get("id") is None
                     ):
                         processed_chunk = None
-                        print("skipping empty chunk...")
+                        logger.info("skipping empty chunk...")
                     else:
                         if prev_message_type and prev_message_type != "tool_call_message":
                             message_index += 1
@@ -928,9 +928,9 @@ class StreamingServerInterface(AgentChunkStreamingInterface):
                 #     # prefix_str = f'{{"\\"{self.inner_thoughts_kwarg}\\":\\"}}'
                 #     prefix_str = f'{{"{self.inner_thoughts_kwarg}":'
                 #     if self.function_args_buffer.startswith(prefix_str):
-                #         print(f"Found prefix!!!: {self.function_args_buffer}")
+                #         logger.info(f"Found prefix!!!: {self.function_args_buffer}")
                 #     else:
-                #         print(f"No prefix found: {self.function_args_buffer}")
+                #         logger.info(f"No prefix found: {self.function_args_buffer}")
 
                 # tool_call_delta = {}
                 # if tool_call.id:
@@ -1006,7 +1006,7 @@ class StreamingServerInterface(AgentChunkStreamingInterface):
                     and tool_call_delta.get("id") is None
                 ):
                     processed_chunk = None
-                    print("skipping empty chunk...")
+                    logger.info("skipping empty chunk...")
                 else:
                     if prev_message_type and prev_message_type != "tool_call_message":
                         message_index += 1
@@ -1115,7 +1115,7 @@ class StreamingServerInterface(AgentChunkStreamingInterface):
 
         data: {"function_return": "None", "status": "success", "date": "2024-02-29T06:07:50.847262+00:00"}
         """
-        # print("Processed CHUNK:", chunk)
+        # logger.info("Processed CHUNK:", chunk)
 
         # Example where we just pass through the raw stream from the underlying OpenAI SSE stream
         # processed_chunk = chunk.model_dump_json(exclude_none=True)
@@ -1227,9 +1227,10 @@ class StreamingServerInterface(AgentChunkStreamingInterface):
                     # }
                     try:
                         func_args = parse_json(function_call.function.arguments)
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         func_args = function_call.function.arguments
-                    # processed_chunk = {
+                        # processed_chunk = {
                     #     "function_call": f"{function_call.function.name}({func_args})",
                     #     "id": str(msg_obj.id),
                     #     "date": msg_obj.created_at.isoformat(),
@@ -1257,12 +1258,13 @@ class StreamingServerInterface(AgentChunkStreamingInterface):
                             )
                             self._push_to_buffer(processed_chunk)
                         except Exception as e:
-                            print(f"Failed to parse function message: {e}")
+                            logger.info(f"Failed to parse function message: {e}")
 
                 else:
                     try:
                         func_args = parse_json(function_call.function.arguments)
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         logger.warning(f"Failed to parse function arguments: {function_call.function.arguments}")
                         func_args = {}
 

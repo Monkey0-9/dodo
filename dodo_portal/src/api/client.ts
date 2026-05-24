@@ -1,9 +1,19 @@
 import axios from 'axios';
+import type { AgentState, Message, Tool, AnalyticsStats, TopologyData } from './types';
 
 // Using relative paths to leverage Vite proxy in development
 // and backend serving in production
 const API_BASE_URL = '/v1';
 const WS_BASE_URL = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/v1`;
+
+export class ApiError extends Error {
+  public status?: number;
+  constructor(status?: number, message?: string) {
+    super(message);
+    this.status = status;
+    this.name = 'ApiError';
+  }
+}
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -13,41 +23,40 @@ const apiClient = axios.create({
   },
 });
 
-// Mock data for initial bootstrap or development without backend
-const MOCK_AGENTS = [
-  { id: 'agent_8819_xa', name: 'AutoCoder_V4', agent_type: 'coding_agent', status: 'active', persona: 'Expert software engineer.', human: 'Wants efficient code.' },
-  { id: 'agent_2241_zb', name: 'DataScribe_X', agent_type: 'reasoning_agent', status: 'active', persona: 'Data analyst.', human: 'Needs reports.' }
-];
+const handleApiError = (error: unknown) => {
+  if (axios.isAxiosError(error)) {
+    throw new ApiError(error.response?.status, error.response?.data?.detail || error.message);
+  }
+  throw error;
+};
 
 export const api = {
   agents: {
-    list: async () => {
+    list: async (): Promise<AgentState[]> => {
       try {
         const response = await apiClient.get('/agents');
         return response.data;
       } catch (error) {
-        console.warn('Backend connection failed, using mock agents.');
-        return MOCK_AGENTS;
+        throw handleApiError(error);
       }
     },
-    create: async (data: Record<string, unknown>) => {
+    create: async (data: Partial<AgentState>): Promise<AgentState> => {
       try {
         const response = await apiClient.post('/agents', data);
         return response.data;
       } catch (error) {
-        console.warn('Backend connection failed, simulating creation.');
-        return { ...data, id: `agent_${Math.random().toString(36).substr(2, 4)}`, status: 'active' };
+        throw handleApiError(error);
       }
     },
-    get: async (id: string) => {
+    get: async (id: string): Promise<AgentState> => {
       try {
         const response = await apiClient.get(`/agents/${id}`);
         return response.data;
       } catch (error) {
-        return MOCK_AGENTS.find(a => a.id === id) || MOCK_AGENTS[0];
+        throw handleApiError(error);
       }
     },
-    sendMessage: async (id: string, message: string) => {
+    sendMessage: async (id: string, message: string): Promise<any> => {
       try {
         const response = await apiClient.post(`/agents/${id}/messages`, {
           messages: [{ role: 'user', content: message }],
@@ -55,15 +64,15 @@ export const api = {
         });
         return response.data;
       } catch (error) {
-        return { role: 'assistant', content: 'Connection to AI Core is currently offline. Please check .env configuration.' };
+        throw handleApiError(error);
       }
     },
-    listMessages: async (id: string) => {
+    listMessages: async (id: string): Promise<Message[]> => {
       try {
         const response = await apiClient.get(`/agents/${id}/messages`);
         return response.data;
       } catch (error) {
-        return [{ role: 'assistant', content: 'System is in offline mode.' }];
+        throw handleApiError(error);
       }
     },
     getStreamUrl: (id: string) => {
@@ -71,44 +80,150 @@ export const api = {
     }
   },
   tools: {
-    list: async () => {
+    list: async (): Promise<Tool[]> => {
       try {
         const response = await apiClient.get('/tools');
         return response.data;
       } catch (error) {
-        return [];
+        throw handleApiError(error);
       }
     }
   },
   providers: {
-    list: async () => {
+    list: async (): Promise<any[]> => {
       try {
         const response = await apiClient.get('/providers');
         return response.data;
       } catch (error) {
-        return [
-          { id: 'p1', name: 'OpenAI', provider_type: 'openai', base_url: 'https://api.openai.com/v1' },
-          { id: 'p2', name: 'Anthropic', provider_type: 'anthropic', base_url: 'https://api.anthropic.com/v1' }
-        ];
+        throw handleApiError(error);
       }
     },
-    create: async (data: Record<string, unknown>) => {
-      const response = await apiClient.post('/providers', data);
-      return response.data;
+    create: async (data: Record<string, unknown>): Promise<any> => {
+      try {
+        const response = await apiClient.post('/providers', data);
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
     }
   },
   organizations: {
-    list: async () => {
+    list: async (): Promise<any[]> => {
       try {
         const response = await apiClient.get('/orgs');
         return response.data;
       } catch (error) {
-        return [{ id: 'org_dd_8923456', name: 'Dodo Global Operations' }];
+        throw handleApiError(error);
       }
     },
-    update: async (id: string, data: Record<string, unknown>) => {
-      const response = await apiClient.patch(`/orgs?org_id=${id}`, data);
-      return response.data;
+    create: async (data: any): Promise<any> => {
+      try {
+        const response = await apiClient.post('/orgs', data);
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    },
+    update: async (id: string, data: any): Promise<any> => {
+      try {
+        const response = await apiClient.patch(`/orgs?org_id=${id}`, data);
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    },
+    delete: async (id: string): Promise<any> => {
+      try {
+        const response = await apiClient.delete(`/orgs?org_id=${id}`);
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    }
+  },
+  blocks: {
+    list: async (): Promise<any[]> => {
+      try {
+        const response = await apiClient.get('/blocks');
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    },
+    create: async (data: any): Promise<any> => {
+      try {
+        const response = await apiClient.post('/blocks', data);
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    },
+    delete: async (id: string): Promise<any> => {
+      try {
+        const response = await apiClient.delete(`/blocks/${id}`);
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    }
+  },
+  runs: {
+    list: async (params?: any): Promise<any[]> => {
+      try {
+        const response = await apiClient.get('/runs', { params });
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    },
+    delete: async (id: string): Promise<any> => {
+      try {
+        const response = await apiClient.delete(`/runs/${id}`);
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    }
+  },
+  analytics: {
+    getStats: async (): Promise<AnalyticsStats> => {
+      try {
+        const response = await apiClient.get('/analytics/stats');
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    },
+    getTopology: async (): Promise<TopologyData> => {
+      try {
+        const response = await apiClient.get('/analytics/topology');
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    }
+  },
+  groups: {
+    list: async (): Promise<any[]> => {
+      try {
+        const response = await apiClient.get('/groups');
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    },
+    create: async (data: any): Promise<any> => {
+      try {
+        const response = await apiClient.post('/groups', data);
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    }
+  },
+  logs: {
+    getStreamUrl: () => {
+      return `${WS_BASE_URL}/logs/stream`;
     }
   }
 };

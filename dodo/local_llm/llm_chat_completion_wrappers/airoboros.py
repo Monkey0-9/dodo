@@ -1,7 +1,10 @@
-﻿from ...errors import LLMJSONParsingError
+from ...errors import LLMJSONParsingError
 from ...helpers.json_helpers import json_dumps, json_loads
 from ..json_parser import clean_json
 from .wrapper_base import LLMChatCompletionWrapper
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 class Airoboros21Wrapper(LLMChatCompletionWrapper):
@@ -130,8 +133,11 @@ class Airoboros21Wrapper(LLMChatCompletionWrapper):
                         content_json = json_loads(message["content"])
                         content_simple = content_json["message"]
                         prompt += f"\nUSER: {content_simple}"
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         prompt += f"\nUSER: {message['content']}"
+                else:
+                    prompt += f"\nUSER: {message['content']}"
             elif message["role"] == "assistant":
                 prompt += f"\nASSISTANT: {message['content']}"
                 # need to add the function call if there was one
@@ -348,8 +354,11 @@ class Airoboros21InnerMonologueWrapper(Airoboros21Wrapper):
                         content_json = json_loads(message["content"])
                         content_simple = content_json["message"]
                         prompt += f"\n{user_prefix}: {content_simple}"
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         prompt += f"\n{user_prefix}: {message['content']}"
+                else:
+                    prompt += f"\n{user_prefix}: {message['content']}"
             elif message["role"] == "assistant":
                 # Support for AutoGen naming of agents
                 if "name" in message:

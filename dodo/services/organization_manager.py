@@ -1,4 +1,4 @@
-﻿from typing import List, Optional
+from typing import List, Optional
 
 from dodo.constants import DEFAULT_ORG_ID, DEFAULT_ORG_NAME
 from dodo.orm.errors import NoResultFound
@@ -36,6 +36,10 @@ class OrganizationManager:
         except NoResultFound:
             return await self._create_organization_async(pydantic_org=pydantic_org)
 
+    def create_organization(self, pydantic_org: PydanticOrganization) -> PydanticOrganization:
+        from dodo.utils import run_async
+        return run_async(self.create_organization_async(pydantic_org=pydantic_org))
+
     @enforce_types
     @trace_method
     async def _create_organization_async(self, pydantic_org: PydanticOrganization) -> PydanticOrganization:
@@ -49,6 +53,10 @@ class OrganizationManager:
     async def create_default_organization_async(self) -> PydanticOrganization:
         """Create the default organization."""
         return await self.create_organization_async(PydanticOrganization(name=DEFAULT_ORG_NAME, id=DEFAULT_ORG_ID))
+
+    def create_default_organization(self) -> PydanticOrganization:
+        from dodo.utils import run_async
+        return run_async(self.create_default_organization_async())
 
     @enforce_types
     @trace_method

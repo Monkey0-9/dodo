@@ -24,13 +24,13 @@ class WebSocketServer:
     def shutdown_server(self):
         try:
             self.interface.close()
-            print("Closed the WS interface")
+            logger.info("Closed the WS interface")
         except Exception as e:
-            print(f"Closing the WS interface failed with: {e}")
+            logger.info(f"Closing the WS interface failed with: {e}")
 
     def initialize_server(self):
-        print("Server is initializing...")
-        print(f"Listening on {self.host}:{self.port}...")
+        logger.info("Server is initializing...")
+        logger.info(f"Listening on {self.host}:{self.port}...")
 
     async def start_server(self):
         self.initialize_server()
@@ -53,13 +53,14 @@ class WebSocketServer:
                 # Assuming the message is a JSON string
                 try:
                     data = json_loads(message)
-                except Exception:
-                    print(f"[server] bad data from client:\n{data}")
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
+                    logger.info(f"[server] bad data from client:\n{data}")
                     await websocket.send(protocol.server_command_response(f"Error: bad data from client - {str(data)}"))
                     continue
 
                 if "type" not in data:
-                    print(f"[server] bad data from client (JSON but no type):\n{data}")
+                    logger.info(f"[server] bad data from client (JSON but no type):\n{data}")
                     await websocket.send(protocol.server_command_response(f"Error: bad data from client - {str(data)}"))
 
                 elif data["type"] == "command":
@@ -75,7 +76,7 @@ class WebSocketServer:
                             await websocket.send(protocol.server_command_response(f"Error: Failed to init agent - {str(e)}"))
 
                     else:
-                        print(f"[server] unrecognized client command type: {data}")
+                        logger.info(f"[server] unrecognized client command type: {data}")
                         await websocket.send(protocol.server_error(f"unrecognized client command type: {data}"))
 
                 elif data["type"] == "user_message":
@@ -97,11 +98,11 @@ class WebSocketServer:
 
                 # ... handle other message types as needed ...
                 else:
-                    print(f"[server] unrecognized client package data type: {data}")
+                    logger.info(f"[server] unrecognized client package data type: {data}")
                     await websocket.send(protocol.server_error(f"unrecognized client package data type: {data}"))
 
         except websockets.exceptions.ConnectionClosed:
-            print("[server] connection with client was closed")
+            logger.info("[server] connection with client was closed")
         finally:
             self.interface.unregister_client(websocket)
 
@@ -113,17 +114,17 @@ def start_server():
         try:
             port = int(sys.argv[1])
         except ValueError:
-            print(f"Invalid port number. Using default port {port}.")
+            logger.info(f"Invalid port number. Using default port {port}.")
 
-    server = WebSocketServer(port=port)
+            server = WebSocketServer(port=port)
 
     def handle_sigterm(*args):
         # Perform necessary cleanup
-        print("SIGTERM received, shutting down...")
+        logger.info("SIGTERM received, shutting down...")
         # Note: This should be quick and not involve asynchronous calls
-        print("Shutting down the server...")
+        logger.info("Shutting down the server...")
         server.shutdown_server()
-        print("Server has been shut down.")
+        logger.info("Server has been shut down.")
         sys.exit(0)
 
     signal.signal(signal.SIGTERM, handle_sigterm)
@@ -131,10 +132,10 @@ def start_server():
     try:
         asyncio.run(server.run())
     except KeyboardInterrupt:
-        print("Shutting down the server...")
+        logger.info("Shutting down the server...")
     finally:
         server.shutdown_server()
-        print("Server has been shut down.")
+        logger.info("Server has been shut down.")
 
 
 if __name__ == "__main__":

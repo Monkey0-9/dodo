@@ -192,8 +192,9 @@ class AsyncToolSandboxModalV2(AsyncToolSandboxBase):
                 log_event("modal_v2_deploy_already_exists", {"app_name": app_full_name, "version": version})
                 # Return the created app with the function attached
                 return app
-            except Exception:
-                # App doesn't exist, need to deploy
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
+        # App doesn't exist, need to deploy
                 pass
 
             with modal.enable_output():
@@ -240,7 +241,7 @@ class AsyncToolSandboxModalV2(AsyncToolSandboxBase):
                 # Final fallback: convert to string representation
                 args_pickled = safe_pickle_dumps(str(self.args))
 
-        agent_state_pickled = None
+            agent_state_pickled = None
         if self.inject_agent_state and agent_state:
             try:
                 agent_state_pickled = safe_pickle_dumps(agent_state)
@@ -369,7 +370,7 @@ class AsyncToolSandboxModalV2(AsyncToolSandboxBase):
                 stdout=[result["stdout"]] if result["stdout"] else [],
                 stderr=[result["stderr"]] if result["stderr"] else [],
                 status=status,
-                sandbox_config_fingerprint=sbx_config.fingerprint(),
+                sandbox_config_fingerprint=sbx_config.fingerlogger.info(),
             )
 
         except Exception as e:
@@ -406,7 +407,7 @@ class AsyncToolSandboxModalV2(AsyncToolSandboxBase):
                 stdout=[],
                 stderr=[f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"],
                 status="error",
-                sandbox_config_fingerprint=sbx_config.fingerprint(),
+                sandbox_config_fingerprint=sbx_config.fingerlogger.info(),
             )
 
     def _get_modal_image(self, sbx_config: SandboxConfig) -> modal.Image:

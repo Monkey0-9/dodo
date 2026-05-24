@@ -7,6 +7,9 @@ from urllib.parse import urlparse
 from dodo.helpers.singleton import singleton
 from dodo.schemas.provider_trace import ProviderTrace
 from dodo.settings import settings
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 def _parse_json_maybe(value: str | None) -> dict[str, Any]:
@@ -15,7 +18,8 @@ def _parse_json_maybe(value: str | None) -> dict[str, Any]:
     try:
         parsed = json.loads(value)
         return parsed if isinstance(parsed, dict) else {"_value": parsed}
-    except Exception:
+    except Exception as e:
+        logger.exception(f"Unexpected error: {e}")
         # Preserve the raw payload if parsing fails (e.g. non-JSON string)
         return {"_raw": value}
 

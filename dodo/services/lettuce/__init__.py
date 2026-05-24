@@ -3,4 +3,4 @@ try:
 except ImportError:
     from .lettuce_client_base import LettuceClient
 
-__all__ = ["LettuceClient"]
+    __all__ = ["LettuceClient"]

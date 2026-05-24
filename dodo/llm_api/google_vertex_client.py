@@ -167,8 +167,8 @@ class GoogleVertexClient(LLMClientBase):
                 raise self.handle_llm_error(e, llm_config=llm_config)
             except Exception as e:
                 raise self.handle_llm_error(e, llm_config=llm_config)
-            response_data = response.model_dump()
-            is_malformed_function_call = self.is_malformed_function_call(response_data)
+                response_data = response.model_dump()
+                is_malformed_function_call = self.is_malformed_function_call(response_data)
             if is_malformed_function_call:
                 logger.warning(
                     f"Received FinishReason.MALFORMED_FUNCTION_CALL in response for {llm_config.model}, retrying {retry_count}/{self.MAX_RETRIES}"
@@ -195,7 +195,7 @@ class GoogleVertexClient(LLMClientBase):
                                     # Not a JSON message or not a heartbeat, skip modification
                                     pass
 
-            should_retry = is_malformed_function_call
+                                    should_retry = is_malformed_function_call
             retry_count += 1
 
         if response_data is None:

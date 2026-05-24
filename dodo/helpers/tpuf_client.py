@@ -21,6 +21,7 @@ from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import MessageRole, TagMatchMode
 from dodo.schemas.passage import Passage as PydanticPassage
 from dodo.settings import model_settings, settings
+from dodo.log import get_logger
 
 logger = logging.getLogger(__name__)
 
@@ -1671,7 +1672,7 @@ class TurbopufferClient:
             logger.error(f"Failed to delete all messages from Turbopuffer: {e}")
             raise
 
-    # file/source passage methods
+            # file/source passage methods
 
     @trace_method
     async def _get_file_passages_namespace_name(self, organization_id: str) -> str:

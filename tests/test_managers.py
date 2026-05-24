@@ -55,6 +55,7 @@ from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import (
     ActorType,
     AgentStepStatus,
+    AgentType,
     FileProcessingStatus,
     JobStatus,
     JobType,
@@ -72,7 +73,7 @@ from dodo.schemas.identity import IdentityCreate, IdentityProperty, IdentityProp
 from dodo.schemas.job import BatchJob, Job, Job as PydanticJob, JobUpdate, dodoRequestConfig
 from dodo.schemas.dodo_message import UpdateAssistantMessage, UpdateReasoningMessage, UpdateSystemMessage, UpdateUserMessage
 from dodo.schemas.dodo_message_content import TextContent
-from dodo.schemas.dodo_stop_reason import dodoStopReason, StopReasonType
+from dodo.schemas.dodo_stop_reason import MessageStreamStatus, StopReasonType
 from dodo.schemas.llm_batch_job import AgentStepState, LLMBatchItem
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import Message as PydanticMessage, MessageCreate, MessageUpdate
@@ -810,6 +811,7 @@ async def test_create_agent_include_base_tools(server: SyncServer, default_user)
         memory_blocks=memory_blocks,
         llm_config=LLMConfig.default_config("gpt-4o-mini"),
         embedding_config=EmbeddingConfig.default_config(provider="openai"),
+        agent_type=AgentType.dodo_v2_agent,
         include_base_tools=True,
     )
 
@@ -9612,7 +9614,7 @@ async def test_step_manager_error_tracking(server: SyncServer, sarah_agent, defa
         error_message="Test error message",
         error_traceback="Traceback (most recent call last):\n  File test.py, line 1\n    raise ValueError('Test error')",
         error_details=error_details,
-        stop_reason=dodoStopReason(stop_reason=StopReasonType.error.value),
+        stop_reason=MessageStreamStatus(stop_reason=StopReasonType.error.value),
     )
 
     assert updated_step.status == StepStatus.FAILED
@@ -9652,7 +9654,7 @@ async def test_step_manager_error_tracking(server: SyncServer, sarah_agent, defa
         actor=default_user,
         step_id=success_step.id,
         usage=final_usage,
-        stop_reason=dodoStopReason(stop_reason=StopReasonType.end_turn.value),
+        stop_reason=MessageStreamStatus(stop_reason=StopReasonType.end_turn.value),
     )
 
     assert updated_success_step.status == StepStatus.SUCCESS
@@ -9686,7 +9688,7 @@ async def test_step_manager_error_tracking(server: SyncServer, sarah_agent, defa
     updated_cancelled_step = await step_manager.update_step_cancelled_async(
         actor=default_user,
         step_id=cancelled_step.id,
-        stop_reason=dodoStopReason(stop_reason=StopReasonType.cancelled.value),
+        stop_reason=MessageStreamStatus(stop_reason=StopReasonType.cancelled.value),
     )
 
     assert updated_cancelled_step.status == StepStatus.CANCELLED

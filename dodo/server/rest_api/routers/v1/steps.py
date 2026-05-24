@@ -14,11 +14,14 @@ from dodo.server.server import SyncServer
 from dodo.services.step_manager import FeedbackType
 from dodo.settings import settings
 from dodo.validators import StepId
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 router = APIRouter(prefix="/steps", tags=["steps"])
 
 
-@router.get("/", response_model=List[Step], operation_id="list_steps")
+@router.get("", response_model=List[Step], operation_id="list_steps")
 async def list_steps(
     before: Optional[str] = Query(None, description="Return steps before this step ID"),
     after: Optional[str] = Query(None, description="Return steps after this step ID"),
@@ -106,7 +109,8 @@ async def retrieve_trace_for_step(
             provider_trace = await server.telemetry_manager.get_provider_trace_by_step_id_async(
                 step_id=step_id, actor=await server.user_manager.get_actor_or_default_async(actor_id=headers.actor_id)
             )
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             pass
 
     return provider_trace

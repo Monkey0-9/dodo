@@ -10,7 +10,7 @@ AGENTS_CREATE_PARAMS = [
             # strict defaults to False when no model_settings is explicitly provided
             # (OpenAIModelSettings defaults to True only when explicitly instantiated)
             "model_settings": {
-                "max_output_tokens": 16384,
+                "max_output_tokens": 4096,
                 "parallel_tool_calls": True,
                 "strict": False,
                 "provider_type": "openai",
@@ -30,7 +30,7 @@ AGENTS_UPDATE_PARAMS = [
         {
             # After updating just the name, model_settings should still be present
             "model_settings": {
-                "max_output_tokens": 16384,
+                "max_output_tokens": 4096,
                 "parallel_tool_calls": True,
                 "strict": False,
                 "provider_type": "openai",

@@ -1153,7 +1153,8 @@ class ChatGPTOAuthClient(LLMClientBase):
         try:
             error_json = e.response.json()
             error_message = error_json.get("error", {}).get("message", error_text)
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             error_message = error_text
 
         if status_code == 401:

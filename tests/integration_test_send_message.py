@@ -13,9 +13,9 @@ from unittest.mock import patch
 import pytest
 import requests
 from dotenv import load_dotenv
-from dodo_client import APIError, Asyncdodo, dodo
+from dodo.client import APIError, DodoClient, dodo
 from dodo.client.types import AgentState, MessageCreateParam, ToolReturnMessage
-from dodo_client.types.agents import (
+from dodo.client.types import (
     AssistantMessage,
     HiddenReasoningMessage,
     Message,
@@ -24,9 +24,9 @@ from dodo_client.types.agents import (
     ToolCallMessage,
     UserMessage,
 )
-from dodo_client.types.agents.image_content_param import ImageContentParam, SourceBase64Image
-from dodo_client.types.agents.dodo_streaming_response import dodoPing, dodoStopReason, dodoUsageStatistics
-from dodo_client.types.agents.text_content_param import TextContentParam
+from dodo.client.types.agents.image_content_param import ImageContentParam, SourceBase64Image
+from dodo.client.types import dodoStreamingResponse, MessageStreamStatus, dodoUsageStatistics
+from dodo.client.types.agents.text_content_param import TextContentParam
 
 from dodo.errors import LLMError
 from dodo.helpers.reasoning_helper import is_reasoning_completely_disabled  # noqa: F401
@@ -339,9 +339,9 @@ def assert_greeting_with_assistant_message_response(
     Asserts that the messages list follows the expected sequence:
     ReasoningMessage -> AssistantMessage.
     """
-    # Filter out dodoPing messages which are keep-alive messages for SSE streams
+    # Filter out dodoStreamingResponse messages which are keep-alive messages for SSE streams
     messages = [
-        msg for msg in messages if not (isinstance(msg, dodoPing) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
+        msg for msg in messages if not (isinstance(msg, dodoStreamingResponse) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
     ]
 
     expected_message_count_min, expected_message_count_max = get_expected_message_count_range(
@@ -375,14 +375,14 @@ def assert_greeting_with_assistant_message_response(
         pass
 
     # For o1/o3/o4/gpt-5 models in token streaming, AssistantMessage is omitted
-    # Check if next message is dodoStopReason to detect this case
+    # Check if next message is MessageStreamStatus to detect this case
     model_name = model_handle.split("/")[-1] if "/" in model_handle else model_handle
     skip_assistant_message = (
         streaming
         and token_streaming
         and is_openai_reasoning_model(model_name)
         and index < len(messages)
-        and isinstance(messages[index], dodoStopReason)
+        and isinstance(messages[index], MessageStreamStatus)
     )
 
     # Assistant message (skip for o1-style models in token streaming)
@@ -397,7 +397,7 @@ def assert_greeting_with_assistant_message_response(
 
     # Stop reason and usage statistics if streaming
     if streaming:
-        assert isinstance(messages[index], dodoStopReason)
+        assert isinstance(messages[index], MessageStreamStatus)
         assert messages[index].stop_reason == "end_turn"
         index += 1
         assert isinstance(messages[index], dodoUsageStatistics)
@@ -421,8 +421,8 @@ def assert_contains_step_id(messages: List[Any]) -> None:
     Asserts that the messages list contains a step_id.
     """
     for message in messages:
-        # Skip dodoPing messages which are keep-alive and don't have step_id
-        if isinstance(message, dodoPing):
+        # Skip dodoStreamingResponse messages which are keep-alive and don't have step_id
+        if isinstance(message, dodoStreamingResponse):
             continue
         if hasattr(message, "step_id"):
             assert message.step_id is not None
@@ -438,9 +438,9 @@ def assert_greeting_no_reasoning_response(
     Asserts that the messages list follows the expected sequence without reasoning:
     AssistantMessage (no ReasoningMessage when put_inner_thoughts_in_kwargs is False).
     """
-    # Filter out dodoPing messages which are keep-alive messages for SSE streams
+    # Filter out dodoStreamingResponse messages which are keep-alive messages for SSE streams
     messages = [
-        msg for msg in messages if not (isinstance(msg, dodoPing) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
+        msg for msg in messages if not (isinstance(msg, dodoStreamingResponse) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
     ]
     expected_message_count = 3 if streaming else 2 if from_db else 1
     assert len(messages) == expected_message_count
@@ -459,7 +459,7 @@ def assert_greeting_no_reasoning_response(
     index += 1
 
     if streaming:
-        assert isinstance(messages[index], dodoStopReason)
+        assert isinstance(messages[index], MessageStreamStatus)
         assert messages[index].stop_reason == "end_turn"
         index += 1
         assert isinstance(messages[index], dodoUsageStatistics)
@@ -481,9 +481,9 @@ def assert_greeting_without_assistant_message_response(
     Asserts that the messages list follows the expected sequence:
     ReasoningMessage -> ToolCallMessage -> ToolReturnMessage.
     """
-    # Filter out dodoPing messages which are keep-alive messages for SSE streams
+    # Filter out dodoStreamingResponse messages which are keep-alive messages for SSE streams
     messages = [
-        msg for msg in messages if not (isinstance(msg, dodoPing) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
+        msg for msg in messages if not (isinstance(msg, dodoStreamingResponse) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
     ]
 
     expected_message_count_min, expected_message_count_max = get_expected_message_count_range(
@@ -538,7 +538,7 @@ def assert_greeting_without_assistant_message_response(
 
     # Stop reason and usage statistics if streaming
     if streaming:
-        assert isinstance(messages[index], dodoStopReason)
+        assert isinstance(messages[index], MessageStreamStatus)
         assert messages[index].stop_reason == "end_turn"
         index += 1
         assert isinstance(messages[index], dodoUsageStatistics)
@@ -560,9 +560,9 @@ def assert_tool_call_response(
     ReasoningMessage -> ToolCallMessage -> ToolReturnMessage ->
     ReasoningMessage -> AssistantMessage.
     """
-    # Filter out dodoPing messages which are keep-alive messages for SSE streams
+    # Filter out dodoStreamingResponse messages which are keep-alive messages for SSE streams
     messages = [
-        msg for msg in messages if not (isinstance(msg, dodoPing) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
+        msg for msg in messages if not (isinstance(msg, dodoStreamingResponse) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
     ]
 
     # Special-case relaxation for Gemini 2.5 Flash on Google endpoints during streaming
@@ -709,7 +709,7 @@ def assert_tool_call_response(
         index += 1
 
     if streaming:
-        assert isinstance(messages[index], dodoStopReason)
+        assert isinstance(messages[index], MessageStreamStatus)
         assert messages[index].stop_reason == "end_turn"
         index += 1
         assert isinstance(messages[index], dodoUsageStatistics)
@@ -823,9 +823,9 @@ def assert_image_input_response(
     Asserts that the messages list follows the expected sequence:
     ReasoningMessage -> AssistantMessage or ToolCallMessage -> ToolReturnMessage.
     """
-    # Filter out dodoPing messages which are keep-alive messages for SSE streams
+    # Filter out dodoStreamingResponse messages which are keep-alive messages for SSE streams
     messages = [
-        msg for msg in messages if not (isinstance(msg, dodoPing) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
+        msg for msg in messages if not (isinstance(msg, dodoStreamingResponse) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
     ]
 
     # Check if there are tool calls in the response
@@ -882,7 +882,7 @@ def assert_image_input_response(
 
     # Stop reason and usage statistics if streaming
     if streaming and index < len(messages):
-        assert isinstance(messages[index], dodoStopReason)
+        assert isinstance(messages[index], MessageStreamStatus)
         assert messages[index].stop_reason == "end_turn"
         index += 1
         assert isinstance(messages[index], dodoUsageStatistics)
@@ -927,7 +927,7 @@ def accumulate_chunks(chunks: List[Any], verify_token_streaming: bool = False) -
                         elif message_type == "user_message":
                             chunk = UserMessage(**data)
                         elif message_type == "stop_reason":
-                            chunk = dodoStopReason(**data)
+                            chunk = MessageStreamStatus(**data)
                         elif message_type == "usage_statistics":
                             chunk = dodoUsageStatistics(**data)
                         else:
@@ -1052,11 +1052,11 @@ def client(server_url: str) -> dodo:
 
 
 @pytest.fixture(scope="function")
-def async_client(server_url: str) -> Asyncdodo:
+def async_client(server_url: str) -> DodoClient:
     """
     Creates and returns an asynchronous dodo REST client for testing.
     """
-    async_client_instance = Asyncdodo(base_url=server_url)
+    async_client_instance = DodoClient(base_url=server_url)
     yield async_client_instance
 
 

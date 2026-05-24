@@ -1,4 +1,4 @@
-﻿import importlib
+import importlib
 from typing import List, Optional, Set, Union
 
 from pydantic import ValidationError
@@ -104,15 +104,15 @@ def modal_tool_wrapper(tool: PydanticTool, actor: PydanticUser, sandbox_env_vars
                 # Log if we filtered out any fields
                 filtered_out = set(agent_state.keys()) - modal_agent_fields
                 if filtered_out:
-                    print(f"Fields not in available in AgentState: {filtered_out}", file=sys.stderr)
+                    logger.error(f"Fields not in available in AgentState: {filtered_out}")
 
             except ImportError as e:
-                print(f"Cannot import AgentState: {e}", file=sys.stderr)
-                print("Passing agent_state as dict to tool", file=sys.stderr)
+                logger.error(f"Cannot import AgentState: {e}")
+                logger.error("Passing agent_state as dict to tool")
                 reconstructed_agent_state = agent_state
             except Exception as e:
-                print(f"Warning: Could not reconstruct AgentState (schema mismatch?): {e}", file=sys.stderr)
-                print("Passing agent_state as dict to tool", file=sys.stderr)
+                logger.info(f"Warning: Could not reconstruct AgentState (schema mismatch?): {e}", file=sys.stderr)
+                logger.error("Passing agent_state as dict to tool")
                 reconstructed_agent_state = agent_state
 
         if env_vars:
@@ -175,7 +175,8 @@ def modal_tool_wrapper(tool: PydanticTool, actor: PydanticUser, sandbox_env_vars
                         allow_unsafe_eval=True,
                         extra_globals=tool_func.__globals__,
                     )
-                except Exception:
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
                     pass
 
                 # Execute the tool function (async or sync)
@@ -183,8 +184,9 @@ def modal_tool_wrapper(tool: PydanticTool, actor: PydanticUser, sandbox_env_vars
                     result = asyncio.run(tool_func(**kwargs))
                 else:
                     result = tool_func(**kwargs)
-            except Exception:
-                # Capture the exception and write to stderr
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
+        # Capture the exception and write to stderr
                 error_occurred = True
                 traceback.print_exc(file=stderr_capture)
 
@@ -205,6 +207,20 @@ def modal_tool_wrapper(tool: PydanticTool, actor: PydanticUser, sandbox_env_vars
 
 class ToolManager:
     """Manager class to handle business logic related to Tools."""
+
+    def create_or_update_tool(
+        self, pydantic_tool: PydanticTool, actor: PydanticUser, bypass_name_check: bool = False, modal_sandbox_enabled: bool = False
+    ) -> PydanticTool:
+        from dodo.utils import run_async
+        return run_async(
+            self.create_or_update_tool_async(
+                pydantic_tool=pydantic_tool, actor=actor, bypass_name_check=bypass_name_check, modal_sandbox_enabled=modal_sandbox_enabled
+            )
+        )
+
+    def get_tool_by_name(self, tool_name: str, actor: PydanticUser) -> Optional[PydanticTool]:
+        from dodo.utils import run_async
+        return run_async(self.get_tool_by_name_async(tool_name=tool_name, actor=actor))
 
     @enforce_types
     @trace_method
@@ -1132,6 +1148,10 @@ class ToolManager:
             except NoResultFound:
                 raise ValueError(f"Tool with id {tool_id} not found.")
 
+    def upsert_base_tools(self, actor: PydanticUser) -> List[PydanticTool]:
+        from dodo.utils import run_async
+        return run_async(self.upsert_base_tools_async(actor=actor))
+
     @enforce_types
     @trace_method
     async def upsert_base_tools_async(
@@ -1437,10 +1457,11 @@ class ToolManager:
             try:
                 tool = await self.get_tool_by_id_async(tool_id, actor=actor)
                 tools.append(tool)
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 pass  # Tool may have been deleted
 
-        tool_map = {tool.id: tool for tool in tools}
+                tool_map = {tool.id: tool for tool in tools}
 
         # Build result list preserving order and including metadata
         result_list = []

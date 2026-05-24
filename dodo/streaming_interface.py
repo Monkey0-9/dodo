@@ -12,6 +12,9 @@ from dodo.interface import CLIInterface
 from dodo.local_llm.constants import ASSISTANT_MESSAGE_CLI_SYMBOL, INNER_THOUGHTS_CLI_SYMBOL
 from dodo.schemas.message import Message
 from dodo.schemas.openai.chat_completion_response import ChatCompletionChunkResponse, ChatCompletionResponse
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 # init(autoreset=True)
 
@@ -334,7 +337,8 @@ class StreamingRefreshCLIInterface(AgentRefreshStreamingInterface):
             if self.separate_send_message and function_name == "send_message":
                 try:
                     message = json.loads(function_args)["message"]
-                except Exception:
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
                     prefix = '{\n  "message": "'
                     if len(function_args) < len(prefix):
                         message = "..."

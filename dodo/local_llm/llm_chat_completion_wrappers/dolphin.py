@@ -1,7 +1,10 @@
-﻿from ...errors import LLMJSONParsingError
+from ...errors import LLMJSONParsingError
 from ...helpers.json_helpers import json_dumps, json_loads
 from ..json_parser import clean_json
 from .wrapper_base import LLMChatCompletionWrapper
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 class Dolphin21MistralWrapper(LLMChatCompletionWrapper):
@@ -154,13 +157,14 @@ class Dolphin21MistralWrapper(LLMChatCompletionWrapper):
             if message["role"] == "user":
                 if self.simplify_json_content:
                     try:
-                        content_json = (json_loads(message["content"]),)
+                        content_json = json_loads(message["content"])
                         content_simple = content_json["message"]
                         prompt += f"\n{IM_START_TOKEN}user\n{content_simple}{IM_END_TOKEN}"
-                        # prompt += f"\nUSER: {content_simple}"
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         prompt += f"\n{IM_START_TOKEN}user\n{message['content']}{IM_END_TOKEN}"
-                        # prompt += f"\nUSER: {message['content']}"
+                else:
+                    prompt += f"\n{IM_START_TOKEN}user\n{message['content']}{IM_END_TOKEN}"
             elif message["role"] == "assistant":
                 prompt += f"\n{IM_START_TOKEN}assistant"
                 if message["content"] is not None:

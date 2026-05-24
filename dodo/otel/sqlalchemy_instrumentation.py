@@ -437,7 +437,7 @@ def setup_sqlalchemy_sync_instrumentation(
                     print(f"Error instrumenting engine {engine}: {e}")
                     # Continue with other engines
 
-        _instrumentation_state["active"] = True
+                _instrumentation_state["active"] = True
 
     except Exception as e:
         if _config["log_instrumentation_errors"]:

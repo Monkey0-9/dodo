@@ -1,4 +1,4 @@
-﻿import sqlite3
+import sqlite3
 from typing import Optional, Union
 
 import numpy as np
@@ -128,8 +128,8 @@ def cosine_distance(embedding1, embedding2, expected_dim=MAX_EMBEDDING_DIM):
     except ValueError:
         return 0.0
 
-    similarity = np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
-    distance = float(1.0 - similarity)
+        similarity = np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+        distance = float(1.0 - similarity)
 
     return distance
 
@@ -147,8 +147,15 @@ def register_functions(dbapi_connection, connection_record):
         # Get the actual SQLite connection for async connections
         actual_connection = dbapi_connection._connection if is_aiosqlite_connection else dbapi_connection
 
-        # Enable sqlite-vec extension
+        # Get raw connection
+        raw_conn = getattr(actual_connection, "_connection", actual_connection)
+
+        # Enable sqlite-vec extension and foreign keys
         try:
+            # Enable foreign keys synchronously
+            raw_conn.execute("PRAGMA foreign_keys=ON")
+            logger.info("Successfully enabled foreign key constraints for SQLite")
+
             if is_aiosqlite_connection:
                 # For aiosqlite connections, we cannot use async operations in sync event handlers
                 # The extension will need to be loaded per-connection when actually used
@@ -160,9 +167,13 @@ def register_functions(dbapi_connection, connection_record):
                 # dbapi_connection.enable_load_extension(False)
                 logger.info("sqlite-vec extension successfully loaded for sqlite3 (sync)")
         except Exception as e:
-            raise RuntimeError(f"Failed to load sqlite-vec extension: {e}")
+            raise RuntimeError(f"Failed to load sqlite-vec extension or enable foreign keys: {e}")
 
-        # Register custom cosine_distance function for backward compatibility
+        # Register custom functions
+        def sql_now():
+            import datetime
+            return datetime.datetime.now(datetime.timezone.utc).isoformat()
+
         try:
             if is_aiosqlite_connection:
                 # Try to register function on the actual connection, even though it might be async
@@ -173,12 +184,14 @@ def register_functions(dbapi_connection, connection_record):
                 raw_conn = getattr(actual_connection, "_connection", actual_connection)
                 if hasattr(raw_conn, "create_function"):
                     raw_conn.create_function("cosine_distance", 2, cosine_distance)
-                    logger.debug("Successfully registered cosine_distance for aiosqlite")
+                    raw_conn.create_function("now", 0, sql_now)
+                    logger.debug("Successfully registered cosine_distance and now for aiosqlite")
             else:
                 dbapi_connection.create_function("cosine_distance", 2, cosine_distance)
-                logger.info("Successfully registered cosine_distance for sync connection")
+                dbapi_connection.create_function("now", 0, sql_now)
+                logger.info("Successfully registered cosine_distance and now for sync connection")
         except Exception as e:
-            raise RuntimeError(f"Failed to register cosine_distance function: {e}")
+            raise RuntimeError(f"Failed to register SQLite functions: {e}")
     else:
         logger.debug("Warning: Not a SQLite connection, but instead %s skipping function registration", type(dbapi_connection))
 

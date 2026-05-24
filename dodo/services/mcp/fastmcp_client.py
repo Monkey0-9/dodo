@@ -1,4 +1,4 @@
-﻿"""FastMCP-based MCP clients with server-side OAuth support.
+"""FastMCP-based MCP clients with server-side OAuth support.
 
 This module provides MCP client implementations using the FastMCP library,
 with support for server-side OAuth flows where authorization URLs are
@@ -179,7 +179,7 @@ class AsyncFastMCPSSEClient:
                 await self.client.close()
             except Exception as e:
                 logger.warning(f"Error during FastMCP client cleanup: {e}")
-        self.initialized = False
+                self.initialized = False
 
 
 class AsyncFastMCPStreamableHTTPClient:
@@ -336,5 +336,5 @@ class AsyncFastMCPStreamableHTTPClient:
                 await self.client.close()
             except Exception as e:
                 logger.warning(f"Error during FastMCP client cleanup: {e}")
-        self.initialized = False
+                self.initialized = False
 

@@ -279,6 +279,7 @@ class FileProcessor:
             return all_passages
 
         except Exception as e:
+
             logger.exception("File processing failed for %s: %s", filename, e)
             log_event(
                 "file_processor.processing_failed",
@@ -382,6 +383,7 @@ class FileProcessor:
             return all_passages
 
         except Exception as e:
+
             logger.exception("Import file processing failed for %s: %s", filename, e)
             log_event(
                 "file_processor.import_processing_failed",

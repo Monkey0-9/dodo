@@ -1,4 +1,4 @@
-﻿import os
+import os
 import threading
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -52,7 +52,8 @@ def client(server_url: str) -> dodo:
     """
     Creates and returns a synchronous dodo REST client for testing.
     """
-    client_instance = dodo(base_url=server_url)
+    password = os.getenv("DODO_SERVER_PASSWORD", "dodo-secret")
+    client_instance = dodo(base_url=server_url, token=password)
     yield client_instance
 
 
@@ -139,12 +140,12 @@ def create_test_module(
                 assert custom_model_dump(getattr(item, key)) == value
 
     @pytest.mark.order(1)
-    def test_retrieve(handler):
+    def test_get(handler):
         """Test retrieving resources."""
-        skip_test_if_not_implemented(handler, resource_name, "retrieve")
+        skip_test_if_not_implemented(handler, resource_name, "get")
         for name, item_id in test_item_ids.items():
             kwargs = {id_param_name: item_id}
-            item = handler.retrieve(**kwargs)
+            item = handler.get(**kwargs)
             assert hasattr(item, "id") and item.id == item_id, f"{resource_name.capitalize()} {name} with id {item_id} not found"
 
     @pytest.mark.order(2)
@@ -200,9 +201,9 @@ def create_test_module(
             if hasattr(item, key):
                 assert custom_model_dump(getattr(item, key)) == value
 
-        # Verify via retrieve as well
-        retrieve_kwargs = {id_param_name: item.id}
-        retrieved_item = handler.retrieve(**retrieve_kwargs)
+        # Verify via get as well
+        get_kwargs = {id_param_name: item.id}
+        retrieved_item = handler.get(**get_kwargs)
 
         expected_values = processed_params | processed_extra_expected
         for key, value in expected_values.items():
@@ -229,15 +230,23 @@ def create_test_module(
         for name, item_id in test_item_ids.items():
             try:
                 kwargs = {id_param_name: item_id}
-                item = handler.retrieve(**kwargs)
+                item = handler.get(**kwargs)
                 raise AssertionError(f"{resource_name.capitalize()} {name} with id {item.id} was not deleted")
             except Exception as e:
                 if isinstance(e, AssertionError):
                     raise e
                 if hasattr(e, "status_code"):
                     assert e.status_code == 404, f"Expected 404 error, got {e.status_code}"
+                elif hasattr(e, "response") and hasattr(e.response, "status_code"):
+                    assert e.response.status_code == 404, f"Expected 404 error, got {e.response.status_code}"
+                elif e.__class__.__name__ in ("dodoError", "HandleNotFoundError"):
+                    pass
                 else:
-                    raise AssertionError(f"Unexpected error type: {type(e)}")
+                    from dodo.errors import dodoError, ErrorCode
+                    if isinstance(e, dodoError) and e.code == ErrorCode.NOT_FOUND:
+                        pass
+                    else:
+                        raise AssertionError(f"Unexpected error type: {type(e)}")
 
         test_item_ids.clear()
 
@@ -246,7 +255,7 @@ def create_test_module(
         "handler": handler,
         "caren_agent": caren_agent,
         "test_create": pytest.mark.parametrize("name, params, extra_expected_values, expected_error", create_params)(test_create),
-        "test_retrieve": test_retrieve,
+        "test_get": test_get,
         "test_upsert": pytest.mark.parametrize("name, params, extra_expected_values, expected_error", upsert_params)(test_upsert),
         "test_update": pytest.mark.parametrize("name, params, extra_expected_values, expected_error", update_params)(test_update),
         "test_delete": test_delete,

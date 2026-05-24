@@ -2,6 +2,9 @@
 
 from dodo.local_llm.settings.settings import get_completions_settings
 from dodo.local_llm.utils import post_json_auth_request
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 WEBUI_API_SUFFIX = "/completions"
 
@@ -50,7 +53,9 @@ def get_vllm_completion(endpoint, auth_type, auth_key, model, prompt, context_wi
                 + f" Make sure that the vLLM server is running and reachable at {URI}."
             )
 
-    except:
+    except Exception as e:
+
+        logger.exception(f"Unexpected error: {e}")
         # TODO handle gracefully
         raise
 

@@ -8,6 +8,9 @@ from typing import Any, Dict, List, Literal, Optional
 
 from dodo.errors import dodoToolCreateError
 from dodo.functions.schema_generator import generate_schema
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 # NOTE: THIS FILE WILL BE DEPRECATED
 
@@ -179,16 +182,18 @@ def _extract_pydantic_classes(tree: ast.AST, imports_map: Dict[str, Any]) -> Dic
                                             pass  # Field is required, no default
                                         else:
                                             field_kwargs["default"] = default_val
-                                    except Exception:
+                                    except Exception as e:
+                                        logger.exception(f"Unexpected error: {e}")
                                         pass
 
-                                fields[field_name] = Field(**field_kwargs)
+                                        fields[field_name] = Field(**field_kwargs)
                             else:
                                 # Not a Field call, try to evaluate the default value
                                 try:
                                     default_val = ast.literal_eval(stmt.value)
                                     fields[field_name] = default_val
-                                except Exception:
+                                except Exception as e:
+                                    logger.exception(f"Unexpected error: {e}")
                                     pass
 
                 # Create the dynamic Pydantic model
@@ -199,8 +204,10 @@ def _extract_pydantic_classes(tree: ast.AST, imports_map: Dict[str, Any]) -> Dic
                 remaining_classes.remove(node)
                 progress_made = True
 
-            except Exception:
-                # This class might depend on others, try later
+            except Exception as e:
+
+                logger.exception(f"Unexpected error: {e}")
+        # This class might depend on others, try later
                 continue
 
         if not progress_made:
@@ -272,7 +279,7 @@ def _parse_function_from_source(source_code: str, desired_name: Optional[str] = 
             except (ValueError, TypeError):
                 # Can't evaluate the default, use Parameter.empty
                 default_value = inspect.Parameter.empty
-            param = inspect.Parameter(
+                param = inspect.Parameter(
                 param_name, inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=param_annotation, default=default_value
             )
         else:

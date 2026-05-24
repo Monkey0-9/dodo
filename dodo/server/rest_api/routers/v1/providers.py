@@ -1,4 +1,4 @@
-﻿from typing import TYPE_CHECKING, List, Literal, Optional
+from typing import TYPE_CHECKING, List, Literal, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 router = APIRouter(prefix="/providers", tags=["providers"])
 
 
-@router.get("/", response_model=List[Provider], operation_id="list_providers")
+@router.get("", response_model=List[Provider], operation_id="list_providers")
 async def list_providers(
     before: Optional[str] = Query(
         None,
@@ -64,7 +64,7 @@ async def retrieve_provider(
     return await server.provider_manager.get_provider_async(provider_id=provider_id, actor=actor)
 
 
-@router.post("/", response_model=Provider, operation_id="create_provider")
+@router.post("", response_model=Provider, operation_id="create_provider")
 async def create_provider(
     request: ProviderCreate = Body(...),
     headers: HeaderParams = Depends(get_headers),

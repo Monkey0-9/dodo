@@ -73,8 +73,9 @@ async def build_summarizer_llm_config(
             logger.warning(f"Failed to resolve haiku for auto mode summarizer: {e}. Falling back to zai/glm-5.")
             try:
                 return await ProviderManager().get_llm_config_from_handle("zai/glm-5", actor)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
+            pass
 
     # If no summarizer model specified, use lightweight provider-specific defaults
     if not summarizer_config.model:
@@ -126,7 +127,8 @@ async def build_summarizer_llm_config(
             return base.model_copy(update=update_params)
 
         return base
-    except Exception:
+    except Exception as e:
+        logger.exception(f"Unexpected error: {e}")
         # On any error, do not break the agent â€“ just fall back
         return agent_llm_config
 

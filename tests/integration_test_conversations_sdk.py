@@ -9,7 +9,7 @@ from typing import Any, List, Optional
 
 import pytest
 import requests
-from dodo_client import APIError, Asyncdodo, dodo
+from dodo.client import APIError, DodoClient, dodo
 from dodo.client.types import MessageCreateParam
 
 logger = logging.getLogger(__name__)
@@ -18,9 +18,9 @@ TEST_MODEL_HANDLE = "anthropic/claude-haiku-4-5"
 
 
 @pytest.fixture
-def async_client(server_url: str) -> Asyncdodo:
+def async_client(server_url: str) -> DodoClient:
     """Create an async dodo client."""
-    return Asyncdodo(base_url=server_url)
+    return DodoClient(base_url=server_url)
 
 
 @pytest.fixture
@@ -452,7 +452,7 @@ class TestConversationsSDK:
 
     def test_retrieve_conversation_stream_no_active_run(self, client: dodo, agent):
         """Test that retrieve_conversation_stream returns error when no active run exists."""
-        from dodo_client import BadRequestError
+        from dodo.client import BadRequestError
 
         # Create a conversation
         conversation = client.conversations.create(agent_id=agent.id)
@@ -468,7 +468,7 @@ class TestConversationsSDK:
 
     def test_retrieve_conversation_stream_after_completed_run(self, client: dodo, agent):
         """Test that retrieve_conversation_stream returns error when run is completed."""
-        from dodo_client import BadRequestError
+        from dodo.client import BadRequestError
 
         # Create a conversation
         conversation = client.conversations.create(agent_id=agent.id)
@@ -564,7 +564,7 @@ class TestConversationsSDK:
         """
         import concurrent.futures
 
-        from dodo_client import ConflictError
+        from dodo.client import ConflictError
 
         from dodo.settings import settings
 
@@ -858,7 +858,7 @@ class TestConversationsSDK:
         """
         import concurrent.futures
 
-        from dodo_client import ConflictError
+        from dodo.client import ConflictError
 
         from dodo.settings import settings
 
@@ -1712,7 +1712,7 @@ class TestConversationSystemMessageRecompilation:
 async def test_concurrent_conversation_requests_return_409(
     server_url: str,
     otid_test_agent,
-    async_client: Asyncdodo,
+    async_client: DodoClient,
     disable_e2b_api_key: Any,
 ) -> None:
     """
@@ -1796,7 +1796,7 @@ async def test_concurrent_conversation_requests_return_409(
 async def test_duplicate_request_recovery_with_same_otid(
     server_url: str,
     otid_test_agent,
-    async_client: Asyncdodo,
+    async_client: DodoClient,
     disable_e2b_api_key: Any,
 ) -> None:
     """
@@ -1900,7 +1900,7 @@ async def test_duplicate_request_recovery_with_same_otid(
 async def test_otid_recovery_via_retrieve_stream(
     server_url: str,
     otid_test_agent,
-    async_client: Asyncdodo,
+    async_client: DodoClient,
     disable_e2b_api_key: Any,
 ) -> None:
     """

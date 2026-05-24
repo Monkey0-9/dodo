@@ -30,7 +30,7 @@ logger = get_logger(__name__)
 ### Sandbox Config Routes
 
 
-@router.post("/", response_model=PydanticSandboxConfig)
+@router.post("", response_model=PydanticSandboxConfig)
 async def create_sandbox_config(
     config_create: SandboxConfigCreate,
     server: SyncServer = Depends(get_dodo_server),
@@ -107,7 +107,7 @@ async def delete_sandbox_config(
     await server.sandbox_config_manager.delete_sandbox_config_async(sandbox_config_id, actor)
 
 
-@router.get("/", response_model=List[PydanticSandboxConfig])
+@router.get("", response_model=List[PydanticSandboxConfig])
 async def list_sandbox_configs(
     limit: int = Query(1000, description="Number of results to return"),
     after: Optional[str] = Query(None, description="Pagination cursor to fetch the next set of results"),

@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 from typing import Dict, List, Optional
 
 import sqlalchemy as sa
@@ -24,7 +24,7 @@ from dodo.schemas.enums import ActorType, PrimitiveType
 from dodo.schemas.user import User as PydanticUser
 from dodo.server.db import db_registry
 from dodo.settings import DatabaseChoice, settings
-from dodo.utils import bounded_gather, decrypt_agent_secrets, enforce_types
+from dodo.utils import bounded_gather, decrypt_agent_secrets, enforce_types, run_async
 from dodo.validators import raise_on_invalid_id
 
 logger = get_logger(__name__)
@@ -64,7 +64,8 @@ class BlockManager:
         for agent_id in agent_ids:
             try:
                 await self.agent_manager.rebuild_system_prompt_async(agent_id=agent_id, actor=actor, force=True, update_timestamp=False)
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 logger.exception(f"Failed to rebuild system prompt for agent {agent_id} after block {block_id} was updated")
 
     # ======================================================================================================================
@@ -1046,4 +1047,22 @@ class BlockManager:
             # context manager now handles commits
             # await session.commit()
             return block.to_pydantic()
+
+    def create_or_update_block(self, block: PydanticBlock, actor: PydanticUser) -> PydanticBlock:
+        return run_async(self.create_or_update_block_async(block, actor))
+
+    def update_block(self, block_id: str, block_update: BlockUpdate, actor: PydanticUser) -> PydanticBlock:
+        return run_async(self.update_block_async(block_id, block_update, actor))
+
+    def delete_block(self, block_id: str, actor: PydanticUser) -> None:
+        return run_async(self.delete_block_async(block_id, actor))
+
+    def get_blocks(self, *args, **kwargs) -> List[PydanticBlock]:
+        return run_async(self.get_blocks_async(*args, **kwargs))
+
+    def get_block_by_id(self, block_id: str, actor: PydanticUser) -> Optional[PydanticBlock]:
+        return run_async(self.get_block_by_id_async(block_id, actor))
+
+    def count_blocks(self, *args, **kwargs) -> int:
+        return run_async(self.count_blocks_async(*args, **kwargs))
 

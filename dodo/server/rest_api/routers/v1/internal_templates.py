@@ -1,4 +1,4 @@
-﻿from typing import List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, Query
 from pydantic import BaseModel
@@ -10,6 +10,9 @@ from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dod
 from dodo.server.server import SyncServer
 
 router = APIRouter(prefix="/_internal_templates", tags=["_internal_templates"])
+
+from dodo.log import get_logger
+logger = get_logger(__name__)
 
 
 @router.post("/groups", response_model=Group, operation_id="create_internal_template_group")
@@ -245,7 +248,7 @@ async def delete_deployment(
                 deleted_blocks.append(block.id)
             except Exception as e:
                 # Continue deleting other blocks even if one fails
-                print(f"Failed to delete block {block.id}: {e}")
+                logger.error(f"Failed to delete block {block.id}: {e}")
 
     # Then delete agents
     from dodo.orm.agent import Agent as AgentModel
@@ -264,7 +267,7 @@ async def delete_deployment(
                 deleted_agents.append(agent.id)
             except Exception as e:
                 # Continue deleting other agents even if one fails
-                print(f"Failed to delete agent {agent.id}: {e}")
+                logger.error(f"Failed to delete agent {agent.id}: {e}")
 
     # Finally delete groups
     from dodo.orm.group import Group as GroupModel
@@ -283,10 +286,10 @@ async def delete_deployment(
                 deleted_groups.append(group.id)
             except Exception as e:
                 # Continue deleting other groups even if one fails
-                print(f"Failed to delete group {group.id}: {e}")
+                logger.error(f"Failed to delete group {group.id}: {e}")
 
-    total_deleted = len(deleted_blocks) + len(deleted_agents) + len(deleted_groups)
-    message = f"Successfully deleted {total_deleted} entities from deployment {deployment_id}"
+                total_deleted = len(deleted_blocks) + len(deleted_agents) + len(deleted_groups)
+                message = f"Successfully deleted {total_deleted} entities from deployment {deployment_id}"
 
     return DeleteDeploymentResponse(
         deleted_blocks=deleted_blocks, deleted_agents=deleted_agents, deleted_groups=deleted_groups, message=message

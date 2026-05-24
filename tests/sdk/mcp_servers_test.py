@@ -1,10 +1,12 @@
-﻿"""
+"""
 Integration tests for the new MCP server endpoints (/v1/mcp-servers/).
 Tests all CRUD operations, tool management, and OAuth connection flows.
 Uses the dodo SDK client instead of direct HTTP requests.
 """
 
 import os
+os.environ["MCP_DISABLE_STDIO"] = "false"
+os.environ["dodo_MCP_DISABLE_STDIO"] = "false"
 import sys
 import threading
 import time
@@ -15,7 +17,7 @@ from typing import Any, Dict, List
 import pytest
 import requests
 from dotenv import load_dotenv
-from dodo_client import BadRequestError, dodo, NotFoundError, UnprocessableEntityError
+from dodo.client import BadRequestError, dodo, NotFoundError, UnprocessableEntityError
 
 from dodo.schemas.agent import AgentState
 from dodo.schemas.embedding_config import EmbeddingConfig
@@ -37,6 +39,8 @@ def server_url() -> str:
 
     def _run_server() -> None:
         load_dotenv()
+        from dodo.settings import tool_settings
+        tool_settings.mcp_disable_stdio = False
         from dodo.server.rest_api.app import start_server
 
         start_server(debug=True)
@@ -69,7 +73,8 @@ def client(server_url: str) -> dodo:
     """
     Creates and returns a synchronous dodo REST client for testing.
     """
-    client_instance = dodo(base_url=server_url)
+    password = os.getenv("DODO_SERVER_PASSWORD", "dodo-secret")
+    client_instance = dodo(base_url=server_url, token=password)
     yield client_instance
 
 

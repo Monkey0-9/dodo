@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 from functools import wraps
 from typing import Any, Dict, List, Optional, Set, Union
 
@@ -17,6 +17,8 @@ from dodo.errors import ConversationBusyError, MemoryRepoBusyError
 from dodo.log import get_logger
 from dodo.otel.metric_registry import MetricRegistry
 from dodo.settings import settings
+logger = get_logger(__name__)
+
 
 try:
     from redis import RedisError
@@ -28,9 +30,7 @@ except ImportError:
     ConnectionPool = None
     Lock = None
 
-logger = get_logger(__name__)
-
-_client_instance = None
+_client_instance: Optional["AsyncRedisClient"] = None
 
 
 class AsyncRedisClient:
@@ -114,6 +114,7 @@ class AsyncRedisClient:
             logger.exception("Redis ping failed")
             return False
 
+
     async def wait_for_ready(self, timeout: int = 30, interval: float = 0.5):
         """Wait for Redis to be ready."""
         start_time = asyncio.get_event_loop().time()
@@ -158,8 +159,9 @@ class AsyncRedisClient:
         try:
             client = await self.get_client()
             return await client.get(key)
-        except Exception:
-            return default
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        return default
 
     @with_retry()
     async def set(
@@ -390,8 +392,9 @@ class AsyncRedisClient:
             client = await self.get_client()
             result = await client.smismember(key, values)
             return result if isinstance(values, list) else result[0]
-        except Exception:
-            return [0] * len(values) if isinstance(values, list) else 0
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        return [0] * len(values) if isinstance(values, list) else 0
 
     async def srem(self, key: str, *members: Union[str, int, float]) -> int:
         """Remove members from set."""

@@ -1,4 +1,4 @@
-﻿from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod
 from typing import Any, AsyncGenerator, List, Optional, Union
 
 import openai
@@ -181,7 +181,7 @@ class BaseAgent(ABC):
 
             else:
                 return in_context_messages
-        except:
+        except Exception:
             logger.exception(f"Failed to rebuild memory for agent id={agent_state.id} and actor=({self.actor.id}, {self.actor.name})")
             raise
 

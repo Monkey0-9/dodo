@@ -121,7 +121,7 @@ class GenerateResponse(BaseModel):
     usage: dodoUsageStatistics = Field(..., description="Token usage statistics")
 
 
-@router.get("/", response_model=list[AgentState], operation_id="list_agents")
+@router.get("", response_model=list[AgentState], operation_id="list_agents")
 async def list_agents(
     name: str | None = Query(None, description="Name of the agent"),
     tags: list[str] | None = Query(None, description="List of tags to filter agents by"),
@@ -610,7 +610,7 @@ class CreateAgentRequest(CreateAgent):
     actor_id: str | None = Field(None, exclude=True)
 
 
-@router.post("/", response_model=AgentState, operation_id="create_agent")
+@router.post("", response_model=AgentState, operation_id="create_agent")
 async def create_agent(
     agent: CreateAgentRequest = Body(...),
     server: "SyncServer" = Depends(get_dodo_server),
@@ -898,7 +898,8 @@ async def detach_source(
             source = await server.source_manager.get_source_by_id(source_id=source_id, actor=actor)
             block = await server.agent_manager.get_block_with_label_async(agent_id=agent_state.id, block_label=source.name, actor=actor)
             await server.block_manager.delete_block_async(block.id, actor)
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             pass
 
     return agent_state
@@ -930,7 +931,8 @@ async def detach_folder_from_agent(
             source = await server.source_manager.get_source_by_id(source_id=folder_id, actor=actor)
             block = await server.agent_manager.get_block_with_label_async(agent_id=agent_state.id, block_label=source.name, actor=actor)
             await server.block_manager.delete_block_async(block.id, actor)
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             pass
 
     if is_1_0_sdk_version(headers):
@@ -1951,8 +1953,8 @@ async def cancel_message(
             # Cancellation failures should not raise errors back to the client.
             logger.error(f"Failed to cancel run {run_id}: {str(e)}")
             continue
-        results[run_id] = "cancelled"
-        logger.info(f"Cancelled run {run_id}")
+            results[run_id] = "cancelled"
+            logger.info(f"Cancelled run {run_id}")
     return results
 
 
@@ -2218,9 +2220,10 @@ async def send_message_async(
 
     try:
         is_message_input = request.messages[0].type == MessageCreateType.message
-    except Exception:
+    except Exception as e:
+        logger.exception(f"Unexpected error: {e}")
         is_message_input = True
-    use_lettuce = headers.experimental_params.message_async and is_message_input
+        use_lettuce = headers.experimental_params.message_async and is_message_input
 
     # Create a new run
     run = PydanticRun(

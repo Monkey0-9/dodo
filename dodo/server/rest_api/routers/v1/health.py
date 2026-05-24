@@ -1,4 +1,4 @@
-﻿from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
@@ -15,15 +15,17 @@ router = APIRouter(tags=["health"])
 _UNREADY_STATES = {"degraded", "manual_disable", "warming"}
 
 
-@router.get("/health/", response_model=Health, operation_id="check_health")
+@router.get("/health", response_model=Health, operation_id="check_health")
+@router.get("/health/", response_model=Health, include_in_schema=False)
 async def check_health():
     """Liveness endpoint; returns 200 when process is responsive."""
     return Health(version=__version__, status="ok")
 
 
-@router.get("/ready/", response_model=Health, operation_id="check_readiness")
+@router.get("/ready", response_model=Health, operation_id="check_readiness")
+@router.get("/ready/", response_model=Health, include_in_schema=False)
 async def check_readiness():
-    """Readiness endpoint gated by internal readiness state when enforcement is enabled."""
+    """Readiness endpoint gated by internal readiness state."""
     from dodo.settings import readiness_settings
 
     if not readiness_settings.enforcement_enabled:
@@ -33,14 +35,19 @@ async def check_readiness():
 
     state = get_readiness_state()
 
-    # During drain we optionally return 503 so k8s stops new routing before termination.
+    # During drain we optionally return 503 so k8s stops routing before exit.
     if state == "draining":
         if readiness_settings.drain_returns_503:
-            return JSONResponse(status_code=503, content={"version": __version__, "status": "draining"})
+            return JSONResponse(
+                status_code=503,
+                content={"version": __version__, "status": "draining"}
+            )
         return Health(version=__version__, status="ok")
 
     if state in _UNREADY_STATES:
-        return JSONResponse(status_code=503, content={"version": __version__, "status": state})
+        return JSONResponse(
+            status_code=503,
+            content={"version": __version__, "status": state}
+        )
 
     return Health(version=__version__, status="ok")
-

@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import difflib
 import json
 import os
@@ -78,6 +78,8 @@ def _clear_tables():
     async def _clear():
         async with db_registry.async_session() as session:
             for table in reversed(Base.metadata.sorted_tables):  # Reverse to avoid FK issues
+                if table.name in ("organizations", "users", "block_history"):
+                    continue
                 await session.execute(table.delete())  # Truncate table
             # context manager now handles commits
             # await session.commit()

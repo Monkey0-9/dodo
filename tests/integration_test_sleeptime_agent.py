@@ -5,7 +5,7 @@ import time
 import pytest
 import requests
 from dotenv import load_dotenv
-from dodo_client import APIError, dodo
+from dodo.client import APIError, dodo
 from dodo.client.types import CreateBlockParam, MessageCreateParam
 
 from dodo.constants import DEFAULT_HUMAN

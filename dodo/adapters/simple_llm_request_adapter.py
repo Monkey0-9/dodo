@@ -7,6 +7,9 @@ from dodo.schemas.enums import LLMCallType
 from dodo.schemas.dodo_message import dodoMessage
 from dodo.schemas.dodo_message_content import OmittedReasoningContent, ReasoningContent, TextContent
 from dodo.schemas.usage import normalize_cache_tokens, normalize_reasoning_tokens
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 class SimpleLLMRequestAdapter(dodoLLMRequestAdapter):
@@ -60,7 +63,7 @@ class SimpleLLMRequestAdapter(dodoLLMRequestAdapter):
                 raise
             raise self.llm_client.handle_llm_error(e, llm_config=self.llm_config)
 
-        self.llm_request_finish_timestamp_ns = get_utc_timestamp_ns()
+            self.llm_request_finish_timestamp_ns = get_utc_timestamp_ns()
 
         # Convert response to chat completion format
         self.chat_completions_response = await self.llm_client.convert_response_to_chat_completion(

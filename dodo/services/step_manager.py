@@ -628,7 +628,7 @@ class StepManager:
             except NoResultFound:
                 pass
 
-            metrics_data = {
+                metrics_data = {
                 "id": step_id,
                 "organization_id": actor.organization_id,
                 "agent_id": agent_id or step.agent_id,

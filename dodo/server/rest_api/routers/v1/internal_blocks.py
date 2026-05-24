@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 router = APIRouter(prefix="/_internal_blocks", tags=["_internal_blocks"])
 
 
-@router.get("/", response_model=List[Block], operation_id="list_internal_blocks")
+@router.get("", response_model=List[Block], operation_id="list_internal_blocks")
 async def list_blocks(
     # query parameters
     label: BlockLabelQuery = None,
@@ -100,7 +100,7 @@ async def list_blocks(
     )
 
 
-@router.post("/", response_model=Block, operation_id="create_internal_block")
+@router.post("", response_model=Block, operation_id="create_internal_block")
 async def create_block(
     create_block: CreateBlock = Body(...),
     server: SyncServer = Depends(get_dodo_server),

@@ -1,4 +1,4 @@
-﻿import os
+import os
 from enum import Enum
 from pathlib import Path
 from typing import Optional
@@ -44,6 +44,7 @@ class ToolSettings(BaseSettings):
     mcp_read_from_config: bool = False  # if False, will throw if attempting to read/write from file
     mcp_disable_stdio: bool = Field(
         default=True,
+        validation_alias=AliasChoices("dodo_MCP_DISABLE_STDIO", "MCP_DISABLE_STDIO", "mcp_disable_stdio"),
         description=(
             "Disable MCP stdio server type. When True (default), creating or connecting to "
             "MCP servers using stdio transport will fail. Stdio MCP servers spawn local "

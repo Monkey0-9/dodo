@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import json
 import os
 import secrets
@@ -404,7 +404,8 @@ class MCPManager:
                 # context manager now handles commits
                 # await session.commit()
                 return mcp_server.to_pydantic()
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 await session.rollback()
                 raise
 
@@ -516,9 +517,9 @@ class MCPManager:
                     except Exception as e:
                         results.append(e)
 
-                successful = sum(1 for r in results if not isinstance(r, Exception))
-                failed = len(results) - successful
-                logger.info(
+                        successful = sum(1 for r in results if not isinstance(r, Exception))
+                        failed = len(results) - successful
+                        logger.info(
                     f"Auto-sync completed for MCP server {created_server.server_name}: "
                     f"{successful} tools persisted, {failed} failed, "
                     f"{len(mcp_tools) - len(valid_tools)} invalid tools skipped"
@@ -1141,19 +1142,19 @@ class MCPManager:
 
         logo_uri = None
         NEXT_PUBLIC_CURRENT_HOST = os.getenv("NEXT_PUBLIC_CURRENT_HOST")
-        dodo_AGENTS_ENDPOINT = os.getenv("dodo_AGENTS_ENDPOINT")
+        DODO_AGENTS_ENDPOINT = os.getenv("DODO_AGENTS_ENDPOINT")
 
         if (is_web_request or is_dodo_code_request) and NEXT_PUBLIC_CURRENT_HOST:
             # Use static callback URI - session is identified via state parameter
             redirect_uri = f"{NEXT_PUBLIC_CURRENT_HOST}/oauth/callback/mcp"
             logo_uri = f"{NEXT_PUBLIC_CURRENT_HOST}/seo/favicon.svg"
-        elif dodo_AGENTS_ENDPOINT:
+        elif DODO_AGENTS_ENDPOINT:
             # API and SDK usage should call core server directly
             # Use static callback URI - session is identified via state parameter
-            redirect_uri = f"{dodo_AGENTS_ENDPOINT}/v1/tools/mcp/oauth/callback"
+            redirect_uri = f"{DODO_AGENTS_ENDPOINT}/v1/tools/mcp/oauth/callback"
         else:
             logger.error(
-                f"No redirect URI found for request and base urls: {http_request.headers if http_request else 'No headers'} {NEXT_PUBLIC_CURRENT_HOST} {dodo_AGENTS_ENDPOINT}"
+                f"No redirect URI found for request and base urls: {http_request.headers if http_request else 'No headers'} {NEXT_PUBLIC_CURRENT_HOST} {DODO_AGENTS_ENDPOINT}"
             )
             raise HTTPException(status_code=400, detail="No redirect URI found")
 

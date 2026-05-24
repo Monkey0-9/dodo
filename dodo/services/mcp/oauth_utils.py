@@ -133,8 +133,9 @@ class MCPOAuthSession:
             try:
                 oauth_record = await MCPOAuth.read_async(db_session=session, identifier=self.session_id, actor=None)
                 return oauth_record.status
-            except Exception:
-                return OAuthSessionStatus.ERROR
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
+        return OAuthSessionStatus.ERROR
 
     async def update_session_status(self, status: OAuthSessionStatus) -> None:
         """Update the session status."""
@@ -144,7 +145,8 @@ class MCPOAuthSession:
                 oauth_record.status = status
                 oauth_record.updated_at = datetime.now()
                 await oauth_record.update_async(db_session=session, actor=None)
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 pass
 
     async def store_authorization_code(self, code: str, state: str) -> Optional[MCPOAuth]:
@@ -164,8 +166,9 @@ class MCPOAuthSession:
                 oauth_record.state = state
 
                 return await oauth_record.update_async(db_session=session, actor=None)
-            except Exception:
-                return None
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
+        return None
 
     async def get_authorization_url(self) -> Optional[str]:
         """Get the authorization URL for this session."""
@@ -173,8 +176,9 @@ class MCPOAuthSession:
             try:
                 oauth_record = await MCPOAuth.read_async(db_session=session, identifier=self.session_id, actor=None)
                 return oauth_record.authorization_url
-            except Exception:
-                return None
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
+        return None
 
     async def set_authorization_url(self, url: str) -> None:
         """Set the authorization URL for this session."""
@@ -184,7 +188,8 @@ class MCPOAuthSession:
                 oauth_record.authorization_url = url
                 oauth_record.updated_at = datetime.now()
                 await oauth_record.update_async(db_session=session, actor=None)
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 pass
 
 

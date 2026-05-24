@@ -6,6 +6,9 @@ from dodo.agents.dodo_agent_v3 import dodoAgentV3
 from dodo.groups.sleeptime_multi_agent import SleeptimeMultiAgent
 from dodo.schemas.agent import AgentState
 from dodo.schemas.enums import AgentType
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 if TYPE_CHECKING:
     from dodo.orm import User

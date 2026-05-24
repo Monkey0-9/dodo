@@ -1,6 +1,9 @@
 ﻿from typing import Any, Iterable, List
 
 from dodo.settings import settings
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 def _get_sandbox_client() -> Any:
@@ -147,7 +150,8 @@ def send_message_to_agents_matching_tags(message: str, match_all: List[str], mat
                 import ast
 
                 parsed_response = ast.literal_eval(response_payload)
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 parsed_response = {"agent_id": agent_id, "response": [response_payload]}
 
             if isinstance(parsed_response, dict):

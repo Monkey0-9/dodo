@@ -75,7 +75,7 @@ class OptimisticJSONParser(JSONParser):
         self.on_extra_token = self._default_on_extra_token
 
     def _default_on_extra_token(self, text, data, reminding):
-        print(f"Parsed JSON with extra tokens: {data}, remaining: {reminding}")
+        logger.info(f"Parsed JSON with extra tokens: {data}, remaining: {reminding}")
 
     def parse(self, input_str):
         """
@@ -232,27 +232,27 @@ class OptimisticJSONParser(JSONParser):
 # def main():
 #     test_string = '{"inner_thoughts":}'
 #
-#     print(f"Testing string: {test_string!r}")
-#     print("=" * 50)
+#     logger.info(f"Testing string: {test_string!r}")
+#     logger.info("=" * 50)
 #
-#     print("OptimisticJSONParser (strict=False):")
+#     logger.info("OptimisticJSONParser (strict=False):")
 #     try:
 #         optimistic_parser = OptimisticJSONParser(strict=False)
 #         result = optimistic_parser.parse(test_string)
-#         print(f"  Result: {result}")
-#         print(f"  Remaining: {optimistic_parser.last_parse_reminding!r}")
+#         logger.info(f"  Result: {result}")
+#         logger.info(f"  Remaining: {optimistic_parser.last_parse_reminding!r}")
 #     except Exception as e:
-#         print(f"  Error: {e}")
+#         logger.info(f"  Error: {e}")
 #
-#     print()
+#     logger.info()
 #
-#     print("PydanticJSONParser (strict=False):")
+#     logger.info("PydanticJSONParser (strict=False):")
 #     try:
 #         pydantic_parser = PydanticJSONParser(strict=False)
 #         result = pydantic_parser.parse(test_string)
-#         print(f"  Result: {result}")
+#         logger.info(f"  Result: {result}")
 #     except Exception as e:
-#         print(f"  Error: {e}")
+#         logger.info(f"  Error: {e}")
 #
 #
 # if __name__ == "__main__":

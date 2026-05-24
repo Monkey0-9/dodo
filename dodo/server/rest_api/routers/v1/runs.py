@@ -1,4 +1,4 @@
-﻿from datetime import timedelta
+from datetime import timedelta
 from typing import Annotated, Any, List, Literal, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
@@ -43,7 +43,7 @@ def convert_statuses_to_enum(statuses: Optional[List[str]]) -> Optional[List[Run
     return [RunStatus(status) for status in statuses]
 
 
-@router.get("/", response_model=List[Run], operation_id="list_runs")
+@router.get("", response_model=List[Run], operation_id="list_runs")
 async def list_runs(
     server: "SyncServer" = Depends(get_dodo_server),
     agent_id: Optional[str] = Query(None, description="The unique identifier of the agent associated with the run."),
@@ -198,20 +198,6 @@ async def retrieve_usage_for_run(
     runs_manager = RunManager()
 
     return await runs_manager.get_run_usage(run_id=run_id, actor=actor)
-
-
-@router.get("/{run_id}/metrics", response_model=RunMetrics, operation_id="retrieve_metrics_for_run")
-async def retrieve_metrics_for_run(
-    run_id: str,
-    headers: HeaderParams = Depends(get_headers),
-    server: "SyncServer" = Depends(get_dodo_server),
-):
-    """
-    Get run metrics by run ID.
-    """
-    actor = await server.user_manager.get_actor_or_default_async(actor_id=headers.actor_id)
-    runs_manager = RunManager()
-    return await runs_manager.get_run_metrics_async(run_id=run_id, actor=actor)
 
 
 @router.get("/{run_id}/metrics", response_model=RunMetrics, operation_id="retrieve_metrics_for_run")

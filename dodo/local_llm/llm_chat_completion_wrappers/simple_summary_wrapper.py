@@ -1,5 +1,8 @@
 from ...helpers.json_helpers import json_dumps, json_loads
 from .wrapper_base import LLMChatCompletionWrapper
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 class SimpleSummaryWrapper(LLMChatCompletionWrapper):
@@ -101,8 +104,9 @@ class SimpleSummaryWrapper(LLMChatCompletionWrapper):
                         content_json = json_loads(message["content"])
                         content_simple = content_json["message"]
                         prompt += f"\nUSER: {content_simple}"
-                    except Exception:
-                        prompt += f"\nUSER: {message['content']}"
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
+        prompt += f"\nUSER: {message['content']}"
             elif message["role"] == "assistant":
                 prompt += f"\nASSISTANT: {message['content']}"
                 # need to add the function call if there was one

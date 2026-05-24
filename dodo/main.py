@@ -1,11 +1,12 @@
-﻿import typer
+import typer
 
-from dodo.cli.cli import server
+from dodo.cli.cli import server, version
 
 app = typer.Typer(pretty_exceptions_enable=False)
 
 # Register server as both the default command and as a subcommand
 app.command(name="server")(server)
+app.command(name="version")(version)
 
 
 # Also make server the default when no command is specified
@@ -14,4 +15,8 @@ def main(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         # If no subcommand is specified, run the server
         server()
+
+
+if __name__ == "__main__":
+    app()
 

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Lightweight thread-based watchdog to detect event loop hangs.
 Runs independently and won't interfere with tests or normal operation.
 """
@@ -96,7 +96,8 @@ class EventLoopWatchdog:
 
             try:
                 MetricRegistry().event_loop_lag_ms_histogram.record(lag * 1000, attributes={"source": "watchdog_heartbeat"})
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 # Observability must never interfere with watchdog safety.
                 pass
 
@@ -135,20 +136,23 @@ class EventLoopWatchdog:
                         all_tasks = asyncio.all_tasks(self._loop)
                         task_count = len(all_tasks)
                         executor_backlog = self._get_executor_backlog(self._loop)
-                except Exception:
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
                     # Accessing loop from thread can be fragile, don't fail
                     pass
 
                 if executor_backlog >= 0:
                     try:
                         MetricRegistry().executor_backlog_gauge.set(executor_backlog, attributes={"source": "default_executor"})
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         pass
 
                 if task_count >= 0:
                     try:
                         MetricRegistry().asyncio_task_count_gauge.set(task_count)
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         pass
 
                 # ALWAYS log every check to prove watchdog is alive
@@ -231,7 +235,8 @@ class EventLoopWatchdog:
             elapsed = now - self._degraded_since
             if elapsed >= rs.degraded_stabilization_seconds and get_readiness_state() == "ready":
                 mark_degraded(f"event_loop_lag:{current_lag_ms:.0f}ms")
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             pass  # Readiness gating must never crash the watchdog
 
     def _maybe_recover_readiness(self, now: float) -> None:
@@ -257,7 +262,8 @@ class EventLoopWatchdog:
             if elapsed >= rs.recovery_stabilization_seconds:
                 clear_degraded("event_loop_lag")
                 self._recovery_since = None
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             pass  # Readiness gating must never crash the watchdog
 
     @staticmethod
@@ -273,8 +279,9 @@ class EventLoopWatchdog:
 
         try:
             return int(work_queue.qsize())
-        except Exception:
-            return 0
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        return 0
 
     def _dump_state(self):
         """Dump state with stack traces when hang detected."""
@@ -346,7 +353,8 @@ class EventLoopWatchdog:
 
                             tasks_by_location[location].append((task, stack))
                             break
-                except Exception:
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
                     continue
 
             if not tasks_by_location:

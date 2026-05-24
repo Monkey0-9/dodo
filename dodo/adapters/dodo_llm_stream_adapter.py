@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import asyncio
 from typing import AsyncGenerator
@@ -18,6 +18,9 @@ from dodo.schemas.provider_trace import BillingContext, ProviderTrace
 from dodo.schemas.user import User
 from dodo.settings import settings
 from dodo.utils import safe_create_task
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 class dodoLLMStreamAdapter(dodoLLMAdapter):
@@ -126,10 +129,12 @@ class dodoLLMStreamAdapter(dodoLLMAdapter):
         # ttft_span = kwargs.get('ttft_span', None)
 
         request_start_ns = get_utc_timestamp_ns()
+        stream_started = False
 
         # Start the streaming request (map provider errors to common LLMError types)
         try:
             stream = await self.llm_client.stream_async(request_data, self.llm_config)
+            stream_started = True
         except Exception as e:
             self.llm_request_finish_timestamp_ns = get_utc_timestamp_ns()
             latency_ms = int((self.llm_request_finish_timestamp_ns - request_start_ns) / 1_000_000)
@@ -144,8 +149,6 @@ class dodoLLMStreamAdapter(dodoLLMAdapter):
             if isinstance(e, LLMError):
                 raise
             raise self.llm_client.handle_llm_error(e, llm_config=self.llm_config)
-
-        stream_started = True
 
         try:
             # Process the stream and yield chunks immediately for TTFT
@@ -183,23 +186,27 @@ class dodoLLMStreamAdapter(dodoLLMAdapter):
             # Extract best-effort request results for trace logging
             try:
                 self.tool_call = self.interface.get_tool_call_object()
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 self.tool_call = None
 
             try:
                 self.reasoning_content = self.interface.get_reasoning_content()
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 self.reasoning_content = []
 
             try:
                 self.usage = self.interface.get_usage_statistics()
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 pass
-            self.usage.step_count = 1
+                self.usage.step_count = 1
 
             try:
                 self.message_id = self.interface.dodo_message_id
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 self.message_id = None
 
             # Log request and response data

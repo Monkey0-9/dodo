@@ -1,10 +1,10 @@
-﻿import os
+import os
 import threading
 
 import pytest
 from dotenv import load_dotenv
 from dodo.client import dodo
-from dodo_client.core.api_error import ApiError
+from dodo.client.types import APIError as ApiError
 
 from tests.utils import wait_for_server
 

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 router = APIRouter(prefix="/orgs", tags=["organization", "admin"])
 
 
-@router.get("/", tags=["admin"], response_model=List[Organization], operation_id="list_orgs")
+@router.get("", tags=["admin"], response_model=List[Organization], operation_id="list_orgs")
 async def get_all_orgs(
     after: Optional[str] = Query(None),
     limit: Optional[int] = Query(50),
@@ -24,7 +24,7 @@ async def get_all_orgs(
     return await server.organization_manager.list_organizations_async(after=after, limit=limit)
 
 
-@router.post("/", tags=["admin"], response_model=Organization, operation_id="create_organization")
+@router.post("", tags=["admin"], response_model=Organization, operation_id="create_organization")
 async def create_org(
     request: OrganizationCreate = Body(...),
     server: "SyncServer" = Depends(get_dodo_server),
@@ -37,7 +37,7 @@ async def create_org(
     return org
 
 
-@router.delete("/", tags=["admin"], response_model=Organization, operation_id="delete_organization_by_id")
+@router.delete("", tags=["admin"], response_model=Organization, operation_id="delete_organization_by_id")
 async def delete_org(
     org_id: str = Query(..., description="The org_id key to be deleted."),
     server: "SyncServer" = Depends(get_dodo_server),
@@ -49,7 +49,7 @@ async def delete_org(
     return org
 
 
-@router.patch("/", tags=["admin"], response_model=Organization, operation_id="update_organization")
+@router.patch("", tags=["admin"], response_model=Organization, operation_id="update_organization")
 async def update_org(
     org_id: str = Query(..., description="The org_id key to be updated."),
     request: OrganizationUpdate = Body(...),

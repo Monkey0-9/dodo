@@ -1,5 +1,40 @@
+import { useEffect, useState } from 'react';
+import { api } from '../../api/client';
+import type { TopologyData, TopologyNode } from '../../api/types';
 
 export const Topology = () => {
+  const [data, setData] = useState<TopologyData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedNode, setSelectedNode] = useState<TopologyNode | null>(null);
+
+  useEffect(() => {
+    const fetchTopology = async () => {
+      try {
+        const topology = await api.analytics.getTopology();
+        setData(topology);
+        if (topology.nodes.length > 0) {
+          setSelectedNode(topology.nodes[0]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch topology:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchTopology();
+  }, []);
+
+  if (isLoading || !data) {
+    return (
+      <div className="flex h-full items-center justify-center bg-surface-container-lowest -m-8">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-mono text-primary font-bold uppercase tracking-widest">Discovering Topology...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full overflow-hidden -m-8">
       {/* Left Sidebar: Intelligence Streams */}
@@ -9,10 +44,18 @@ export const Topology = () => {
           <span className="w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_10px_#4cd7f6]"></span>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
-          <StreamItem id="AGENT_772" latency="0.12ms" logs={['RETRIEVING_CONTEXT: hash_88192...', 'GENERATING_TOKENS: 45/s']} active />
-          <StreamItem id="DODO_CORE_V2" latency="0.08ms" logs={['SYNAPSE_REWEIGHTING: active', 'CACHE_HIT: metadata_layer_04']} active />
-          <StreamItem id="MEMORY_CLUSTER_A" latency="IDLE" logs={['COMPRESSION_CYCLE: 98%']} />
-          <StreamItem id="AGENT_114" latency="0.44ms" logs={['KNOWLEDGE_EMBEDDING: shard_12', 'STREAMING_ACTIVE: buffer_overflow_0']} active />
+          {data.nodes.filter(n => n.type === 'agent').map(agent => (
+            <StreamItem 
+              key={agent.id}
+              id={agent.name} 
+              latency="0.12ms" 
+              logs={['STREAMING_ACTIVE', 'HEARTBEAT_OK']} 
+              active={agent.status === 'active'} 
+            />
+          ))}
+          <div className="p-4 bg-surface-container/30 border border-outline-variant/30 rounded-xl opacity-40 italic text-[10px] text-center">
+            End of active streams
+          </div>
         </div>
         {/* Knowledge Indexing Status Bar */}
         <div className="p-6 bg-surface border-t border-outline-variant">
@@ -22,10 +65,6 @@ export const Topology = () => {
           </div>
           <div className="h-1 bg-outline-variant w-full overflow-hidden rounded-full">
             <div className="h-full bg-primary w-[74.2%] transition-all duration-1000"></div>
-          </div>
-          <div className="mt-3 flex justify-between">
-            <span className="text-[9px] font-mono text-on-surface-variant">BATCH: V2.B-1099</span>
-            <span className="text-[9px] font-mono text-on-surface-variant">ETA: 02:14:00</span>
           </div>
         </div>
       </aside>
@@ -47,38 +86,47 @@ export const Topology = () => {
             </div>
 
             {/* Custom UI Node Overlays */}
-            {/* Core Model */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 p-4 bg-surface/90 backdrop-blur-md border-2 border-primary rounded-xl shadow-[0_0_40px_rgba(76,215,246,0.2)] z-10">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-primary border-b border-outline-variant pb-2 mb-2 font-mono">Core_Intelligence_01</div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center"><span className="font-mono text-[10px] text-on-surface-variant uppercase">Load</span> <span className="font-mono text-[11px] text-primary font-bold">44.2%</span></div>
-                <div className="flex justify-between items-center"><span className="font-mono text-[10px] text-on-surface-variant uppercase">Temp</span> <span className="font-mono text-[11px] text-error font-bold">72.4°C</span></div>
-              </div>
-            </div>
+            {data.nodes.map((node, i) => {
+              const x = 20 + (i * 30) % 60;
+              const y = 20 + (i * 20) % 60;
+              
+              return (
+                <div 
+                  key={node.id}
+                  onClick={() => setSelectedNode(node)}
+                  className={`absolute p-4 backdrop-blur-md border-2 rounded-xl shadow-lg z-10 cursor-pointer transition-all hover:scale-105
+                    ${node.type === 'model' ? 'border-primary bg-surface/90 w-56' : 
+                      node.type === 'memory' ? 'border-secondary bg-surface/80 w-40' : 'border-tertiary bg-surface/80 w-40'}
+                    ${selectedNode?.id === node.id ? 'ring-2 ring-white/20 scale-105' : ''}`}
+                  style={{ left: `${x}%`, top: `${y}%` }}
+                >
+                  <div className={`text-[10px] font-bold uppercase tracking-widest border-b border-outline-variant pb-2 mb-2 font-mono
+                    ${node.type === 'model' ? 'text-primary' : node.type === 'memory' ? 'text-secondary' : 'text-tertiary'}`}>
+                    {node.name}
+                  </div>
+                  <div className="space-y-1">
+                    {Object.entries(node.metadata).map(([key, val]) => (
+                      <div key={key} className="flex justify-between items-center">
+                        <span className="font-mono text-[9px] text-on-surface-variant uppercase">{key}</span> 
+                        <span className="font-mono text-[10px] text-on-surface font-bold">{val as string}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
 
-            {/* Memory Node 1 */}
-            <div className="absolute top-1/4 left-1/4 w-40 p-3 bg-surface/80 backdrop-blur-md border border-secondary rounded-lg shadow-xl">
-              <div className="text-[9px] font-bold uppercase tracking-widest text-secondary border-b border-outline-variant mb-2 font-mono">Mem_Cluster_A</div>
-              <div className="h-1 bg-outline-variant w-full mb-2 rounded-full overflow-hidden">
-                <div className="h-full bg-secondary w-1/3"></div>
-              </div>
-              <div className="text-[9px] font-mono text-on-surface-variant uppercase">Health: 99.9%</div>
-            </div>
-
-            {/* Agent Node 1 */}
-            <div className="absolute bottom-1/4 right-1/4 w-40 p-3 bg-surface/80 backdrop-blur-md border border-tertiary rounded-lg shadow-xl">
-              <div className="text-[9px] font-bold uppercase tracking-widest text-tertiary border-b border-outline-variant mb-2 font-mono">Agent_Instance_09</div>
-              <div className="flex items-center gap-1.5 font-mono text-[9px] text-on-surface-variant">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                <span>STATUS: ACTIVE</span>
-              </div>
-            </div>
-
-            {/* Connection Lines (SVG) */}
+            {/* Connection Lines (SVG) - Simplified Auto-mapping */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-40">
-              <line x1="25%" y1="25%" x2="50%" y2="50%" stroke="var(--color-secondary)" strokeWidth="1" strokeDasharray="4 4" />
-              <line x1="75%" y1="75%" x2="50%" y2="50%" stroke="var(--color-tertiary)" strokeWidth="1" strokeDasharray="4 4" />
-              <circle cx="50%" cy="50%" r="100" fill="none" stroke="var(--color-primary)" strokeWidth="0.5" strokeDasharray="10 10" className="animate-spin-slow" />
+              <circle cx="50%" cy="50%" r="150" fill="none" stroke="var(--color-primary)" strokeWidth="0.5" strokeDasharray="10 10" className="animate-spin-slow" />
+              {data.links.map((link, i) => (
+                <line 
+                  key={i}
+                  x1="50%" y1="50%" x2="25%" y2="25%" 
+                  stroke={link.type === 'data' ? 'var(--color-secondary)' : 'var(--color-tertiary)'} 
+                  strokeWidth="1" strokeDasharray="4 4" 
+                />
+              ))}
             </svg>
           </div>
         </div>
@@ -88,31 +136,34 @@ export const Topology = () => {
           <div className="flex items-center justify-between px-6 py-3 border-b border-outline-variant bg-surface-container">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-primary text-lg">monitoring</span>
-              <h4 className="text-[10px] font-bold uppercase tracking-widest font-mono">Latency_Matrix_System_Wide</h4>
-            </div>
-            <div className="flex gap-2">
-              <button className="px-3 py-1 border border-outline-variant text-[9px] font-bold uppercase tracking-widest font-mono hover:bg-surface-container-high transition-colors">Refresh_Logs</button>
-              <button className="px-3 py-1 border border-outline-variant text-[9px] font-bold uppercase tracking-widest font-mono hover:bg-surface-container-high transition-colors">Export_CSV</button>
+              <h4 className="text-[10px] font-bold uppercase tracking-widest font-mono">System_Performance_Matrix</h4>
             </div>
           </div>
           <div className="flex-1 overflow-auto p-0 no-scrollbar">
             <table className="w-full text-left font-mono text-[11px] border-collapse">
               <thead className="sticky top-0 bg-surface-container-low border-b border-outline-variant z-10">
                 <tr>
-                  <th className="p-4 border-r border-outline-variant text-on-surface-variant font-bold uppercase tracking-widest">Model_Node_ID</th>
-                  <th className="p-4 border-r border-outline-variant text-on-surface-variant font-bold uppercase tracking-widest">P50 (ms)</th>
-                  <th className="p-4 border-r border-outline-variant text-on-surface-variant font-bold uppercase tracking-widest">P99 (ms)</th>
-                  <th className="p-4 border-r border-outline-variant text-on-surface-variant font-bold uppercase tracking-widest">Throughput (t/s)</th>
-                  <th className="p-4 border-r border-outline-variant text-on-surface-variant font-bold uppercase tracking-widest">Error_Rate</th>
-                  <th className="p-4 text-on-surface-variant font-bold uppercase tracking-widest">Last_Sync</th>
+                  <th className="p-4 border-r border-outline-variant text-on-surface-variant font-bold uppercase tracking-widest">Entity_ID</th>
+                  <th className="p-4 border-r border-outline-variant text-on-surface-variant font-bold uppercase tracking-widest">Type</th>
+                  <th className="p-4 border-r border-outline-variant text-on-surface-variant font-bold uppercase tracking-widest">Status</th>
+                  <th className="p-4 text-on-surface-variant font-bold uppercase tracking-widest">Performance_Metric</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/30">
-                <TableRow id="DODO-LLM-ULTRA-01" p50="12.4" p99="45.8" throughput="1,240" error="0.001%" sync="14:02:11" />
-                <TableRow id="DODO-FAST-TOKENIZER" p50="0.8" p99="2.1" throughput="12,500" error="0.000%" sync="14:02:09" />
-                <TableRow id="RAG-EMBED-V4" p50="34.1" p99="102.5" throughput="450" error="0.012%" sync="14:02:12" color="text-tertiary" />
-                <TableRow id="CORE-REASONER-BETA" p50="112.5" p99="450.0" throughput="12" error="2.441%" sync="14:02:10" color="text-error" />
-                <TableRow id="VISION-CLUSTER-A" p50="65.2" p99="144.1" throughput="88" error="0.005%" sync="14:01:59" />
+                {data.nodes.map(node => (
+                  <tr key={node.id} className="hover:bg-surface-container-high transition-colors">
+                    <td className="p-4 border-r border-outline-variant font-bold text-on-surface">{node.id}</td>
+                    <td className="p-4 border-r border-outline-variant uppercase text-[10px]">{node.type}</td>
+                    <td className="p-4 border-r border-outline-variant">
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${node.status === 'active' ? 'bg-success/10 text-success' : 'bg-on-surface-variant/10 text-on-surface-variant'}`}>
+                        {node.status.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="p-4 text-primary-fixed-dim">
+                      {Object.values(node.metadata)[0] as string}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -122,42 +173,39 @@ export const Topology = () => {
       {/* Right Inspector Panel */}
       <aside className="w-80 border-l border-outline-variant bg-surface-container flex flex-col">
         <div className="p-6 bg-surface border-b border-outline-variant">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface font-mono">System_Entity_Inspector</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface font-mono">Entity_Inspector</span>
         </div>
-        <div className="p-6 space-y-8 flex-1 overflow-y-auto no-scrollbar">
-          <div className="space-y-3">
-            <h3 className="text-xl font-bold text-primary">CORE_INTELLIGENCE_01</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <MetadataBox label="Role" value="SUPERVISOR" />
-              <MetadataBox label="Uptime" value="422:11:05" />
+        {selectedNode ? (
+          <div className="p-6 space-y-8 flex-1 overflow-y-auto no-scrollbar">
+            <div className="space-y-3">
+              <h3 className="text-xl font-bold text-primary">{selectedNode.name}</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <MetadataBox label="ID" value={selectedNode.id} />
+                <MetadataBox label="Status" value={selectedNode.status.toUpperCase()} />
+              </div>
             </div>
-          </div>
 
-          <div className="aspect-video w-full bg-background border border-outline-variant relative flex items-center justify-center rounded-lg overflow-hidden group">
-             <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors"></div>
-             <div className="relative z-10 flex flex-col items-center gap-2">
-               <span className="material-symbols-outlined text-primary animate-pulse">monitoring</span>
-               <span className="text-[9px] font-mono font-bold text-primary uppercase tracking-widest border border-primary/30 px-2 py-1 rounded bg-background/80">Live_Metrics</span>
-             </div>
-          </div>
-
-          <div className="space-y-4">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface font-mono">Trace_Logs</span>
-            <div className="bg-surface-container-lowest p-4 border border-outline-variant h-64 overflow-y-auto font-mono text-[10px] space-y-2 rounded-lg no-scrollbar">
-              <LogLine time="14:02:10" content={<><span className="text-primary">CORE_01</span> Connected to <span className="text-secondary">MEM_A</span></>} />
-              <LogLine time="14:02:11" content="Handshake protocol verified (0x02)" />
-              <LogLine time="14:02:11" content="Forwarding query batch to 12 agents" />
-              <LogLine time="14:02:12" content={<span className="text-tertiary">Agent_114 reporting heavy latency (shard_12)</span>} />
-              <LogLine time="14:02:12" content="Rebalancing load across shard_13" />
-              <LogLine time="14:02:13" content="HEARTBEAT_OK" />
-              <LogLine time="14:02:14" content="Processing token stream..." />
+            <div className="space-y-4">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface font-mono">Detailed_Metadata</span>
+              <div className="bg-surface-container-lowest p-4 border border-outline-variant font-mono text-[10px] space-y-3 rounded-lg">
+                {Object.entries(selectedNode.metadata).map(([key, val]) => (
+                  <div key={key} className="flex justify-between">
+                    <span className="text-on-surface-variant">{key}:</span>
+                    <span className="text-primary">{val as string}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <button className="w-full py-4 bg-error/20 border border-error/50 text-error font-mono font-bold text-xs uppercase tracking-widest rounded hover:bg-error hover:text-on-error transition-all active:scale-95">
-            Initiate_System_Purge
-          </button>
-        </div>
+            <button className="w-full py-4 bg-primary/10 border border-primary/30 text-primary font-mono font-bold text-xs uppercase tracking-widest rounded hover:bg-primary hover:text-on-primary transition-all">
+              Initialize_Diagnostic
+            </button>
+          </div>
+        ) : (
+          <div className="p-12 text-center text-on-surface-variant opacity-40 italic text-xs">
+            Select a node to inspect details
+          </div>
+        )}
       </aside>
     </div>
   );
@@ -184,26 +232,9 @@ const Indicator = ({ color, label }: { color: string, label: React.ReactNode }) 
   </div>
 );
 
-const TableRow = ({ id, p50, p99, throughput, error, sync, color = "text-primary" }: { id: string, p50: string, p99: string, throughput: string, error: string, sync: string, color?: string }) => (
-  <tr className="hover:bg-surface-container-high transition-colors group">
-    <td className="p-4 border-r border-outline-variant font-bold text-on-surface">{id}</td>
-    <td className="p-4 border-r border-outline-variant">{p50}</td>
-    <td className="p-4 border-r border-outline-variant">{p99}</td>
-    <td className="p-4 border-r border-outline-variant">{throughput}</td>
-    <td className={`p-4 border-r border-outline-variant font-bold ${color}`}>{error}</td>
-    <td className="p-4 text-on-surface-variant">{sync}</td>
-  </tr>
-);
-
 const MetadataBox = ({ label, value }: { label: string, value: React.ReactNode }) => (
   <div className="bg-surface p-3 border border-outline-variant rounded-lg">
     <div className="text-[8px] font-bold uppercase tracking-widest text-on-surface-variant font-mono mb-1">{label}</div>
     <div className="font-mono text-xs font-bold text-on-surface">{value}</div>
-  </div>
-);
-
-const LogLine = ({ time, content }: { time: string, content: React.ReactNode }) => (
-  <div className="text-on-surface-variant border-b border-outline-variant/10 pb-1">
-    <span className="opacity-40">[{time}]</span> {content}
   </div>
 );

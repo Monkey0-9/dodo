@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 router = APIRouter(prefix="/tags", tags=["tag", "admin"])
 
 
-@router.get("/", tags=["admin"], response_model=List[str], operation_id="list_tags")
+@router.get("", tags=["admin"], response_model=List[str], operation_id="list_tags")
 async def list_tags(
     before: Optional[str] = Query(
         None, description="Tag cursor for pagination. Returns tags that come before this tag in the specified sort order"

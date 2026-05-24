@@ -12,7 +12,7 @@ from typing import Any, List, Tuple
 import pytest
 import requests
 from dotenv import load_dotenv
-from dodo_client import Asyncdodo
+from dodo.client import DodoClient
 from dodo.client.types import (
     AgentState,
     AnthropicModelSettings,
@@ -21,8 +21,8 @@ from dodo.client.types import (
     OpenAIModelSettings,
     ToolReturnMessage,
 )
-from dodo_client.types.agents import AssistantMessage, ReasoningMessage, Run, ToolCallMessage, UserMessage
-from dodo_client.types.agents.dodo_streaming_response import dodoPing, dodoStopReason, dodoUsageStatistics
+from dodo.client.types import AssistantMessage, ReasoningMessage, Run, ToolCallMessage, UserMessage
+from dodo.client.types import dodoStreamingResponse, MessageStreamStatus, dodoUsageStatistics
 
 logger = logging.getLogger(__name__)
 
@@ -110,9 +110,9 @@ def assert_greeting_response(
     Asserts that the messages list follows the expected sequence:
     ReasoningMessage -> AssistantMessage.
     """
-    # Filter out dodoPing messages which are keep-alive messages for SSE streams
+    # Filter out dodoStreamingResponse messages which are keep-alive messages for SSE streams
     messages = [
-        msg for msg in messages if not (isinstance(msg, dodoPing) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
+        msg for msg in messages if not (isinstance(msg, dodoStreamingResponse) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
     ]
 
     expected_message_count_min, expected_message_count_max = get_expected_message_count_range(
@@ -149,7 +149,7 @@ def assert_greeting_response(
 
     # Stop reason and usage statistics if streaming
     if streaming:
-        assert isinstance(messages[index], dodoStopReason)
+        assert isinstance(messages[index], MessageStreamStatus)
         assert messages[index].stop_reason == "end_turn"
         index += 1
         assert isinstance(messages[index], dodoUsageStatistics)
@@ -172,9 +172,9 @@ def assert_tool_call_response(
     ReasoningMessage -> ToolCallMessage -> ToolReturnMessage ->
     ReasoningMessage -> AssistantMessage.
     """
-    # Filter out dodoPing messages which are keep-alive messages for SSE streams
+    # Filter out dodoStreamingResponse messages which are keep-alive messages for SSE streams
     messages = [
-        msg for msg in messages if not (isinstance(msg, dodoPing) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
+        msg for msg in messages if not (isinstance(msg, dodoStreamingResponse) or (hasattr(msg, "message_type") and msg.message_type == "ping"))
     ]
 
     # If cancellation happened and no messages were persisted (early cancellation), return early
@@ -229,8 +229,8 @@ def assert_tool_call_response(
         assert "roll" in messages[index].content.lower() or "die" in messages[index].content.lower()
         return  # Skip tool call assertions for early cancellation
 
-    # If cancellation happens before tool call, we might get dodoStopReason directly
-    if with_cancellation and index < len(messages) and isinstance(messages[index], dodoStopReason):
+    # If cancellation happens before tool call, we might get MessageStreamStatus directly
+    if with_cancellation and index < len(messages) and isinstance(messages[index], MessageStreamStatus):
         assert messages[index].stop_reason == "cancelled"
         return  # Skip remaining assertions for very early cancellation
 
@@ -238,8 +238,8 @@ def assert_tool_call_response(
     assert messages[index].otid and messages[index].otid[-1] == str(otid_suffix)
     index += 1
 
-    # If cancellation happens before tool return, we might get dodoStopReason directly
-    if with_cancellation and index < len(messages) and isinstance(messages[index], dodoStopReason):
+    # If cancellation happens before tool return, we might get MessageStreamStatus directly
+    if with_cancellation and index < len(messages) and isinstance(messages[index], MessageStreamStatus):
         assert messages[index].stop_reason == "cancelled"
         return  # Skip remaining assertions for very early cancellation
 
@@ -270,7 +270,7 @@ def assert_tool_call_response(
 
     # Stop reason and usage statistics if streaming
     if streaming:
-        assert isinstance(messages[index], dodoStopReason)
+        assert isinstance(messages[index], MessageStreamStatus)
         assert messages[index].stop_reason == ("cancelled" if with_cancellation else "end_turn")
         index += 1
         assert isinstance(messages[index], dodoUsageStatistics)
@@ -304,15 +304,15 @@ async def accumulate_chunks(chunks, verify_token_streaming: bool = False) -> Lis
                         # Create proper message type objects
                         message_type = data.get("message_type")
                         if message_type == "assistant_message":
-                            from dodo_client.types.agents import AssistantMessage
+                            from dodo.client.types import AssistantMessage
 
                             chunk = AssistantMessage(**data)
                         elif message_type == "reasoning_message":
-                            from dodo_client.types.agents import ReasoningMessage
+                            from dodo.client.types import ReasoningMessage
 
                             chunk = ReasoningMessage(**data)
                         elif message_type == "tool_call_message":
-                            from dodo_client.types.agents import ToolCallMessage
+                            from dodo.client.types import ToolCallMessage
 
                             chunk = ToolCallMessage(**data)
                         elif message_type == "tool_return_message":
@@ -320,15 +320,15 @@ async def accumulate_chunks(chunks, verify_token_streaming: bool = False) -> Lis
 
                             chunk = ToolReturnMessage(**data)
                         elif message_type == "user_message":
-                            from dodo_client.types.agents import UserMessage
+                            from dodo.client.types import UserMessage
 
                             chunk = UserMessage(**data)
                         elif message_type == "stop_reason":
-                            from dodo_client.types.agents.dodo_streaming_response import dodoStopReason
+                            from dodo.client.types import MessageStreamStatus
 
-                            chunk = dodoStopReason(**data)
+                            chunk = MessageStreamStatus(**data)
                         elif message_type == "usage_statistics":
-                            from dodo_client.types.agents.dodo_streaming_response import dodoUsageStatistics
+                            from dodo.client.types import dodoUsageStatistics
 
                             chunk = dodoUsageStatistics(**data)
                         else:
@@ -377,12 +377,12 @@ async def accumulate_chunks(chunks, verify_token_streaming: bool = False) -> Lis
     return messages
 
 
-async def cancel_run_after_delay(client: Asyncdodo, agent_id: str, delay: float = 0.5):
+async def cancel_run_after_delay(client: DodoClient, agent_id: str, delay: float = 0.5):
     await asyncio.sleep(delay)
     await client.agents.messages.cancel(agent_id=agent_id)
 
 
-async def wait_for_run_completion(client: Asyncdodo, run_id: str, timeout: float = 30.0, interval: float = 0.5) -> Run:
+async def wait_for_run_completion(client: DodoClient, run_id: str, timeout: float = 30.0, interval: float = 0.5) -> Run:
     start = time.time()
     while True:
         run = await client.runs.retrieve(run_id)
@@ -562,16 +562,16 @@ def server_url() -> str:
 
 
 @pytest.fixture(scope="function")
-async def client(server_url: str) -> Asyncdodo:
+async def client(server_url: str) -> DodoClient:
     """
     Creates and returns an asynchronous dodo REST client for testing.
     """
-    client_instance = Asyncdodo(base_url=server_url)
+    client_instance = DodoClient(base_url=server_url)
     yield client_instance
 
 
 @pytest.fixture(scope="function")
-async def agent_state(client: Asyncdodo) -> AgentState:
+async def agent_state(client: DodoClient) -> AgentState:
     """
     Creates and returns an agent state for testing with a pre-configured agent.
     The agent is named 'supervisor' and is configured with base tools and the roll_dice tool.
@@ -609,7 +609,7 @@ async def agent_state(client: Asyncdodo) -> AgentState:
 @pytest.mark.asyncio(loop_scope="function")
 async def test_greeting(
     disable_e2b_api_key: Any,
-    client: Asyncdodo,
+    client: DodoClient,
     agent_state: AgentState,
     model_config: Tuple[str, dict],
     send_type: str,
@@ -679,7 +679,7 @@ async def test_greeting(
 @pytest.mark.asyncio(loop_scope="function")
 async def test_parallel_tool_calls(
     disable_e2b_api_key: Any,
-    client: Asyncdodo,
+    client: DodoClient,
     agent_state: AgentState,
     model_config: Tuple[str, dict],
     send_type: str,
@@ -883,7 +883,7 @@ async def test_parallel_tool_calls(
 @pytest.mark.asyncio(loop_scope="function")
 async def test_tool_call(
     disable_e2b_api_key: Any,
-    client: Asyncdodo,
+    client: DodoClient,
     agent_state: AgentState,
     model_config: Tuple[str, dict],
     send_type: str,
@@ -970,7 +970,7 @@ async def test_tool_call(
 @pytest.mark.asyncio(loop_scope="function")
 async def test_conversation_streaming_raw_http(
     disable_e2b_api_key: Any,
-    client: Asyncdodo,
+    client: DodoClient,
     server_url: str,
     agent_state: AgentState,
     model_config: Tuple[str, dict],
@@ -1063,7 +1063,7 @@ async def test_conversation_streaming_raw_http(
 @pytest.mark.asyncio(loop_scope="function")
 async def test_conversation_non_streaming_raw_http(
     disable_e2b_api_key: Any,
-    client: Asyncdodo,
+    client: DodoClient,
     server_url: str,
     agent_state: AgentState,
     model_config: Tuple[str, dict],
@@ -1129,7 +1129,7 @@ async def test_conversation_non_streaming_raw_http(
 @pytest.mark.asyncio(loop_scope="function")
 async def test_json_schema_response_format(
     disable_e2b_api_key: Any,
-    client: Asyncdodo,
+    client: DodoClient,
     model_handle: str,
     provider_type: str,
 ) -> None:
@@ -1331,7 +1331,7 @@ PROMPT_CACHE_MODEL_CONFIGS: List[Tuple[str, dict]] = [
 @pytest.mark.asyncio(loop_scope="function")
 async def test_openai_prompt_cache_integration(
     disable_e2b_api_key: Any,
-    client: Asyncdodo,
+    client: DodoClient,
     model_config: Tuple[str, dict],
 ) -> None:
     """

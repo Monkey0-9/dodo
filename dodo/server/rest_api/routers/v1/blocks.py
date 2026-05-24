@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 router = APIRouter(prefix="/blocks", tags=["blocks"])
 
 
-@router.get("/", response_model=List[BlockResponse], operation_id="list_blocks")
+@router.get("", response_model=List[BlockResponse], operation_id="list_blocks")
 async def list_blocks(
     # query parameters
     label: BlockLabelQuery = None,
@@ -143,7 +143,7 @@ async def count_blocks(
     )
 
 
-@router.post("/", response_model=BlockResponse, operation_id="create_block")
+@router.post("", response_model=BlockResponse, operation_id="create_block")
 async def create_block(
     create_block: CreateBlock = Body(...),
     server: SyncServer = Depends(get_dodo_server),

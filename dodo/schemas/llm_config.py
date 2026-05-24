@@ -1,4 +1,4 @@
-﻿import re
+import re
 from typing import TYPE_CHECKING, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator

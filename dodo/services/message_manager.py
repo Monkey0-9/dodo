@@ -323,8 +323,8 @@ class MessageManager:
                         except (json.JSONDecodeError, ValueError):
                             tool_result_summary = tool_result_text
 
-                        combined_data = {"thinking": assistant_text, "tool_call": tool_call_str, "tool_result": tool_result_summary}
-                        combined_text = json.dumps(combined_data)
+                            combined_data = {"thinking": assistant_text, "tool_call": tool_call_str, "tool_result": tool_result_summary}
+                            combined_text = json.dumps(combined_data)
                     else:
                         combined_text = assistant_text
 

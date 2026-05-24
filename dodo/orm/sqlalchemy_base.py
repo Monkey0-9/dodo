@@ -48,7 +48,8 @@ def _record_db_checkout_timeout_metric() -> None:
 
         pool_mode = "client_pooling_disabled" if settings.disable_sqlalchemy_pooling else "client_pooling_enabled"
         MetricRegistry().db_pool_checkout_timeout_counter.add(1, attributes={"engine_name": "core", "pool_mode": pool_mode})
-    except Exception:
+    except Exception as e:
+        logger.exception(f"Unexpected error: {e}")
         # Never break DB error handling due to metric failures.
         pass
 

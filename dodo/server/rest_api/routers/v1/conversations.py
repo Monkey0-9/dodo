@@ -44,7 +44,7 @@ logger = get_logger(__name__)
 conversation_manager = ConversationManager()
 
 
-@router.post("/", response_model=Conversation, operation_id="create_conversation")
+@router.post("", response_model=Conversation, operation_id="create_conversation")
 async def create_conversation(
     agent_id: str = Query(..., description="The agent ID to create a conversation for"),
     conversation_create: CreateConversation = Body(default_factory=CreateConversation),
@@ -60,7 +60,7 @@ async def create_conversation(
     )
 
 
-@router.get("/", response_model=List[Conversation], operation_id="list_conversations")
+@router.get("", response_model=List[Conversation], operation_id="list_conversations")
 async def list_conversations(
     agent_id: Optional[str] = Query(
         None, description="The agent ID to list conversations for (optional - returns all conversations if not provided)"
@@ -917,8 +917,8 @@ async def cancel_conversation(
             results[run_id] = "failed"
             logger.error(f"Failed to cancel run {run_id}: {str(e)}")
             continue
-        results[run_id] = "cancelled"
-        logger.info(f"Cancelled run {run_id}")
+            results[run_id] = "cancelled"
+            logger.info(f"Cancelled run {run_id}")
 
     return results
 

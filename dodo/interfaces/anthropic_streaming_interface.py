@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import json
 from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
@@ -126,7 +126,8 @@ class AnthropicStreamingInterface:
             # Attempt to use OptimisticJSONParser to handle incomplete/malformed JSON
             try:
                 tool_input = self.json_parser.parse(args_str)
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 logger.warning(
                     f"Failed to decode tool call arguments for tool_call_id={self.tool_call_id}, "
                     f"name={self.tool_call_name}. Raw input: {args_str!r}. Error: {e}"
@@ -678,7 +679,8 @@ class SimpleAnthropicStreamingInterface:
             # Attempt to use OptimisticJSONParser to handle incomplete/malformed JSON
             try:
                 tool_input = self.json_parser.parse(args_str)
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 logger.warning(
                     f"Failed to decode tool call arguments for tool_call_id={self.tool_call_id}, "
                     f"name={self.tool_call_name}. Raw input: {args_str!r}. Error: {e}"
@@ -797,7 +799,7 @@ class SimpleAnthropicStreamingInterface:
                                 if prev_message_type != None:
                                     message_index += 1
                                 prev_message_type = new_message_type
-                            # print(f"Yielding message: {message}")
+                            # logger.info(f"Yielding message: {message}")
                             yield message
                     except (asyncio.CancelledError, RunCancelledException) as e:
                         import traceback

@@ -14,7 +14,7 @@ from dodo.validators import GroupId, MessageId
 router = APIRouter(prefix="/groups", tags=["groups"])
 
 
-@router.get("/", response_model=List[Group], operation_id="list_groups", deprecated=True)
+@router.get("", response_model=List[Group], operation_id="list_groups", deprecated=True)
 async def list_groups(
     server: "SyncServer" = Depends(get_dodo_server),
     headers: HeaderParams = Depends(get_headers),
@@ -78,7 +78,7 @@ async def retrieve_group(
     return await server.group_manager.retrieve_group_async(group_id=group_id, actor=actor)
 
 
-@router.post("/", response_model=Group, operation_id="create_group", deprecated=True)
+@router.post("", response_model=Group, operation_id="create_group", deprecated=True)
 async def create_group(
     group: GroupCreate = Body(...),
     server: "SyncServer" = Depends(get_dodo_server),

@@ -1,39 +1,133 @@
+import { useState, useEffect, useRef } from 'react';
+import { api } from '../../api/client';
+import type { AgentState, Message as APIMessage } from '../../api/types';
 
 export const Playground = () => {
+  const [agents, setAgents] = useState<AgentState[]>([]);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>('');
+  const [messages, setMessages] = useState<APIMessage[]>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [initLoading, setInitLoading] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const agentsData = await api.agents.list();
+        setAgents(agentsData);
+        if (agentsData.length > 0) {
+          setSelectedAgentId(agentsData[0].id);
+        }
+      } catch (err) {
+        console.error("Failed to load agents", err);
+      } finally {
+        setInitLoading(false);
+      }
+    };
+    init();
+  }, []);
+
+  useEffect(() => {
+    if (selectedAgentId) {
+      api.agents.listMessages(selectedAgentId).then(data => {
+        setMessages(data || []);
+      }).catch(err => {
+        console.error("Failed to load messages", err);
+        setMessages([]);
+      });
+    } else {
+      setMessages([]);
+    }
+  }, [selectedAgentId]);
+
+  useEffect(() => {
+    // Scroll to bottom when messages change
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  const handleSend = async () => {
+    if (!input.trim() || !selectedAgentId || loading) return;
+    
+    const text = input;
+    setInput('');
+    setLoading(true);
+    
+    // Optimistic user message
+    const tempUserMsg: APIMessage = {
+      id: Math.random().toString(),
+      role: 'user',
+      content: text,
+      created_at: new Date().toISOString(),
+    };
+    
+    setMessages(prev => [...prev, tempUserMsg]);
+    
+    try {
+      await api.agents.sendMessage(selectedAgentId, text);
+      const updatedMessages = await api.agents.listMessages(selectedAgentId);
+      setMessages(updatedMessages || []);
+    } catch (e) {
+      console.error("Failed to send message", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const selectedAgent = agents.find(a => a.id === selectedAgentId);
+
   return (
     <div className="flex h-full overflow-hidden -m-8">
       {/* Left Column: Configuration (20%) */}
       <section className="w-1/5 border-r border-outline-variant bg-surface-container-lowest p-6 flex flex-col gap-6 overflow-y-auto shrink-0">
         <div className="space-y-4">
           <h3 className="text-[10px] font-mono uppercase tracking-widest text-primary font-bold">Configuration</h3>
-          <div className="space-y-2">
-            <label className="block text-[10px] text-on-surface-variant font-mono uppercase tracking-widest font-bold">Agent Profile</label>
-            <select title="Agent Profile" className="w-full bg-surface-container-high border border-outline-variant rounded-lg p-2.5 text-sm focus:border-primary outline-none text-on-surface">
-              <option>Data Scribe</option>
-              <option>Workflow Orchestrator</option>
-              <option>Kernel Auditor</option>
-            </select>
-          </div>
-          <div className="space-y-2">
-            <label className="block text-[10px] text-on-surface-variant font-mono uppercase tracking-widest font-bold">Inference Model</label>
-            <select title="Inference Model" className="w-full bg-surface-container-high border border-outline-variant rounded-lg p-2.5 text-sm focus:border-primary outline-none text-on-surface">
-              <option>GPT-4o (Stable)</option>
-              <option>Claude 3.5 Sonnet</option>
-              <option>Llama-3-70b-Instruct</option>
-            </select>
-          </div>
-          <div className="space-y-2">
-            <label className="block text-[10px] text-on-surface-variant font-mono uppercase tracking-widest font-bold">System Prompt</label>
-            <textarea 
-              title="System Prompt"
-              className="w-full h-48 bg-surface-container-high border border-outline-variant rounded-lg p-3 font-mono text-xs resize-none focus:border-primary outline-none text-on-surface" 
-              placeholder="Enter system directives..."
-              defaultValue="You are Data Scribe, an elite AI specialized in parsing unstructured technical logs into structured JSON schemas. Your tone is clinical and efficient. Use standard documentation formatting."
-            />
-          </div>
+          
+          {initLoading ? (
+            <div className="text-on-surface-variant text-sm font-mono animate-pulse">Loading Agents...</div>
+          ) : (
+            <div className="space-y-2">
+              <label className="block text-[10px] text-on-surface-variant font-mono uppercase tracking-widest font-bold">Agent Profile</label>
+              <select 
+                title="Agent Profile" 
+                value={selectedAgentId}
+                onChange={(e) => setSelectedAgentId(e.target.value)}
+                className="w-full bg-surface-container-high border border-outline-variant rounded-lg p-2.5 text-sm focus:border-primary outline-none text-on-surface"
+              >
+                {agents.map(a => (
+                  <option key={a.id} value={a.id}>{a.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {selectedAgent && (
+            <>
+              <div className="space-y-2">
+                <label className="block text-[10px] text-on-surface-variant font-mono uppercase tracking-widest font-bold">Inference Model</label>
+                <div className="w-full bg-surface-container-high border border-outline-variant rounded-lg p-2.5 text-sm text-on-surface">
+                  {selectedAgent.model || 'Default Model'}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-[10px] text-on-surface-variant font-mono uppercase tracking-widest font-bold">Agent Type</label>
+                <div className="w-full bg-surface-container-high border border-outline-variant rounded-lg p-2.5 text-sm text-on-surface">
+                  {selectedAgent.agent_type}
+                </div>
+              </div>
+            </>
+          )}
+
           <div className="pt-4 border-t border-outline-variant space-y-4">
             <Toggle label="Persistent Memory" active />
-            <Toggle label="Tool Access" active />
+            <Toggle label="Tool Access" active={selectedAgent?.tools && selectedAgent.tools.length > 0} />
             <Toggle label="Strict Schema" />
           </div>
         </div>
@@ -44,78 +138,70 @@ export const Playground = () => {
         <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-32">
           {/* Agent Greeting */}
           <Message 
-            sender="Data Scribe" 
+            sender={selectedAgent?.name || "System"} 
             role="SYSTEM" 
-            content="System initialized. I am ready to process your technical data. Please provide the log stream or specific schema requirements you wish to implement." 
+            content={`System initialized. I am ready to process your commands. Select an agent to begin interaction.`} 
             icon="smart_toy"
           />
 
-          {/* User Message */}
-          <Message 
-            sender="Debug_User" 
-            content='Analyze the following runtime error: "ECONNREFUSED 127.0.0.1:5432". Check my past database configurations for the correct port mapping.' 
-            icon="account_circle"
-            isUser
-          />
-
-          {/* Agent Process Message */}
-          <Message 
-            sender="Data Scribe" 
-            icon="smart_toy"
-            content={
-              <div className="space-y-3">
-                <p>I've analyzed your database configuration history. The error <code className="font-mono text-error bg-error/10 px-1 rounded">ECONNREFUSED</code> indicates that the connection was rejected because nothing is listening on port 5432.</p>
-                <div className="bg-black/40 p-3 rounded font-mono text-xs border border-outline-variant">
-                  <span className="text-primary">Recalled Configuration (2024-10-12):</span><br/>
-                  DB_HOST: "prod-db-01.internal"<br/>
-                  DB_PORT: <span className="text-secondary">6432</span> (Proxy layer active)
-                </div>
-                <p>You should update your connection string to use port 6432 as specified in your stable runtime profile.</p>
-              </div>
-            }
-            badges={[
-              { label: "Memory Recall", icon: "history", color: "text-primary bg-primary/10 border-primary/20" },
-              { label: "Tool Used", icon: "terminal", color: "text-tertiary bg-tertiary/10 border-tertiary/20" }
-            ]}
-          />
+          {messages.map((msg) => (
+             <Message 
+               key={msg.id}
+               sender={msg.role === 'user' ? 'User' : (msg.role === 'tool' ? 'Tool Return' : (selectedAgent?.name || 'Agent'))}
+               content={
+                 typeof msg.content === 'string' 
+                   ? msg.content 
+                   : (Array.isArray(msg.content) ? msg.content.map((c: any) => c.text || JSON.stringify(c)).join('\n') : JSON.stringify(msg.content))
+               }
+               icon={msg.role === 'user' ? 'account_circle' : (msg.role === 'tool' ? 'build' : 'smart_toy')}
+               isUser={msg.role === 'user'}
+               role={msg.role.toUpperCase()}
+               badges={msg.tool_calls ? msg.tool_calls.map((tc: any) => ({
+                 label: tc.function?.name || tc.name || 'Tool Call',
+                 icon: 'terminal',
+                 color: 'text-tertiary bg-tertiary/10 border-tertiary/20'
+               })) : []}
+             />
+          ))}
 
           {/* Typing Indicator */}
-          <div className="flex gap-4">
-            <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center border border-outline-variant">
-              <span className="material-symbols-outlined text-primary text-lg">smart_toy</span>
+          {loading && (
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center border border-outline-variant">
+                <span className="material-symbols-outlined text-primary text-lg">smart_toy</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-4 py-2 bg-surface-container-high/30 rounded-full border border-outline-variant">
+                <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></div>
+                <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse [animation-delay:200ms]"></div>
+                <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse [animation-delay:400ms]"></div>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 px-4 py-2 bg-surface-container-high/30 rounded-full border border-outline-variant">
-              <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></div>
-              <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse [animation-delay:200ms]"></div>
-              <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse [animation-delay:400ms]"></div>
-            </div>
-          </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Footer Input Area */}
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-linear-to-t from-surface-container-low via-surface-container-low to-transparent">
           <div className="max-w-4xl mx-auto space-y-3">
-            <div className="flex items-center justify-between px-2 font-mono text-[10px] text-on-surface-variant uppercase tracking-widest">
-              <div className="flex gap-4">
-                <span>Tokens: <b className="text-on-surface">1,024 / 128k</b></span>
-                <span>Latency: <b className="text-secondary">42ms</b></span>
-              </div>
-              <span>Provider: <b className="text-primary">Dodo Compute V2</b></span>
-            </div>
             <div className="bg-surface-container-high/80 backdrop-blur-xl border border-outline-variant rounded-xl p-2 flex items-end gap-2 shadow-2xl">
               <button className="p-2 text-on-surface-variant hover:text-primary transition-colors">
                 <span className="material-symbols-outlined">attachment</span>
               </button>
-              <button className="p-2 text-on-surface-variant hover:text-primary transition-colors">
-                <span className="material-symbols-outlined">keyboard_command_key</span>
-              </button>
               <textarea 
                 title="Command Agent"
                 className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2 resize-none outline-none text-on-surface" 
-                placeholder="Command Agent... (type '/' for tools)" 
+                placeholder={selectedAgentId ? "Message Agent..." : "Select an agent first..."}
                 rows={1}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={!selectedAgentId || loading}
               />
-              <button className="bg-primary text-on-primary px-6 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
+              <button 
+                onClick={handleSend}
+                disabled={!input.trim() || !selectedAgentId || loading}
+                className="bg-primary text-on-primary px-6 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:active:scale-100"
+              >
                 Run <span className="material-symbols-outlined text-sm">play_arrow</span>
               </button>
             </div>
@@ -128,30 +214,13 @@ export const Playground = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-outline-variant pb-4">
             <h3 className="text-[10px] font-mono uppercase tracking-widest text-primary font-bold">Execution Trace</h3>
-            <span className="text-[9px] bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded font-mono font-bold tracking-widest">LIVE</span>
+            <span className="text-[9px] bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded font-mono font-bold tracking-widest">{loading ? 'LIVE' : 'IDLE'}</span>
           </div>
 
           <div className="relative pl-6 space-y-8 border-l border-outline-variant ml-2">
-            <TraceStep time="14:22:01.042" title="Message Received" subtitle="Intent: Technical Troubleshooting" />
-            <TraceStep time="14:22:01.115" title="Recalling memory..." subtitle="Querying vector database" active color="bg-primary" />
-            <TraceStep time="14:22:01.450" title="Calling SQL Tool..." subtitle="Executing schema validation" color="bg-tertiary" />
-            <TraceStep time="14:22:01.892" title="Synthesizing answer..." subtitle="Tokenizing response" active animate color="bg-primary" />
-            <TraceStep title="Finalizing State" pending />
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-outline-variant">
-            <div className="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden">
-              <div className="bg-surface-container-high px-3 py-2 border-b border-outline-variant flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase font-bold text-on-surface-variant">Environment</span>
-                <span className="material-symbols-outlined text-xs text-on-surface-variant">unfold_more</span>
-              </div>
-              <div className="p-3 font-mono text-[11px] space-y-1 text-on-surface-variant">
-                <div><span className="text-secondary">OS:</span> "Dodo_Linux_Kernel_x64"</div>
-                <div><span className="text-secondary">RUNTIME:</span> "Node_v20.1"</div>
-                <div><span className="text-secondary">IS_PROD:</span> <span className="text-error">false</span></div>
-                <div><span className="text-secondary">API_KEY:</span> "********"</div>
-              </div>
-            </div>
+             {loading && <TraceStep title="Awaiting Agent Response..." subtitle="Processing inference" active animate color="bg-primary" />}
+             {!loading && messages.length > 0 && <TraceStep title="Finalizing State" subtitle="Sync Complete" />}
+             {!loading && messages.length === 0 && <TraceStep title="Idle" pending />}
           </div>
         </div>
       </section>
@@ -160,7 +229,7 @@ export const Playground = () => {
 };
 
 const Toggle = ({ label, active }: { label: string, active?: boolean }) => (
-  <div className="flex items-center justify-between">
+  <div className="flex items-center justify-between opacity-70">
     <span className="text-sm text-on-surface">{label}</span>
     <div className={`w-10 h-5 rounded-full relative flex items-center px-0.5 transition-colors border ${active ? 'bg-primary border-primary' : 'bg-surface-container-highest border-outline-variant'}`}>
       <div className={`w-4 h-4 bg-on-surface rounded-full transition-transform ${active ? 'translate-x-5' : 'translate-x-0'}`}></div>
@@ -183,7 +252,7 @@ const Message = ({ sender, role, content, icon, isUser, badges }: { sender?: str
           </span>
         ))}
       </div>
-      <div className={`p-4 rounded-xl border text-sm leading-relaxed ${isUser ? 'bg-secondary-container/10 border-secondary/20 text-right max-w-lg' : 'bg-surface-container-high/50 border-outline-variant text-on-surface'}`}>
+      <div className={`p-4 rounded-xl border text-sm leading-relaxed whitespace-pre-wrap ${isUser ? 'bg-secondary-container/10 border-secondary/20 text-right max-w-lg' : 'bg-surface-container-high/50 border-outline-variant text-on-surface'}`}>
         {content}
       </div>
     </div>

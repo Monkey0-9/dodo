@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import json
 import traceback
 from collections.abc import AsyncGenerator
@@ -167,7 +167,7 @@ async def retrieve_tool(
     return tool
 
 
-@router.get("/", response_model=List[Tool], operation_id="list_tools")
+@router.get("", response_model=List[Tool], operation_id="list_tools")
 async def list_tools(
     before: Optional[str] = Query(
         None, description="Tool ID cursor for pagination. Returns tools that come before this tool ID in the specified sort order"
@@ -311,7 +311,7 @@ async def search_tools(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/", response_model=Tool, operation_id="create_tool")
+@router.post("", response_model=Tool, operation_id="create_tool")
 async def create_tool(
     request: ToolCreate = Body(...),
     server: SyncServer = Depends(get_dodo_server),
@@ -331,7 +331,7 @@ async def create_tool(
     )
 
 
-@router.put("/", response_model=Tool, operation_id="upsert_tool")
+@router.put("", response_model=Tool, operation_id="upsert_tool")
 async def upsert_tool(
     request: ToolCreate = Body(...),
     server: SyncServer = Depends(get_dodo_server),

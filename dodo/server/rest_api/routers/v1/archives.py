@@ -55,7 +55,7 @@ class PassageBatchCreateRequest(BaseModel):
     passages: List[PassageCreateRequest] = Field(..., description="Passages to create in the archive")
 
 
-@router.post("/", response_model=PydanticArchive, operation_id="create_archive")
+@router.post("", response_model=PydanticArchive, operation_id="create_archive")
 async def create_archive(
     archive: ArchiveCreateRequest = Body(...),
     server: "SyncServer" = Depends(get_dodo_server),
@@ -87,7 +87,7 @@ async def create_archive(
     )
 
 
-@router.get("/", response_model=List[PydanticArchive], operation_id="list_archives")
+@router.get("", response_model=List[PydanticArchive], operation_id="list_archives")
 async def list_archives(
     before: Optional[str] = Query(
         None,

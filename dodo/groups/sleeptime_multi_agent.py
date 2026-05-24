@@ -19,6 +19,9 @@ from dodo.schemas.run import Run, RunUpdate
 from dodo.schemas.user import User
 from dodo.services.group_manager import GroupManager
 from dodo.utils import safe_create_task
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 class SleeptimeMultiAgent(dodoAgentV3):
@@ -163,7 +166,7 @@ class SleeptimeMultiAgent(dodoAgentV3):
                     self.run_ids.append(sleeptime_run_id)
                 except Exception as e:
                     # Individual task failures
-                    print(f"Sleeptime agent processing failed: {e!s}")
+                    logger.exception(f"Sleeptime agent processing failed: {e!s}")
                     raise e
             return self.run_ids
 
@@ -223,14 +226,15 @@ class SleeptimeMultiAgent(dodoAgentV3):
                         after=last_processed_message_id,
                         before=response_messages[0].id,
                     )
-                except Exception:
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
                     pass  # continue with just latest messages
 
-            message_strings = [stringify_message(message) for message in prior_messages + response_messages]
-            message_strings = [s for s in message_strings if s is not None]
-            messages_text = "\n".join(message_strings)
+                    message_strings = [stringify_message(message) for message in prior_messages + response_messages]
+                    message_strings = [s for s in message_strings if s is not None]
+                    messages_text = "\n".join(message_strings)
 
-            message_text = (
+                    message_text = (
                 "<system-reminder>\n"
                 "You are a sleeptime agent - a background agent that asynchronously processes conversations after they occur.\n\n"
                 "IMPORTANT: You are NOT the primary agent. You are reviewing a conversation that already happened between a primary agent and its user:\n"

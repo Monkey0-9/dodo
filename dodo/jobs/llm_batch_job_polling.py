@@ -241,6 +241,7 @@ async def poll_running_llm_batches(server: "SyncServer") -> List[dodoBatchRespon
             logger.info("[Poll BatchJob] No item-level updates needed.")
 
     except Exception as e:
+
         logger.exception("[Poll BatchJob] Unhandled error in poll_running_llm_batches", exc_info=e)
     finally:
         # 7. Log metrics summary

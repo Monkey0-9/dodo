@@ -1,4 +1,4 @@
-﻿from contextlib import AsyncExitStack
+from contextlib import AsyncExitStack
 from typing import Optional, Tuple
 
 from mcp import ClientSession, Tool as MCPTool

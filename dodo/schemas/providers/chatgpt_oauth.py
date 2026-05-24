@@ -1,4 +1,4 @@
-﻿"""ChatGPT OAuth Provider - uses chatgpt.com/backend-api/codex with OAuth authentication."""
+"""ChatGPT OAuth Provider - uses chatgpt.com/backend-api/codex with OAuth authentication."""
 
 import json
 from datetime import datetime, timezone
@@ -243,8 +243,9 @@ class ChatGPTOAuthProvider(Provider):
                 try:
                     error_body = e.response.json()
                     logger.error(f"Token refresh HTTP error: {e.response.status_code} - JSON: {error_body}")
-                except Exception:
-                    logger.error(f"Token refresh HTTP error: {e.response.status_code} - Text: {e.response.text}")
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
+                logger.error(f"Token refresh HTTP error: {e.response.status_code} - Text: {e.response.text}")
                 if e.response.status_code == 401:
                     raise LLMAuthenticationError(
                         message="Failed to refresh ChatGPT OAuth token: refresh token is invalid or expired",
@@ -260,6 +261,7 @@ class ChatGPTOAuthProvider(Provider):
                     message=f"Failed to refresh ChatGPT OAuth token: {e}",
                     code=ErrorCode.INTERNAL_SERVER_ERROR,
                 )
+
 
     async def _update_stored_credentials(self, creds: ChatGPTOAuthCredentials, actor: Optional["User"] = None) -> None:
         """Update stored credentials in memory and persist to database.

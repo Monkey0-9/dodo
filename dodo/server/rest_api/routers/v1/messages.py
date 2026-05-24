@@ -27,7 +27,7 @@ MessagesResponse = Annotated[
 ]
 
 
-@router.get("/", response_model=MessagesResponse, operation_id="list_all_messages")
+@router.get("", response_model=MessagesResponse, operation_id="list_all_messages")
 async def list_all_messages(
     server: SyncServer = Depends(get_dodo_server),
     headers: HeaderParams = Depends(get_headers),

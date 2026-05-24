@@ -1,4 +1,4 @@
-﻿"""Git operations for memory repositories using git CLI.
+"""Git operations for memory repositories using git CLI.
 
 This module provides high-level operations for working with git repos
 stored in object storage (GCS/S3), using the git command-line tool
@@ -152,7 +152,8 @@ class GitOperations:
                 commit_sha = result.stdout.strip()
 
                 return repo_path, commit_sha
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 shutil.rmtree(temp_dir, ignore_errors=True)
                 raise
 
@@ -410,7 +411,7 @@ class GitOperations:
                 except Exception as e:
                     logger.warning(f"Failed to release lock for agent {agent_id}: {e}")
                     await redis_client.release_memory_repo_lock(agent_id)
-            logger.info(f"[GIT_PERF] lock release took {(time.perf_counter() - t0) * 1000:.2f}ms")
+                    logger.info(f"[GIT_PERF] lock release took {(time.perf_counter() - t0) * 1000:.2f}ms")
 
     async def _commit_with_lock(
         self,
@@ -451,7 +452,8 @@ class GitOperations:
                 try:
                     parent_result = _run_git(["rev-parse", "HEAD"], cwd=repo_path, check=False)
                     parent_sha = parent_result.stdout.strip() if parent_result.returncode == 0 else None
-                except Exception:
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
                     parent_sha = None
 
                 # Apply changes

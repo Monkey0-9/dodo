@@ -1,8 +1,9 @@
 from dodo.server.rest_api.routers.v1.agents import router as agents_router
+from dodo.server.rest_api.routers.v1.auth import router as auth_router
 from dodo.server.rest_api.routers.v1.anthropic import router as anthropic_router
 from dodo.server.rest_api.routers.v1.archives import router as archives_router
 from dodo.server.rest_api.routers.v1.blocks import router as blocks_router
-from dodo.server.rest_api.routers.v1.chat_completions import router as chat_completions_router, router as openai_chat_completions_router
+from dodo.server.rest_api.routers.v1.chat_completions import router as chat_completions_router
 from dodo.server.rest_api.routers.v1.conversations import router as conversations_router
 from dodo.server.rest_api.routers.v1.embeddings import router as embeddings_router
 from dodo.server.rest_api.routers.v1.folders import router as folders_router
@@ -19,6 +20,7 @@ from dodo.server.rest_api.routers.v1.jobs import router as jobs_router
 from dodo.server.rest_api.routers.v1.llms import router as llm_router
 from dodo.server.rest_api.routers.v1.mcp_servers import router as mcp_servers_router
 from dodo.server.rest_api.routers.v1.messages import router as messages_router
+from dodo.server.rest_api.routers.v1.organizations import router as organizations_router
 from dodo.server.rest_api.routers.v1.passages import router as passages_router
 from dodo.server.rest_api.routers.v1.portal import router as portal_router
 from dodo.server.rest_api.routers.v1.providers import router as providers_router
@@ -31,6 +33,8 @@ from dodo.server.rest_api.routers.v1.telemetry import router as telemetry_router
 from dodo.server.rest_api.routers.v1.tools import router as tools_router
 from dodo.server.rest_api.routers.v1.voice import router as voice_router
 from dodo.server.rest_api.routers.v1.zai import router as zai_router
+from dodo.server.rest_api.routers.v1.analytics import router as analytics_router
+from dodo.server.rest_api.routers.v1.logs import router as logs_router
 
 ROUTERS = [
     anthropic_router,
@@ -54,9 +58,9 @@ ROUTERS = [
     mcp_servers_router,
     blocks_router,
     jobs_router,
-    health_router,
     sandbox_configs_router,
     providers_router,
+    organizations_router,
     runs_router,
     steps_router,
     tags_router,
@@ -66,6 +70,6 @@ ROUTERS = [
     portal_router,
     voice_router,
     embeddings_router,
-    openai_chat_completions_router,
+    analytics_router,
+    logs_router,
 ]
-

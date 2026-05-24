@@ -255,7 +255,7 @@ class SimpleAnthropicStreamingInterface:
                                 if prev_message_type != None:
                                     message_index += 1
                                 prev_message_type = new_message_type
-                            # print(f"Yielding message: {message}")
+                            # logger.info(f"Yielding message: {message}")
                             yield message
                     except (asyncio.CancelledError, RunCancelledException) as e:
                         import traceback
@@ -546,11 +546,12 @@ class SimpleAnthropicStreamingInterface:
                 except json.JSONDecodeError:
                     try:
                         tool_input = self.json_parser.parse(raw_args) if raw_args else {}
-                    except Exception:
-                        tool_input = {}
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
+                    tool_input = {}
 
-                arguments = json.dumps(tool_input)
-                finalized = ToolCall(id=ctx["id"], function=FunctionCall(arguments=arguments, name=ctx["name"]))
+                    arguments = json.dumps(tool_input)
+                    finalized = ToolCall(id=ctx["id"], function=FunctionCall(arguments=arguments, name=ctx["name"]))
                 # Keep both raw list and indexed list for compatibility
                 self.collected_tool_calls.append(finalized)
                 self._collected_indexed.append((event.index, finalized))

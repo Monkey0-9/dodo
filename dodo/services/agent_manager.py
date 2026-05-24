@@ -111,6 +111,7 @@ from dodo.utils import (
     calculate_file_defaults_based_on_context_window,
     decrypt_agent_secrets,
     enforce_types,
+    run_async,
     united_diff,
 )
 from dodo.validators import raise_on_invalid_id
@@ -324,9 +325,86 @@ class AgentManager:
             if rows:
                 await AgentManager._bulk_insert_pivot_async(session, table, rows)
 
+    def serialize(self, agent_id: str, actor: PydanticUser, max_steps: Optional[int] = None) -> Any:
+        """
+        Legacy synchronous wrapper around AgentSerializationManager.export for backwards compatibility.
+        """
+        from dodo.services.agent_serialization_manager import AgentSerializationManager
+        from dodo.services.group_manager import GroupManager
+        from dodo.services.mcp_manager import MCPManager
+        from dodo.services.file_manager import FileManager
+        
+        manager = AgentSerializationManager(
+            agent_manager=self,
+            tool_manager=self.tool_manager,
+            source_manager=self.source_manager,
+            block_manager=self.block_manager,
+            group_manager=GroupManager(),
+            mcp_manager=MCPManager(),
+            file_manager=FileManager(),
+            file_agent_manager=self.file_agent_manager,
+            message_manager=self.message_manager,
+        )
+        
+        schema = run_async(manager.export(agent_ids=[agent_id], actor=actor))
+        
+        if max_steps is not None and schema.agents:
+            agent = schema.agents[0]
+            if max_steps == 0:
+                agent.messages = [m for m in agent.messages if m.role == "system"]
+            else:
+                user_msg_indices = [i for i, m in enumerate(agent.messages) if m.role == "user"]
+                if len(user_msg_indices) > max_steps:
+                    start_index = user_msg_indices[-max_steps]
+                    system_msgs = [m for m in agent.messages if m.role == "system"]
+                    other_msgs = [m for m in agent.messages[start_index:] if m.role != "system"]
+                    agent.messages = system_msgs + other_msgs
+            agent.in_context_message_ids = [m.id for m in agent.messages]
+            
+        return schema
+
+    def deserialize(
+        self,
+        serialized_agent: Any,
+        actor: PydanticUser,
+        append_copy_suffix: bool = False,
+        override_existing_tools: bool = False
+    ) -> PydanticAgentState:
+        """
+        Legacy synchronous wrapper around AgentSerializationManager.import_file for backwards compatibility.
+        """
+        from dodo.services.agent_serialization_manager import AgentSerializationManager
+        from dodo.services.group_manager import GroupManager
+        from dodo.services.mcp_manager import MCPManager
+        from dodo.services.file_manager import FileManager
+        
+        manager = AgentSerializationManager(
+            agent_manager=self,
+            tool_manager=self.tool_manager,
+            source_manager=self.source_manager,
+            block_manager=self.block_manager,
+            group_manager=GroupManager(),
+            mcp_manager=MCPManager(),
+            file_manager=FileManager(),
+            file_agent_manager=self.file_agent_manager,
+            message_manager=self.message_manager,
+        )
+        
+        result = run_async(manager.import_file(
+            schema=serialized_agent,
+            actor=actor,
+            append_copy_suffix=append_copy_suffix,
+            override_existing_tools=override_existing_tools
+        ))
+        
+        return run_async(self.get_agent_by_id_async(agent_id=result.agent_ids[0], actor=actor))
+
     # ======================================================================================================================
     # Basic CRUD operations
     # ======================================================================================================================
+
+    def create_agent(self, agent_create: CreateAgent, actor: PydanticUser) -> PydanticAgentState:
+        return run_async(self.create_agent_async(agent_create=agent_create, actor=actor))
 
     @trace_method
     async def create_agent_async(
@@ -753,6 +831,9 @@ class AgentManager:
         init_messages = await self._generate_initial_message_sequence_async(actor, agent_state, initial_message_sequence)
         return await self.append_to_in_context_messages_async(init_messages, agent_id=agent_state.id, actor=actor)
 
+    def update_agent(self, agent_id: str, agent_update: UpdateAgent, actor: PydanticUser) -> PydanticAgentState:
+        return run_async(self.update_agent_async(agent_id=agent_id, agent_update=agent_update, actor=actor))
+
     @enforce_types
     @raise_on_invalid_id(param_name="agent_id", expected_prefix=PrimitiveType.AGENT)
     @trace_method
@@ -1019,6 +1100,9 @@ class AgentManager:
             # context manager now handles commits
             # await session.commit()
 
+    def list_agents(self, *args, **kwargs) -> List[PydanticAgentState]:
+        return run_async(self.list_agents_async(*args, **kwargs))
+
     @trace_method
     async def list_agents_async(
         self,
@@ -1211,6 +1295,9 @@ class AgentManager:
         async with db_registry.async_session() as session:
             return await AgentModel.size_async(db_session=session, actor=actor)
 
+    def get_agent_by_id(self, *args, **kwargs) -> PydanticAgentState:
+        return run_async(self.get_agent_by_id_async(*args, **kwargs))
+
     @enforce_types
     @raise_on_invalid_id(param_name="agent_id", expected_prefix=PrimitiveType.AGENT)
     @trace_method
@@ -1247,6 +1334,30 @@ class AgentManager:
         except Exception as e:
             logger.error(f"Error fetching agent {agent_id}: {str(e)}")
             raise
+
+    async def get_agent_by_name_async(self, agent_name: str, actor: PydanticUser) -> PydanticAgentState:
+        """Fetch an agent by its name."""
+        try:
+            async with db_registry.async_session() as session:
+                query = select(AgentModel).where(AgentModel.name == agent_name)
+                query = AgentModel.apply_access_predicate(query, actor, ["read"], AccessType.ORGANIZATION)
+                result = await session.execute(query)
+                agent = result.scalar_one_or_none()
+
+                if agent is None:
+                    from dodo.errors import dodoAgentNotFoundError
+
+                    raise dodoAgentNotFoundError(
+                        f"Agent with name {agent_name} not found"
+                    )
+
+                return await agent.to_pydantic_async()
+        except Exception as e:
+            logger.error(f"Error fetching agent by name {agent_name}: {str(e)}")
+            raise
+
+    def get_agent_by_name(self, agent_name: str, actor: PydanticUser) -> PydanticAgentState:
+        return run_async(self.get_agent_by_name_async(agent_name=agent_name, actor=actor))
 
     @enforce_types
     @trace_method
@@ -1314,6 +1425,10 @@ class AgentManager:
         async with db_registry.async_session() as session:
             await validate_agent_exists_async(session, agent_id, actor)
 
+    def delete_agent(self, agent_id: str, actor: PydanticUser) -> None:
+        from dodo.utils import run_async
+        return run_async(self.delete_agent_async(agent_id=agent_id, actor=actor))
+
     @enforce_types
     @raise_on_invalid_id(param_name="agent_id", expected_prefix=PrimitiveType.AGENT)
     @trace_method
@@ -1371,7 +1486,7 @@ class AgentManager:
                             agents_to_delete.append(sleeptime_agent)
                         except NoResultFound:
                             pass  # agent already deleted
-                    sleeptime_agent_group = await GroupModel.read_async(
+                            sleeptime_agent_group = await GroupModel.read_async(
                         db_session=session, identifier=agent.multi_agent_group.id, actor=actor
                     )
                     sleeptime_group_to_delete = sleeptime_agent_group
@@ -2073,6 +2188,9 @@ class AgentManager:
     # ======================================================================================================================
     # Block management
     # ======================================================================================================================
+    def get_block_with_label(self, agent_id: str, block_label: str, actor: PydanticUser) -> PydanticBlock:
+        return run_async(self.get_block_with_label_async(agent_id=agent_id, block_label=block_label, actor=actor))
+
     @enforce_types
     @trace_method
     async def get_block_with_label_async(
@@ -2155,6 +2273,9 @@ class AgentManager:
             actor=actor,
         )
 
+    def attach_block(self, agent_id: str, block_id: str, actor: PydanticUser) -> PydanticAgentState:
+        return run_async(self.attach_block_async(agent_id=agent_id, block_id=block_id, actor=actor))
+
     @enforce_types
     @raise_on_invalid_id(param_name="agent_id", expected_prefix=PrimitiveType.AGENT)
     @raise_on_invalid_id(param_name="block_id", expected_prefix=PrimitiveType.BLOCK)
@@ -2196,6 +2317,9 @@ class AgentManager:
 
         # Decrypt secrets outside session
         return (await decrypt_agent_secrets([agent_encrypted]))[0]
+
+    def detach_block(self, agent_id: str, block_id: str, actor: PydanticUser) -> PydanticAgentState:
+        return run_async(self.detach_block_async(agent_id=agent_id, block_id=block_id, actor=actor))
 
     @enforce_types
     @trace_method
@@ -2684,8 +2808,9 @@ class AgentManager:
                     local_time = timestamp.astimezone(tz)
                     # Format as ISO string with timezone
                     formatted_timestamp = local_time.isoformat()
-                except Exception:
-                    # Fallback to ISO format if timezone conversion fails
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
+        # Fallback to ISO format if timezone conversion fails
                     formatted_timestamp = str(timestamp)
             else:
                 # Use ISO format if no timezone is set
@@ -3413,6 +3538,9 @@ class AgentManager:
     # ======================================================================================================================
     # Tag Management
     # ======================================================================================================================
+
+    def list_tags(self, *args, **kwargs) -> List[str]:
+        return run_async(self.list_tags_async(*args, **kwargs))
 
     @enforce_types
     @trace_method

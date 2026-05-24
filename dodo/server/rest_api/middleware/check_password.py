@@ -1,6 +1,7 @@
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
-
+from dodo.server.rest_api.auth.jwt_handler import SECRET_KEY, ALGORITHM
+from jose import jwt, JWTError
 
 class CheckPasswordMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, password: str):
@@ -8,18 +9,31 @@ class CheckPasswordMiddleware(BaseHTTPMiddleware):
         self.password = password
 
     async def dispatch(self, request, call_next):
-        # Exclude health/readiness probe endpoints from password protection
+        # Exclude health/readiness and auth endpoints
         if request.url.path in {
             "/v1/health",
             "/v1/health/",
-            "/latest/health/",
             "/v1/ready",
             "/v1/ready/",
-            "/latest/ready",
-            "/latest/ready/",
-        }:
+            "/v1/auth/login",
+            "/v1/auth/login/",
+            "/openapi.json",
+            "/docs",
+        } or request.url.path.startswith("/v1/auth"):
             return await call_next(request)
 
+        # Priority 1: JWT Bearer Token
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+            try:
+                jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+                return await call_next(request)
+            except JWTError:
+                pass # Fall through to P2 or fail
+
+        # Priority 2: Legacy Bare Password (for migration)
+        # Note: In a real production system, this would be disabled after frontend migration.
         if (
             request.headers.get("X-BARE-PASSWORD") == f"password {self.password}"
             or request.headers.get("Authorization") == f"Bearer {self.password}"
@@ -27,6 +41,6 @@ class CheckPasswordMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         return JSONResponse(
-            content={"detail": "Unauthorized"},
+            content={"detail": "Unauthorized. Please login at /v1/auth/login"},
             status_code=401,
         )

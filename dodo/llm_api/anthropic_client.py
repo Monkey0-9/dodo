@@ -88,7 +88,8 @@ class AnthropicClient(LLMClientBase):
                 betas.append("context-1m-2025-08-07")
             elif model_settings.anthropic_opus_1m and llm_config.model.startswith("claude-opus-4-6"):
                 betas.append("context-1m-2025-08-07")
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             pass
 
         # Effort parameter for Opus 4.5, Opus 4.6, and Sonnet 4.6 - to extend to other models, modify the model check
@@ -161,7 +162,8 @@ class AnthropicClient(LLMClientBase):
                 betas.append("context-1m-2025-08-07")
             elif model_settings.anthropic_opus_1m and llm_config.model.startswith("claude-opus-4-6"):
                 betas.append("context-1m-2025-08-07")
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             pass
 
         # Effort parameter for Opus 4.5, Opus 4.6, and Sonnet 4.6 - to extend to other models, modify the model check
@@ -343,7 +345,8 @@ class AnthropicClient(LLMClientBase):
                 betas.append("context-1m-2025-08-07")
             elif model_settings.anthropic_opus_1m and llm_config.model.startswith("claude-opus-4-6"):
                 betas.append("context-1m-2025-08-07")
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             pass
 
         # Effort parameter for Opus 4.5, Opus 4.6, and Sonnet 4.6 - to extend to other models, modify the model check
@@ -887,7 +890,8 @@ class AnthropicClient(LLMClientBase):
                     betas.append("context-1m-2025-08-07")
                 elif model and model_settings.anthropic_opus_1m and model.startswith("claude-opus-4-6"):
                     betas.append("context-1m-2025-08-07")
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 pass
 
             # Opus 4.5 beta flags for effort and context management
@@ -914,7 +918,7 @@ class AnthropicClient(LLMClientBase):
         except Exception as e:
             raise self.handle_llm_error(e)
 
-        token_count = result.input_tokens
+            token_count = result.input_tokens
         if messages is None:
             token_count -= 8
         return token_count
@@ -1236,7 +1240,8 @@ class AnthropicClient(LLMClientBase):
                             args_json = json.loads(arguments)
                             if not isinstance(args_json, dict):
                                 raise LLMServerError("Expected parseable json object for arguments")
-                        except Exception:
+                        except Exception as e:
+                            logger.exception(f"Unexpected error: {e}")
                             arguments = str(tool_input["function"]["arguments"])
                     else:
                         arguments = json.dumps(tool_input, indent=2)
@@ -1528,7 +1533,8 @@ def is_heartbeat(message: dict, is_ping: bool = False) -> bool:
 
     try:
         message_json = json.loads(message["content"])
-    except Exception:
+    except Exception as e:
+        logger.exception(f"Unexpected error: {e}")
         return False
 
     # Check if message_json is a dict (not int, str, list, etc.)

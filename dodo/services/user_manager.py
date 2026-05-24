@@ -1,4 +1,4 @@
-﻿from typing import List, Optional
+from typing import List, Optional
 
 from sqlalchemy import select
 
@@ -46,6 +46,10 @@ class UserManager:
 
             return actor.to_pydantic()
 
+    def create_default_user(self, org_id: str = DEFAULT_ORG_ID) -> PydanticUser:
+        from dodo.utils import run_async
+        return run_async(self.create_default_actor_async(org_id=org_id))
+
     @enforce_types
     @trace_method
     async def create_actor_async(self, pydantic_user: PydanticUser) -> PydanticUser:
@@ -55,6 +59,10 @@ class UserManager:
             await new_user.create_async(session)
             await self._invalidate_actor_cache(new_user.id)
             return new_user.to_pydantic()
+
+    def create_user(self, pydantic_user: PydanticUser) -> PydanticUser:
+        from dodo.utils import run_async
+        return run_async(self.create_actor_async(pydantic_user=pydantic_user))
 
     @enforce_types
     @trace_method
@@ -98,6 +106,10 @@ class UserManager:
                 raise NoResultFound(f"User not found with id={actor_id}")
 
             return user.to_pydantic()
+
+    def get_user_by_id(self, user_id: str) -> PydanticUser:
+        from dodo.utils import run_async
+        return run_async(self.get_actor_by_id_async(actor_id=user_id))
 
     @enforce_types
     @trace_method

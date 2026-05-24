@@ -96,5 +96,6 @@ async def portal_agent_stream(
         logger.exception(f"Error in Portal WebSocket stream: {e}")
         try:
             await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
-        except:
-            pass
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        pass

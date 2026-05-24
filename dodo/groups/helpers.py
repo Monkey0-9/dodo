@@ -10,6 +10,9 @@ from dodo.schemas.group import ManagerType
 from dodo.schemas.dodo_message_content import ImageContent, ReasoningContent, TextContent
 from dodo.schemas.message import Message
 from dodo.services.mcp.base_client import AsyncBaseMCPClient
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 def load_multi_agent(
@@ -98,10 +101,11 @@ def stringify_message(message: Message, use_assistant_name: bool = False) -> str
                 elif isinstance(content, ImageContent):
                     messages.append(f"{message.name or 'user'}: [Image Here]")
             return "\n".join(messages)
-        except Exception:
-            if message.content and len(message.content) > 0:
-                return f"{message.name or 'user'}: {message.content[0].text}"
-            return None
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        if message.content and len(message.content) > 0:
+            return f"{message.name or 'user'}: {message.content[0].text}"
+        return None
     elif message.role == "assistant":
         messages = []
         if message.content:

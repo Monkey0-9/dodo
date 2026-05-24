@@ -339,7 +339,7 @@ class SGLangNativeAdapter(SimpleLLMRequestAdapter):
         except Exception as _e:
             pass
 
-        tool_call_parser = "qwen25"
+            tool_call_parser = "qwen25"
         if self.model_settings is not None and getattr(self.model_settings, "provider_type", None) == ProviderType.sglang:
             tool_call_parser = getattr(self.model_settings, "tool_call_parser", None) or tool_call_parser
         parsed_tool_calls = _parse_tool_calls(text_response, tools=tools, tool_call_parser=tool_call_parser)

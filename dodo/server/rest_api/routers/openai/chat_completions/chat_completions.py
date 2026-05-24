@@ -125,7 +125,7 @@ async def send_message_to_agent_chat_completions(
     except HTTPException:
         raise
     except Exception as e:
-        print(e)
+        logger.info(e)
         import traceback
 
         traceback.print_exc()

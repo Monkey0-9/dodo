@@ -1,4 +1,4 @@
-﻿from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional
 
 from fastapi import Header
 from pydantic import BaseModel
@@ -86,9 +86,6 @@ def get_headers(
 # TODO: why does this double up the interface?
 async def get_dodo_server() -> "SyncServer":
     with tracer.start_as_current_span("dependency.get_dodo_server"):
-        # Check if a global server is already instantiated
-        from dodo.server.rest_api.app import server
-
-        # assert isinstance(server, SyncServer)
-        return server
+        from dodo.server.rest_api.state import get_server
+        return get_server()
 

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Simple test to verify webhook service functionality.
 
 To run this test:
@@ -15,7 +15,7 @@ These tests verify the webhook service works in both:
 """
 
 import os
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -43,7 +43,7 @@ async def test_webhook_success():
         with patch("httpx.AsyncClient") as mock_client:
             mock_response = AsyncMock()
             mock_response.status_code = 200
-            mock_response.raise_for_status = AsyncMock()
+            mock_response.raise_for_status = Mock()
 
             mock_post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__.return_value.post = mock_post
@@ -66,7 +66,7 @@ async def test_webhook_without_auth():
         with patch("httpx.AsyncClient") as mock_client:
             mock_response = AsyncMock()
             mock_response.status_code = 200
-            mock_response.raise_for_status = AsyncMock()
+            mock_response.raise_for_status = Mock()
 
             mock_post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__.return_value.post = mock_post
@@ -107,7 +107,7 @@ async def test_webhook_http_error():
 
             mock_response = AsyncMock()
             mock_response.status_code = 500
-            mock_response.raise_for_status = AsyncMock(
+            mock_response.raise_for_status = Mock(
                 side_effect=httpx.HTTPStatusError("Server error", request=None, response=mock_response)
             )
 

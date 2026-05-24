@@ -1,4 +1,4 @@
-﻿"""
+"""
 dodo Configuration File Support
 
 Loads hierarchical YAML config and maps it to environment variables.
@@ -94,7 +94,9 @@ def load_config_file(config_path: str | Path | None = None) -> dict[str, Any]:
                 file_config = yaml.safe_load(f)
                 if file_config:
                     config = _deep_merge(config, file_config)
-        except Exception:
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).exception(f"Unexpected error: {path}: {e}")
             pass
 
     return config

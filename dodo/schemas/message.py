@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dodo.log import get_logger
 
@@ -2362,7 +2362,8 @@ class Message(BaseMessage):
 
                     try:
                         function_response = parse_json(text_content)
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         function_response = {"function_response": text_content}
 
                     parts.append(
@@ -2395,10 +2396,11 @@ class Message(BaseMessage):
                 # NOTE: Google AI API wants the function response as JSON only, no string
                 try:
                     function_response = parse_json(legacy_content)
-                except Exception:
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
                     function_response = {"function_response": legacy_content}
 
-                google_ai_message = {
+                    google_ai_message = {
                     "role": "function",
                     "parts": [
                         {

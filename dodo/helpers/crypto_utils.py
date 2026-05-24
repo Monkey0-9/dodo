@@ -10,6 +10,9 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 from dodo.settings import settings
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 # Eagerly load the cryptography backend at module import time.
 _CRYPTO_BACKEND = default_backend()
@@ -318,8 +321,9 @@ class CryptoUtils:
             # Check if length is consistent with our encryption format
             # Minimum size: salt(16) + iv(12) + tag(16) + at least 1 byte of ciphertext
             return len(decoded) >= cls.SALT_SIZE + cls.IV_SIZE + cls.TAG_SIZE + 1
-        except Exception:
-            return False
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        return False
 
     @classmethod
     def is_encryption_available(cls) -> bool:

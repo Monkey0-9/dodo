@@ -109,7 +109,8 @@ class DatabaseRegistry:
         try:
             yield session
             await session.commit()
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             await session.rollback()
             raise
         finally:

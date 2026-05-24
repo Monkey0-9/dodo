@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 import httpx
 
 from dodo.schemas.user import User
+from dodo.log import get_logger
 
 logger = logging.getLogger(__name__)
 

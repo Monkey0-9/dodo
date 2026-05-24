@@ -1,4 +1,4 @@
-﻿from dodo_client import dodo
+from dodo.client import dodo
 
 
 def create_agent() -> None:

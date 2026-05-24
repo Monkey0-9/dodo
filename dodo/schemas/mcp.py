@@ -20,6 +20,7 @@ from dodo.orm.mcp_oauth import OAuthSessionStatus
 from dodo.schemas.enums import PrimitiveType
 from dodo.schemas.dodo_base import dodoBase
 from dodo.schemas.secret import Secret
+from dodo.log import get_logger
 
 
 class BaseMCPServer(dodoBase):

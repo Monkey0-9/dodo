@@ -18,16 +18,28 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute(
-        """
-        UPDATE agents a
-        SET hidden = true
-        FROM agents_tags at
-        WHERE (a.hidden IS NULL OR a.hidden = false)
-          AND a.id = at.agent_id
-          AND at.tag = 'role:subagent'
-        """
-    )
+    connection = op.get_bind()
+    if connection.dialect.name == "sqlite":
+        op.execute(
+            """
+            UPDATE agents
+            SET hidden = 1
+            WHERE id IN (
+                SELECT agent_id FROM agents_tags WHERE tag = 'role:subagent'
+            ) AND (hidden IS NULL OR hidden = 0)
+            """
+        )
+    else:
+        op.execute(
+            """
+            UPDATE agents a
+            SET hidden = true
+            FROM agents_tags at
+            WHERE (a.hidden IS NULL OR a.hidden = false)
+              AND a.id = at.agent_id
+              AND at.tag = 'role:subagent'
+            """
+        )
 
 
 def downgrade() -> None:

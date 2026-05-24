@@ -1,4 +1,4 @@
-﻿import ast
+import ast
 import builtins
 import json
 import typing
@@ -6,6 +6,9 @@ from typing import Dict, Optional, Tuple
 
 from dodo.errors import dodoToolCreateError
 from dodo.types import JsonDict
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 _ALLOWED_TYPING_NAMES = {name: obj for name, obj in vars(typing).items() if not name.startswith("_")}
 _ALLOWED_BUILTIN_TYPES = {name: obj for name, obj in vars(builtins).items() if isinstance(obj, type)}
@@ -76,7 +79,8 @@ def resolve_type(annotation: str, *, allow_unsafe_eval: bool = False, extra_glob
     try:
         parsed = ast.parse(annotation, mode="eval")
         return _resolve_annotation_node(parsed.body)
-    except Exception:
+    except Exception as e:
+        logger.exception(f"Unexpected error: {e}")
         if allow_unsafe_eval:
             try:
                 return eval(annotation, python_types)

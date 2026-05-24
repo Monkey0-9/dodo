@@ -542,7 +542,7 @@ class Agent(BaseAgent):
                 if not isinstance(function_args, dict):
                     raise ValueError(f"Function arguments are not a dictionary: {function_args} (raw={raw_function_args})")
             except Exception as e:
-                print(e)
+                logger.info(e)
                 error_msg = f"Error parsing JSON for function '{function_name}' arguments: {function_call.arguments}"
                 function_response = "None"  # more like "never ran?"
                 messages = self._handle_function_error_response(
@@ -948,8 +948,8 @@ class Agent(BaseAgent):
             # We can't do summarize logic properly if context_window is undefined
             if self.agent_state.llm_config.context_window is None:
                 # Fallback if for some reason context_window is missing, just set to the default
-                print(f"{CLI_WARNING_PREFIX}could not find context_window in config, setting to default {LLM_MAX_TOKENS['DEFAULT']}")
-                print(f"{self.agent_state}")
+                logger.info(f"{CLI_WARNING_PREFIX}could not find context_window in config, setting to default {LLM_MAX_TOKENS['DEFAULT']}")
+                logger.info(f"{self.agent_state}")
                 self.agent_state.llm_config.context_window = (
                     LLM_MAX_TOKENS[self.model] if (self.model is not None and self.model in LLM_MAX_TOKENS) else LLM_MAX_TOKENS["DEFAULT"]
                 )
@@ -1743,7 +1743,7 @@ def strip_name_field_from_user_message(user_message_text: str) -> Tuple[str, Opt
         return clean_message, name
 
     except Exception as e:
-        print(f"{CLI_WARNING_PREFIX}handling of 'name' field failed with: {e}")
+        logger.info(f"{CLI_WARNING_PREFIX}handling of 'name' field failed with: {e}")
         raise e
 
 
@@ -1754,6 +1754,6 @@ def validate_json(user_message_text: str) -> str:
         user_message_json_val = json_dumps(user_message_json)
         return user_message_json_val
     except Exception as e:
-        print(f"{CLI_WARNING_PREFIX}couldn't parse user input message as JSON: {e}")
+        logger.info(f"{CLI_WARNING_PREFIX}couldn't parse user input message as JSON: {e}")
         raise e
 

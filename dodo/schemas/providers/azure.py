@@ -121,8 +121,9 @@ class AzureProvider(Provider):
             if "_set_private_attributes" in str(e):
                 logger.warning(f"Azure endpoint at {self.base_url} returned an unexpected non-JSON response: {e}")
             return []
-        except Exception:
-            return []
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        return []
 
         all_available_models = [model.to_dict() for model in models_list.data]
 
@@ -144,8 +145,8 @@ class AzureProvider(Provider):
         except httpx.HTTPStatusError as e:
             raise RuntimeError(f"Failed to retrieve model list: {e}")
 
-        deployed_models = response.json().get("data", [])
-        deployed_model_names = set([m["id"] for m in deployed_models])
+            deployed_models = response.json().get("data", [])
+            deployed_model_names = set([m["id"] for m in deployed_models])
 
         # 3. Only return the models in available models if they have been deployed
         deployed_models = [m for m in all_available_models if m["id"] in deployed_model_names]

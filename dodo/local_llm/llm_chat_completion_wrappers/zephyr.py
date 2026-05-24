@@ -1,7 +1,10 @@
-﻿from ...errors import LLMJSONParsingError
+from ...errors import LLMJSONParsingError
 from ...helpers.json_helpers import json_dumps, json_loads
 from ..json_parser import clean_json
 from .wrapper_base import LLMChatCompletionWrapper
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 class ZephyrMistralWrapper(LLMChatCompletionWrapper):
@@ -87,10 +90,11 @@ class ZephyrMistralWrapper(LLMChatCompletionWrapper):
                         content_json = json_loads(message["content"])
                         content_simple = content_json["message"]
                         prompt += f"\n<|user|>\n{content_simple}{IM_END_TOKEN}"
-                        # prompt += f"\nUSER: {content_simple}"
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         prompt += f"\n<|user|>\n{message['content']}{IM_END_TOKEN}"
-                        # prompt += f"\nUSER: {message['content']}"
+                else:
+                    prompt += f"\n<|user|>\n{message['content']}{IM_END_TOKEN}"
             elif message["role"] == "assistant":
                 prompt += "\n<|assistant|>"
                 if message["content"] is not None:
@@ -256,8 +260,11 @@ class ZephyrMistralInnerMonologueWrapper(ZephyrMistralWrapper):
                         content_json = json_loads(message["content"])
                         content_simple = content_json["message"]
                         prompt += f"\n<|user|>\n{content_simple}{IM_END_TOKEN}"
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         prompt += f"\n<|user|>\n{message['content']}{IM_END_TOKEN}"
+                else:
+                    prompt += f"\n<|user|>\n{message['content']}{IM_END_TOKEN}"
             elif message["role"] == "assistant":
                 prompt += "\n<|assistant|>"
                 # need to add the function call if there was one

@@ -1,5 +1,6 @@
 import logging
 import time
+from dodo.log import get_logger
 
 logger = logging.getLogger(__name__)
 

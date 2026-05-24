@@ -54,7 +54,7 @@ class ModalDeploymentManager:
             self.tool.source_code,
             str(self.tool.pip_requirements) if self.tool.pip_requirements else "",
             str(self.tool.npm_requirements) if self.tool.npm_requirements else "",
-            sbx_config.fingerprint(),
+            sbx_config.fingerlogger.info(),
         )
         combined = "|".join(components)
         return hashlib.sha256(combined.encode()).hexdigest()[:VERSION_HASH_LENGTH]
@@ -127,7 +127,8 @@ class ModalDeploymentManager:
                 app = await modal.App.lookup.aio(app_full_name)
                 logger.info(f"Found existing Modal app {app_full_name}")
                 return app
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 logger.info(f"Modal app {app_full_name} not found in Modal, will redeploy")
                 return None
 
@@ -209,8 +210,10 @@ class ModalDeploymentManager:
 
             return app, version_hash
 
-        except Exception:
-            if deployment_key:
+        except Exception as e:
+
+            logger.exception(f"Unexpected error: {e}")
+        if deployment_key:
                 self.version_manager.complete_deployment(deployment_key)
             raise
 

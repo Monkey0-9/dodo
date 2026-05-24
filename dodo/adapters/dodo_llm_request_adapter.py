@@ -10,6 +10,9 @@ from dodo.schemas.usage import normalize_cache_tokens, normalize_reasoning_token
 from dodo.schemas.user import User
 from dodo.settings import settings
 from dodo.utils import safe_create_task
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 class dodoLLMRequestAdapter(dodoLLMAdapter):

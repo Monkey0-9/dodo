@@ -6,6 +6,9 @@ from dodo.schemas.provider_trace import ProviderTrace
 from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
 from dodo.server.server import SyncServer
 from dodo.settings import settings
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 router = APIRouter(prefix="/telemetry", tags=["telemetry"])
 
@@ -27,7 +30,8 @@ async def retrieve_provider_trace(
             provider_trace = await server.telemetry_manager.get_provider_trace_by_step_id_async(
                 step_id=step_id, actor=await server.user_manager.get_actor_or_default_async(actor_id=headers.actor_id)
             )
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             pass
 
     return provider_trace

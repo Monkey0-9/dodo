@@ -145,8 +145,8 @@ class AsyncToolSandboxLocal(AsyncToolSandboxBase):
             )
 
         except Exception as e:
-            print(f"Executing tool {self.tool_name} has an unexpected error: {e}")
-            print(f"Auto-generated code for debugging:\n\n{code}")
+            logger.info(f"Executing tool {self.tool_name} has an unexpected error: {e}")
+            logger.info(f"Auto-generated code for debugging:\n\n{code}")
             raise e
         finally:
             # Clean up the temp file if not debugging
@@ -206,7 +206,7 @@ class AsyncToolSandboxLocal(AsyncToolSandboxBase):
 
                 raise TimeoutError(f"Executing tool {self.tool_name} timed out after {tool_settings.tool_sandbox_timeout} seconds.")
 
-            stderr = stderr_bytes.decode("utf-8") if stderr_bytes else ""
+                stderr = stderr_bytes.decode("utf-8") if stderr_bytes else ""
             log_event(name="finish subprocess")
 
             # Parse markers to isolate the function result
@@ -227,7 +227,7 @@ class AsyncToolSandboxLocal(AsyncToolSandboxBase):
                 stdout=[stdout_text] if stdout_text else [],
                 stderr=[stderr] if stderr else [],
                 status="success" if process.returncode == 0 else "error",
-                sandbox_config_fingerprint=sbx_config.fingerprint(),
+                sandbox_config_fingerprint=sbx_config.fingerlogger.info(),
             )
 
         except (TimeoutError, Exception) as e:
@@ -247,7 +247,7 @@ class AsyncToolSandboxLocal(AsyncToolSandboxBase):
                 stdout=[stdout_text],
                 stderr=[str(e)],
                 status="error",
-                sandbox_config_fingerprint=sbx_config.fingerprint(),
+                sandbox_config_fingerprint=sbx_config.fingerlogger.info(),
             )
 
     def parse_out_function_results_markers(self, data: bytes) -> tuple[bytes, str]:

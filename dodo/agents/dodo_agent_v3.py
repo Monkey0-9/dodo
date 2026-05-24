@@ -76,6 +76,9 @@ from dodo.services.summarizer.thresholds import get_compaction_trigger_threshold
 from dodo.settings import settings, summarizer_settings
 from dodo.system import package_function_response
 from dodo.utils import safe_create_task_with_return, validate_function_response
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 
 def extract_compaction_stats_from_message(message: Message) -> CompactionStats | None:
@@ -148,7 +151,8 @@ class dodoAgentV3(dodoAgentV2):
         """
         try:
             cap = int(self.agent_state.llm_config.context_window * 0.2 * 4)  # 20% of tokens â†’ chars
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             cap = 5000
         return max(5000, cap)
 
@@ -962,9 +966,6 @@ class dodoAgentV3(dodoAgentV2):
                     self.logger.info("switching to unconstrained mode (allowing non-tool responses)")
             self._require_tool_call = require_tool_call
 
-            # Refresh messages at the start of each step to scrub inner thoughts.
-            # NOTE: We skip system prompt refresh during normal steps to preserve prefix caching.
-            # The system prompt is only rebuilt after compaction or message reset.
             try:
                 messages = await self._refresh_messages(messages)
             except Exception as e:
@@ -1140,8 +1141,9 @@ class dodoAgentV3(dodoAgentV2):
                                 # We just need to ensure the config flag is set for tracking purposes
                                 # The actual handling happens in GoogleVertexClient.convert_response_to_chat_completion
                                 pass  # No specific request_data field needed for Gemini
-                        except Exception:
-                            # if this fails, we simply don't enable parallel tool use
+                        except Exception as e:
+                            logger.exception(f"Unexpected error: {e}")
+        # if this fails, we simply don't enable parallel tool use
                             pass
                         if dry_run:
                             yield request_data
@@ -1296,7 +1298,7 @@ class dodoAgentV3(dodoAgentV2):
                             self.logger.error(f"Unknown error occured for run {run_id}: {e}")
                             raise e
 
-                step_progression, step_metrics = self._step_checkpoint_llm_request_finish(
+                        step_progression, step_metrics = self._step_checkpoint_llm_request_finish(
                     step_metrics, agent_step_span, llm_adapter.llm_request_finish_timestamp_ns
                 )
                 # update metrics
@@ -1713,7 +1715,8 @@ class dodoAgentV3(dodoAgentV2):
             # Clamp client-side tool returns before persisting (JSON-aware: truncate only the 'message' field)
             try:
                 cap = self._compute_tool_return_truncation_chars()
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 cap = 5000
 
             for tr in tool_returns:
@@ -1743,9 +1746,9 @@ class dodoAgentV3(dodoAgentV2):
                     # Unexpected error; log and skip truncation for this return
                     self.logger.warning(f"Failed to truncate client-side tool return: {e}")
 
-            continue_stepping = True
-            stop_reason = None
-            result_tool_returns = tool_returns
+                    continue_stepping = True
+                    stop_reason = None
+                    result_tool_returns = tool_returns
 
         # 4. Handle denial cases
         if tool_call_denials:

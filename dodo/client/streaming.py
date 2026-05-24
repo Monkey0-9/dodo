@@ -38,7 +38,8 @@ def _sse_post(url: str, data: dict, headers: dict) -> Generator[Union[dodoStream
                         raise LLMError(error_message)
                 except LLMError:
                     raise
-                except Exception:
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
                     logger.error("Failed to parse SSE message, raising HTTP error")
                     event_source.response.raise_for_status()
 

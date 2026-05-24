@@ -260,8 +260,9 @@ async def create_background_stream_processor(
                                     else:
                                         error_metadata = {"error": {"message": maybe_json}}
                                     break
-                        except Exception:
-                            # Don't let parsing failures interfere with streaming
+                        except Exception as e:
+                            logger.exception(f"Unexpected error: {e}")
+        # Don't let parsing failures interfere with streaming
                             error_metadata = {"error": {"message": "Failed to parse error payload from stream."}}
 
                 is_done = saw_done or saw_error
@@ -277,7 +278,8 @@ async def create_background_stream_processor(
                     maybe_stop_reason = json.loads(maybe_json_chunk) if maybe_json_chunk and maybe_json_chunk[0] == "{" else None
                     if maybe_stop_reason and maybe_stop_reason.get("message_type") == "stop_reason":
                         stop_reason = maybe_stop_reason.get("stop_reason")
-                except Exception:
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
                     pass
 
         # Stream ended naturally - check if we got a proper terminal
@@ -434,7 +436,7 @@ async def create_background_stream_processor(
                 logger.warning(f"Unknown stop_reason '{final_stop_reason}' for run {run_id}, defaulting to completed")
                 run_status = RunStatus.completed
 
-            update_kwargs = {"status": run_status, "stop_reason": final_stop_reason}
+                update_kwargs = {"status": run_status, "stop_reason": final_stop_reason}
             if run_status == RunStatus.failed and error_metadata is not None:
                 update_kwargs["metadata"] = error_metadata
 

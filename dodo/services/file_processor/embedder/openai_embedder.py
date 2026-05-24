@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import time
 from typing import List, Optional, Tuple, cast
 
@@ -88,7 +88,7 @@ class OpenAIEmbedder(BaseEmbedder):
                 return result1 + result2
             else:
                 # re-raise for other errors or if batch size is already 1
-                raise
+                raise self.client.handle_llm_error(e)
 
     def _is_token_limit_error(self, error: Exception) -> bool:
         """Check if the error is due to token limit exceeded"""

@@ -4,6 +4,7 @@ import os
 import httpx
 
 from dodo.errors import InsufficientCreditsError
+from dodo.log import get_logger
 
 logger = logging.getLogger(__name__)
 

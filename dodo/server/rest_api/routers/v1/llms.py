@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 router = APIRouter(prefix="/models", tags=["models", "llms"])
 
 
-@router.get("/", response_model=List[Model], operation_id="list_models")
+@router.get("", response_model=List[Model], operation_id="list_models")
 async def list_llm_models(
     provider_category: Optional[List[ProviderCategory]] = Query(None),
     provider_name: Optional[str] = Query(None),

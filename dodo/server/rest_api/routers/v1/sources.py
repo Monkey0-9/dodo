@@ -108,7 +108,7 @@ async def get_sources_metadata(
     )
 
 
-@router.get("/", response_model=List[Source], operation_id="list_sources", deprecated=True)
+@router.get("", response_model=List[Source], operation_id="list_sources", deprecated=True)
 async def list_sources(
     server: "SyncServer" = Depends(get_dodo_server),
     headers: HeaderParams = Depends(get_headers),
@@ -120,7 +120,7 @@ async def list_sources(
     return await server.source_manager.list_sources(actor=actor)
 
 
-@router.post("/", response_model=Source, operation_id="create_source", deprecated=True)
+@router.post("", response_model=Source, operation_id="create_source", deprecated=True)
 async def create_source(
     source_create: SourceCreate,
     server: "SyncServer" = Depends(get_dodo_server),

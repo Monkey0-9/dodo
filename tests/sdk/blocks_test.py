@@ -1,5 +1,5 @@
 ﻿from conftest import create_test_module
-from dodo_client import UnprocessableEntityError
+from dodo.client import UnprocessableEntityError
 
 from dodo.constants import CORE_MEMORY_BLOCK_CHAR_LIMIT
 

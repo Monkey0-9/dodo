@@ -27,8 +27,10 @@ export const Chat = ({ agentId, onClose }: { agentId: string; onClose: () => voi
         ]);
         setMessages(msgData);
         setAgentData(agentInfo);
-        setPersona(agentInfo.persona || '');
-        setHuman(agentInfo.human || '');
+        const personaBlock = agentInfo.blocks?.find((b: any) => b.label === 'persona');
+        const humanBlock = agentInfo.blocks?.find((b: any) => b.label === 'human');
+        setPersona(personaBlock ? personaBlock.value : '');
+        setHuman(humanBlock ? humanBlock.value : '');
       } catch (error) {
         console.error('Failed to initialize chat:', error);
       } finally {

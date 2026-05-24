@@ -225,10 +225,11 @@ class AnthropicProvider(Provider):
                     model["context_window"] = 1_000_000
                 elif model_settings.anthropic_opus_1m and model["id"].startswith("claude-opus-4-6"):
                     model["context_window"] = 1_000_000
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 pass
 
-            max_tokens = self.get_default_max_output_tokens(model["id"])
+                max_tokens = self.get_default_max_output_tokens(model["id"])
             # TODO: set for 3-7 extended thinking mode
 
             # NOTE: from 2025-02

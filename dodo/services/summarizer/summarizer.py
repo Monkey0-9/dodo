@@ -1,4 +1,4 @@
-﻿import json
+import json
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
 if TYPE_CHECKING:
@@ -127,7 +127,8 @@ class Summarizer:
         def callback(t):
             try:
                 t.result()  # This re-raises exceptions from the task
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 logger.exception("Background task failed")
 
         task.add_done_callback(callback)
@@ -378,8 +379,9 @@ def simple_formatter(
                 content = (content + " " if content else "") + "-> " + ", ".join(call_parts)
             if content:
                 lines.append(f"[{role}] {content}")
-        except Exception:
-            lines.append(json.dumps(msg))
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        lines.append(json.dumps(msg))
 
     return "<start_transcript>\n" + "\n".join(lines) + "\n<end_transcript>\n. Generate the summary."
 
@@ -608,7 +610,8 @@ async def simple_summary(
                 # Compute a conservative byte budget for the transcript based on context window
                 try:
                     budget_bytes = int(summarizer_llm_config.context_window * 0.6 * 4)
-                except Exception:
+                except Exception as e:
+                    logger.exception(f"Unexpected error: {e}")
                     budget_bytes = 48000
 
                 overhead_bytes = (
@@ -646,7 +649,7 @@ async def simple_summary(
                     logger.info(f"Full fallback summarization payload: {request_data}")
                     raise llm_client.handle_llm_error(fallback_error_b, llm_config=llm_config)
 
-    logger.info(f"Summarized {len(messages)}: {summary}")
+        logger.info(f"Summarized {len(messages)}: {summary}")
 
     return summary
 

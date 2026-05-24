@@ -7,6 +7,7 @@ from mcp import Tool
 from pydantic import BaseModel, Field
 
 from dodo.utils import get_logger
+from dodo.log import get_logger
 
 # MCP Authentication Constants
 MCP_AUTH_HEADER_AUTHORIZATION = "Authorization"

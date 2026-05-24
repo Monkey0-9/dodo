@@ -3,51 +3,86 @@ import {
   Activity, 
   Binary, 
   ChevronUp, 
+  ChevronDown,
   Globe
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion } from 'framer-motion';
-
-const stats = [
-  { 
-    label: 'Grid Throughput', 
-    value: '1.2M', 
-    unit: 'req/s', 
-    change: '+12.5%', 
-    icon: Zap, 
-    color: 'text-primary',
-    trend: 'up'
-  },
-  { 
-    label: 'Active Threads', 
-    value: '842', 
-    unit: 'cores', 
-    change: 'Stable', 
-    icon: Activity, 
-    color: 'text-success',
-    trend: 'neutral'
-  },
-  { 
-    label: 'Neural Entropy', 
-    value: '0.042', 
-    unit: 'bits', 
-    change: '-5.2%', 
-    icon: Binary, 
-    color: 'text-accent',
-    trend: 'down'
-  },
-  { 
-    label: 'Global Latency', 
-    value: '24', 
-    unit: 'ms', 
-    change: '+2ms', 
-    icon: Globe, 
-    color: 'text-warning',
-    trend: 'up'
-  },
-];
+import { useEffect, useState } from 'react';
+import { api } from '../api/client';
+import type { AnalyticsStats } from '../api/types';
 
 export const StatsGrid = () => {
+  const [statsData, setStatsData] = useState<AnalyticsStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await api.analytics.getStats();
+        setStatsData(data);
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStats();
+    
+    // Poll every 30 seconds for live updates
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (isLoading || !statsData) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="glass-panel p-6 h-32 animate-pulse bg-white/5" />
+        ))}
+      </div>
+    );
+  }
+
+  const stats = [
+    { 
+      label: 'Grid Throughput', 
+      value: statsData.throughput, 
+      unit: 'req/s', 
+      change: statsData.changes.throughput, 
+      icon: Zap, 
+      color: 'text-primary',
+      trend: statsData.trends.throughput
+    },
+    { 
+      label: 'Active Threads', 
+      value: statsData.active_threads, 
+      unit: 'cores', 
+      change: statsData.changes.active_threads, 
+      icon: Activity, 
+      color: 'text-success',
+      trend: statsData.trends.active_threads
+    },
+    { 
+      label: 'Neural Entropy', 
+      value: statsData.neural_entropy, 
+      unit: 'bits', 
+      change: statsData.changes.neural_entropy, 
+      icon: Binary, 
+      color: 'text-accent',
+      trend: statsData.trends.neural_entropy
+    },
+    { 
+      label: 'Global Latency', 
+      value: statsData.global_latency, 
+      unit: 'ms', 
+      change: statsData.changes.global_latency, 
+      icon: Globe, 
+      color: 'text-warning',
+      trend: statsData.trends.global_latency
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat, i) => (
@@ -72,6 +107,7 @@ export const StatsGrid = () => {
               stat.trend === 'down' ? "bg-accent/10 text-accent" : "bg-white/10 text-white/40"
             )}>
               {stat.trend === 'up' && <ChevronUp size={10} />}
+              {stat.trend === 'down' && <ChevronDown size={10} />}
               {stat.change}
             </div>
           </div>

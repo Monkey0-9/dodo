@@ -353,7 +353,7 @@ def deserialize_message_history(xml_str: str) -> Tuple[List[str], str]:
     except ET.ParseError as e:
         raise ValueError(f"Invalid XML: {e}")
 
-    msgs_el = root.find("messages")
+        msgs_el = root.find("messages")
     if msgs_el is None:
         raise ValueError("Missing <messages> section")
 
@@ -442,8 +442,9 @@ def _schema_accepts_value(prop_schema: Dict[str, Any], value: Any) -> bool:
     if "enum" in prop_schema:
         try:
             return value in prop_schema["enum"]
-        except Exception:
-            return False
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        return False
 
     # unions
     for union_key in ("anyOf", "oneOf"):

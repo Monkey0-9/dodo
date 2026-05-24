@@ -148,7 +148,7 @@ class dodoResponse(BaseModel):
             except json.JSONDecodeError:
                 return html.escape(json_str)
 
-        html_output = """
+                html_output = """
         <style>
             .message-container, .usage-container {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

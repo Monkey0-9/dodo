@@ -109,8 +109,8 @@ class AsyncToolSandboxE2B(AsyncToolSandboxBase):
                 )
                 raise Exception("Execution cancelled. Transient failure, please retry.")
 
-            execution_time = time.perf_counter() - start_time
-            logger.info(f"E2B execution completed in {execution_time:.2f}s for sandbox {e2b_sandbox.sandbox_id}, tool: {self.tool_name}")
+                execution_time = time.perf_counter() - start_time
+                logger.info(f"E2B execution completed in {execution_time:.2f}s for sandbox {e2b_sandbox.sandbox_id}, tool: {self.tool_name}")
 
             if execution.results:
                 # Use appropriate result parser based on language
@@ -166,7 +166,7 @@ class AsyncToolSandboxE2B(AsyncToolSandboxBase):
                 stdout=execution.logs.stdout,
                 stderr=execution.logs.stderr,
                 status="error" if execution.error else "success",
-                sandbox_config_fingerprint=sbx_config.fingerprint(),
+                sandbox_config_fingerprint=sbx_config.fingerlogger.info(),
             )
         finally:
             logger.info(f"E2B sandbox {e2b_sandbox.sandbox_id} killed")
@@ -181,7 +181,7 @@ class AsyncToolSandboxE2B(AsyncToolSandboxBase):
 
     @trace_method
     async def create_e2b_sandbox_with_metadata_hash(self, sandbox_config: SandboxConfig) -> "AsyncSandbox":
-        state_hash = sandbox_config.fingerprint()
+        state_hash = sandbox_config.fingerlogger.info()
         e2b_config = sandbox_config.get_e2b_config()
 
         log_event(

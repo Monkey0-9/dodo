@@ -18,9 +18,11 @@ def mount_static_files(app: FastAPI):
         @app.get("/{full_path:path}", include_in_schema=False)
         async def serve_portal_fallback(full_path: str):
             # If not an API call and not a specific file, serve index.html for SPA routing
-            if not full_path.startswith("v1") and not full_path.startswith("docs"):
-                return FileResponse(os.path.join(portal_dist, "index.html"))
-            return None # Fall through to other handlers
+            if full_path.startswith("v1") or full_path.startswith("docs") or full_path.startswith("admin") or full_path.startswith("api"):
+                from fastapi import HTTPException
+                raise HTTPException(status_code=404)
+            
+            return FileResponse(os.path.join(portal_dist, "index.html"))
     else:
         @app.get("/", include_in_schema=False)
         async def redirect_to_docs():

@@ -17,7 +17,7 @@ except ImportError:
         return _router_instance
 
 
-__all__ = [
+    __all__ = [
     "LLMRoutingClient",
     "get_llm_routing_client",
 ]

@@ -1,4 +1,4 @@
-﻿import json
+import json
 from typing import Any
 
 import aiohttp
@@ -10,6 +10,9 @@ from composio.exceptions import (
     EnumMetadataNotFound,
     EnumStringNotFound,
 )
+
+from dodo.log import get_logger
+logger = get_logger(__name__)
 
 
 class AsyncComposioToolSet(BaseComposioToolSet, runtime="dodo", description_char_limit=1024):
@@ -71,7 +74,7 @@ class AsyncComposioToolSet(BaseComposioToolSet, runtime="dodo", description_char
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(endpoint, headers=self.headers, json=json_payload) as response:
-                    print(response, response.status, response.reason, response.content)
+                    logger.debug(f"Composio response: {response} {response.status} {response.reason} {response.content}")
                     if response.status == 200:
                         return await response.json()
                     else:

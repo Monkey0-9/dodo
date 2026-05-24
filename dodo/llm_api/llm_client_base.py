@@ -18,6 +18,9 @@ from dodo.schemas.provider_trace import BillingContext, ProviderTrace
 from dodo.schemas.usage import dodoUsageStatistics
 from dodo.services.telemetry_manager import TelemetryManager
 from dodo.settings import settings
+from dodo.log import get_logger
+logger = get_logger(__name__)
+
 
 if TYPE_CHECKING:
     from dodo.orm import User

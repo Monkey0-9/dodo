@@ -746,6 +746,7 @@ class PassageManager:
 
             # Commit changes
             await curr_passage.update_async(session, actor=actor)
+            self._clear_agent_passage_cache()
             return curr_passage.to_pydantic()
 
     @enforce_types
@@ -840,6 +841,7 @@ class PassageManager:
                             if strict_mode:
                                 raise
 
+                self._clear_agent_passage_cache()
                 return True
             except NoResultFound:
                 raise NoResultFound(f"Agent passage with id {passage_id} not found.")
@@ -1150,4 +1152,14 @@ class PassageManager:
             rows = result.all()
 
             return {row.tag: row.count for row in rows}
+
+    def _clear_agent_passage_cache(self):
+        func = self.get_agent_passage_by_id_async
+        for _ in range(5):
+            if hasattr(func, "cache_clear"):
+                func.cache_clear()
+                return
+            func = getattr(func, "__wrapped__", None)
+            if not func:
+                break
 

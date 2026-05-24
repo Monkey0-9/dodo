@@ -1,10 +1,11 @@
-﻿import uuid
+import uuid
 from datetime import datetime
 from logging import getLogger
 from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from dodo.log import get_logger
 
 # from: https://gist.github.com/norton120/22242eadb80bf2cf1dd54a961b151c61
 
@@ -93,6 +94,10 @@ class dodoBase(BaseModel):
         if to_orm and "metadata" in data:
             data["metadata_"] = data.pop("metadata")
         return data
+
+    def __hash__(self):
+        model_id = getattr(self, "id", None)
+        return hash(model_id) if model_id is not None else id(self)
 
 
 class OrmMetadataBase(dodoBase):

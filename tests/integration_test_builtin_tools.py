@@ -10,7 +10,7 @@ import requests
 from dotenv import load_dotenv
 from dodo.client import dodo
 from dodo.client.types import AgentState, MessageCreateParam, ToolReturnMessage
-from dodo_client.types.agents import ToolCallMessage
+from dodo.client.types import ToolCallMessage
 
 from dodo.services.tool_executor.builtin_tool_executor import dodoBuiltinToolExecutor
 from dodo.settings import tool_settings

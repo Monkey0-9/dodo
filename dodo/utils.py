@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import copy
 import difflib
 import hashlib
@@ -12,6 +12,21 @@ import re
 import subprocess
 import sys
 import uuid
+from concurrent.futures import ThreadPoolExecutor
+
+def run_async(coro):
+    """Run an async coroutine synchronously, handling already running event loops."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+
+    if loop.is_running():
+        # Use a temporary thread to run the coroutine
+        with ThreadPoolExecutor() as executor:
+            return executor.submit(asyncio.run, coro).result()
+    else:
+        return loop.run_until_complete(coro)
 from collections.abc import Coroutine
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -834,14 +849,14 @@ class OpenAIBackcompatUnpickler(pickle.Unpickler):
 #    try:
 #        encoding = tiktoken.encoding_for_model(model)
 #    except KeyError:
-#        print("Falling back to cl100k base for token counting.")
+#        logger.info("Falling back to cl100k base for token counting.")
 #        encoding = tiktoken.get_encoding("cl100k_base")
 #    return len(encoding.encode(s))
 
 
 def printd(*args, **kwargs):
     if DEBUG:
-        print(*args, **kwargs)
+        logger.info(*args, **kwargs)
 
 
 def united_diff(str1: str, str2: str) -> str:
@@ -860,7 +875,7 @@ def parse_json(string) -> dict:
             raise ValueError(f"JSON from string input ({string}) is not a dictionary (type {type(result)}): {result}")
         return result
     except Exception as e:
-        print(f"Error parsing json with json package, falling back to demjson: {e}")
+        logger.info(f"Error parsing json with json package, falling back to demjson: {e}")
 
     try:
         result = demjson.decode(string)
@@ -868,7 +883,7 @@ def parse_json(string) -> dict:
             raise ValueError(f"JSON from string input ({string}) is not a dictionary (type {type(result)}): {result}")
         return result
     except demjson.JSONDecodeError as e:
-        print(f"Error parsing json with demjson package (fatal): {e}")
+        logger.info(f"Error parsing json with demjson package (fatal): {e}")
         raise e
 
 

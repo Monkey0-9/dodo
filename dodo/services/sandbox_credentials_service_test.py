@@ -1,4 +1,4 @@
-﻿"""
+"""
 Test for sandbox credentials service functionality.
 
 To run this test:
@@ -11,7 +11,7 @@ To test with actual webhook:
 """
 
 import os
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -24,7 +24,7 @@ async def test_credentials_not_configured():
     """Test that credentials fetch returns empty dict when URL is not configured."""
     with patch.dict(os.environ, {}, clear=True):
         service = SandboxCredentialsService()
-        mock_user = User(id="user_123", organization_id="org_456")
+        mock_user = User(id="user-00000000", name="test_user", organization_id="org-00000000")
         result = await service.fetch_credentials(mock_user)
         assert result == {}
 
@@ -34,16 +34,21 @@ async def test_credentials_fetch_success():
     """Test successful credentials fetch."""
     with patch.dict(
         os.environ,
-        {"SANDBOX_CREDENTIALS_WEBHOOK": "https://example.com/credentials", "SANDBOX_CREDENTIALS_KEY": "test-key"},
+        {
+            "SANDBOX_CREDENTIALS_WEBHOOK": "https://example.com/credentials",
+            "SANDBOX_CREDENTIALS_KEY": "test-key",
+            "STEP_ORCHESTRATOR_ENDPOINT": "https://example.com/credentials",
+            "STEP_COMPLETE_KEY": "test-key",
+        },
     ):
         service = SandboxCredentialsService()
-        mock_user = User(id="user_123", organization_id="org_456")
+        mock_user = User(id="user-00000000", name="test_user", organization_id="org-00000000")
 
         with patch("httpx.AsyncClient") as mock_client:
-            mock_response = AsyncMock()
+            mock_response = Mock()
             mock_response.status_code = 200
-            mock_response.raise_for_status = AsyncMock()
-            mock_response.json = AsyncMock(return_value={"API_KEY": "secret_key_123", "OTHER_VAR": "value"})
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value={"API_KEY": "secret_key_123", "OTHER_VAR": "value"})
 
             mock_post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__.return_value.post = mock_post
@@ -54,8 +59,8 @@ async def test_credentials_fetch_success():
             mock_post.assert_called_once()
             call_args = mock_post.call_args
             assert call_args.kwargs["json"] == {
-                "user_id": "user_123",
-                "organization_id": "org_456",
+                "user_id": "user-00000000",
+                "organization_id": "org-00000000",
                 "tool_name": "my_tool",
                 "agent_id": "agent_789",
             }
@@ -65,15 +70,22 @@ async def test_credentials_fetch_success():
 @pytest.mark.asyncio
 async def test_credentials_fetch_without_auth():
     """Test credentials fetch without authentication key."""
-    with patch.dict(os.environ, {"SANDBOX_CREDENTIALS_WEBHOOK": "https://example.com/credentials"}, clear=True):
+    with patch.dict(
+        os.environ,
+        {
+            "SANDBOX_CREDENTIALS_WEBHOOK": "https://example.com/credentials",
+            "STEP_ORCHESTRATOR_ENDPOINT": "https://example.com/credentials",
+        },
+        clear=True,
+    ):
         service = SandboxCredentialsService()
-        mock_user = User(id="user_123", organization_id="org_456")
+        mock_user = User(id="user-00000000", name="test_user", organization_id="org-00000000")
 
         with patch("httpx.AsyncClient") as mock_client:
-            mock_response = AsyncMock()
+            mock_response = Mock()
             mock_response.status_code = 200
-            mock_response.raise_for_status = AsyncMock()
-            mock_response.json = AsyncMock(return_value={"API_KEY": "secret_key_123"})
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value={"API_KEY": "secret_key_123"})
 
             mock_post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__.return_value.post = mock_post
@@ -89,9 +101,15 @@ async def test_credentials_fetch_without_auth():
 @pytest.mark.asyncio
 async def test_credentials_fetch_timeout():
     """Test credentials fetch timeout handling."""
-    with patch.dict(os.environ, {"SANDBOX_CREDENTIALS_WEBHOOK": "https://example.com/credentials"}):
+    with patch.dict(
+        os.environ,
+        {
+            "SANDBOX_CREDENTIALS_WEBHOOK": "https://example.com/credentials",
+            "STEP_ORCHESTRATOR_ENDPOINT": "https://example.com/credentials",
+        },
+    ):
         service = SandboxCredentialsService()
-        mock_user = User(id="user_123", organization_id="org_456")
+        mock_user = User(id="user-00000000", name="test_user", organization_id="org-00000000")
 
         with patch("httpx.AsyncClient") as mock_client:
             import httpx
@@ -107,16 +125,22 @@ async def test_credentials_fetch_timeout():
 @pytest.mark.asyncio
 async def test_credentials_fetch_http_error():
     """Test credentials fetch HTTP error handling."""
-    with patch.dict(os.environ, {"SANDBOX_CREDENTIALS_WEBHOOK": "https://example.com/credentials"}):
+    with patch.dict(
+        os.environ,
+        {
+            "SANDBOX_CREDENTIALS_WEBHOOK": "https://example.com/credentials",
+            "STEP_ORCHESTRATOR_ENDPOINT": "https://example.com/credentials",
+        },
+    ):
         service = SandboxCredentialsService()
-        mock_user = User(id="user_123", organization_id="org_456")
+        mock_user = User(id="user-00000000", name="test_user", organization_id="org-00000000")
 
         with patch("httpx.AsyncClient") as mock_client:
             import httpx
 
-            mock_response = AsyncMock()
+            mock_response = Mock()
             mock_response.status_code = 500
-            mock_response.raise_for_status = AsyncMock(
+            mock_response.raise_for_status = Mock(
                 side_effect=httpx.HTTPStatusError("Server error", request=None, response=mock_response)
             )
 
@@ -131,15 +155,21 @@ async def test_credentials_fetch_http_error():
 @pytest.mark.asyncio
 async def test_credentials_fetch_invalid_response():
     """Test credentials fetch with invalid response format."""
-    with patch.dict(os.environ, {"SANDBOX_CREDENTIALS_WEBHOOK": "https://example.com/credentials"}):
+    with patch.dict(
+        os.environ,
+        {
+            "SANDBOX_CREDENTIALS_WEBHOOK": "https://example.com/credentials",
+            "STEP_ORCHESTRATOR_ENDPOINT": "https://example.com/credentials",
+        },
+    ):
         service = SandboxCredentialsService()
-        mock_user = User(id="user_123", organization_id="org_456")
+        mock_user = User(id="user-00000000", name="test_user", organization_id="org-00000000")
 
         with patch("httpx.AsyncClient") as mock_client:
-            mock_response = AsyncMock()
+            mock_response = Mock()
             mock_response.status_code = 200
-            mock_response.raise_for_status = AsyncMock()
-            mock_response.json = AsyncMock(return_value="not a dict")
+            mock_response.raise_for_status = Mock()
+            mock_response.json = Mock(return_value="not a dict")
 
             mock_post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__.return_value.post = mock_post

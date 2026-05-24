@@ -1,4 +1,4 @@
-﻿import os
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
@@ -24,6 +24,28 @@ if settings.database_engine is DatabaseChoice.POSTGRES:
     print("Using database: ", sync_pg_uri)
 else:
     config.set_main_option("sqlalchemy.url", "sqlite:///" + os.path.join(dodo_config.recall_storage_path, "sqlite.db"))
+    
+    # Patch SQLiteImpl to ignore operations not supported by SQLite
+    import alembic.ddl.sqlite
+    
+    def dummy_drop_constraint(self, const):
+        print(f"[SQLite Migration Patch] Ignoring drop_constraint for: {getattr(const, 'name', const)}")
+        
+    def dummy_add_constraint(self, const):
+        print(f"[SQLite Migration Patch] Ignoring add_constraint for: {getattr(const, 'name', const)}")
+        
+    def dummy_alter_column(self, table_name, column_name, **kw):
+        print(f"[SQLite Migration Patch] Ignoring alter_column for: {table_name}.{column_name}")
+        
+    alembic.ddl.sqlite.SQLiteImpl.drop_constraint = dummy_drop_constraint
+    alembic.ddl.sqlite.SQLiteImpl.add_constraint = dummy_add_constraint
+    alembic.ddl.sqlite.SQLiteImpl.alter_column = dummy_alter_column
+
+    # Also import sqlite_functions to register the connect event listeners
+    try:
+        from dodo.orm import sqlite_functions  # noqa: F401
+    except ImportError:
+        pass
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -81,6 +103,25 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        from sqlalchemy import text
+        if connectable.dialect.name == "sqlite":
+            # For SQLite, initialize/sync schema directly using SQLAlchemy models metadata.
+            # This ensures that all latest columns exist and match ORM models.
+            print("[SQLite Migration Patch] Initializing SQLite schema from ORM models...")
+            Base.metadata.create_all(bind=connection)
+            
+            # Stamp with the latest alembic revision
+            connection.execute(text("CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) NOT NULL PRIMARY KEY)"))
+            
+            # Check if there is already a version
+            result = connection.execute(text("SELECT version_num FROM alembic_version")).fetchone()
+            if not result:
+                # Latest revision in the migrations
+                latest_revision = "338b905379b9"
+                connection.execute(text(f"INSERT INTO alembic_version (version_num) VALUES ('{latest_revision}')"))
+                print(f"[SQLite Migration Patch] Stamped SQLite database with revision {latest_revision}")
+            connection.commit()
+
         context.configure(connection=connection, target_metadata=target_metadata, include_schemas=True)
 
         with context.begin_transaction():

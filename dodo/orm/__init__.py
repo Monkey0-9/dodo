@@ -1,4 +1,4 @@
-﻿from dodo.orm.agent import Agent as Agent
+from dodo.orm.agent import Agent as Agent
 from dodo.orm.agents_tags import AgentsTags as AgentsTags
 from dodo.orm.archive import Archive as Archive
 from dodo.orm.archives_agents import ArchivesAgents as ArchivesAgents
@@ -46,4 +46,6 @@ from dodo.orm.step_metrics import StepMetrics as StepMetrics
 from dodo.orm.tool import Tool as Tool
 from dodo.orm.tools_agents import ToolsAgents as ToolsAgents
 from dodo.orm.user import User as User
+from dodo.orm.circuit_breaker import CircuitBreakerState as CircuitBreakerState
+
 

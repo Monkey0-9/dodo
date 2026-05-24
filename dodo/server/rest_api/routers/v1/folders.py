@@ -115,7 +115,7 @@ async def retrieve_metadata(
     )
 
 
-@router.get("/", response_model=List[Folder], operation_id="list_folders")
+@router.get("", response_model=List[Folder], operation_id="list_folders")
 async def list_folders(
     before: Optional[str] = Query(
         None, description="Folder ID cursor for pagination. Returns folders that come before this folder ID in the specified sort order"
@@ -141,7 +141,7 @@ async def list_folders(
     )
 
 
-@router.post("/", response_model=Folder, operation_id="create_folder")
+@router.post("", response_model=Folder, operation_id="create_folder")
 async def create_folder(
     folder_create: SourceCreate,
     server: "SyncServer" = Depends(get_dodo_server),

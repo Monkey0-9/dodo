@@ -89,7 +89,8 @@ class OllamaProvider(OpenAIProvider):
                 if ctx_len is not None:
                     try:
                         context_window = int(ctx_len)
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         context_window = None
             if context_window is None:
                 logger.warning(f"Ollama model {model_name} has no context window in /api/show, using default {DEFAULT_CONTEXT_WINDOW}")
@@ -173,7 +174,8 @@ class OllamaProvider(OpenAIProvider):
                 if embedding_length is not None:
                     try:
                         embedding_dim = int(embedding_length)
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         pass
 
             if not embedding_dim:

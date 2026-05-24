@@ -10,8 +10,8 @@ import requests
 from dotenv import load_dotenv
 from dodo.client import dodo
 from dodo.client.types import MessageCreateParam
-from dodo_client.types.agents.tool_call_message import ToolCallMessage
-from dodo_client.types.tool_return_message import ToolReturnMessage
+from dodo.client.types.agents.tool_call_message import ToolCallMessage
+from dodo.client.types.tool_return_message import ToolReturnMessage
 
 from dodo.functions.mcp_client.types import StdioServerConfig
 from dodo.schemas.agent import AgentState

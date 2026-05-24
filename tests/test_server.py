@@ -1,4 +1,5 @@
-﻿import os
+import os
+from unittest.mock import patch
 
 import pytest
 
@@ -15,6 +16,100 @@ from dodo.schemas.agent import CreateAgent
 from dodo.schemas.message import MessageCreate
 from dodo.schemas.run import Run as PydanticRun
 from dodo.server.server import SyncServer
+
+
+@pytest.fixture(autouse=True)
+def mock_openai_client():
+    async def mock_request_async(self, request_data: dict, llm_config):
+        model = llm_config.model if llm_config else "mock-model"
+        if "input" in request_data and "messages" not in request_data:
+            outputs = []
+            if "tools" in request_data and request_data["tools"]:
+                tool_names = []
+                for t in request_data["tools"]:
+                    if "name" in t:
+                        tool_names.append(t["name"])
+                    elif "function" in t and "name" in t["function"]:
+                        tool_names.append(t["function"]["name"])
+                target_tool = "send_message" if "send_message" in tool_names else (tool_names[0] if tool_names else "send_message")
+                outputs.append({
+                    "type": "function_call",
+                    "call_id": "call-mock-tool",
+                    "name": target_tool,
+                    "arguments": '{"message": "Mock Responses API response"}'
+                })
+            else:
+                outputs.append({
+                    "type": "message",
+                    "content": [
+                        {
+                            "type": "output_text",
+                            "text": "Mock Responses API response"
+                        }
+                    ]
+                })
+            return {
+                "id": "resp-mock",
+                "object": "response",
+                "created_at": 1677652288,
+                "model": model,
+                "status": "completed",
+                "output": outputs,
+                "usage": {
+                    "input_tokens": 10,
+                    "output_tokens": 20,
+                    "total_tokens": 30
+                }
+            }
+        else:
+            tool_calls = None
+            if "tools" in request_data and request_data["tools"]:
+                tool_names = []
+                for t in request_data["tools"]:
+                    if "function" in t and "name" in t["function"]:
+                        tool_names.append(t["function"]["name"])
+                    elif "name" in t:
+                        tool_names.append(t["name"])
+                target_tool = "send_message" if "send_message" in tool_names else (tool_names[0] if tool_names else "send_message")
+                tool_calls = [
+                    {
+                        "id": "call-mock-tool",
+                        "type": "function",
+                        "function": {
+                            "name": target_tool,
+                            "arguments": '{"message": "Mock standard response text"}'
+                        }
+                    }
+                ]
+            return {
+                "id": "chatcmpl-mock",
+                "object": "chat.completion",
+                "created": 1677652288,
+                "model": model,
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": None if tool_calls else "Mock standard response text",
+                            "tool_calls": tool_calls
+                        },
+                        "finish_reason": "tool_calls" if tool_calls else "stop"
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 10,
+                    "completion_tokens": 20,
+                    "total_tokens": 30
+                }
+            }
+
+    async def mock_request_embeddings(self, inputs, embedding_config):
+        return [[0.0] * 1536 for _ in inputs]
+
+    with patch("dodo.llm_api.openai_client.OpenAIClient.request_async", mock_request_async), \
+         patch("dodo.llm_api.openai_client.OpenAIClient.request_embeddings", mock_request_embeddings):
+        yield
 
 
 @pytest.fixture
@@ -69,7 +164,7 @@ async def custom_anthropic_provider(server: SyncServer, user_id: str):
         ProviderCreate(
             name=provider_name,
             provider_type=ProviderType.anthropic,
-            api_key=os.getenv("ANTHROPIC_API_KEY"),
+            api_key=os.getenv("ANTHROPIC_API_KEY") or "mock-anthropic-key",
         ),
         actor=actor,
     )

@@ -180,7 +180,7 @@ def get_chat_completion(
     except requests.exceptions.ConnectionError:
         raise LocalLLMConnectionError(f"Unable to connect to endpoint {endpoint}")
 
-    attributes = usage if isinstance(usage, dict) else {"usage": usage}
+        attributes = usage if isinstance(usage, dict) else {"usage": usage}
     attributes.update({"result": result})
     log_event(name="llm_request_sent", attributes=attributes)
 

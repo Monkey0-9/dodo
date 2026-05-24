@@ -1,4 +1,4 @@
-﻿from typing import List
+from typing import List
 
 import httpx
 import pytest
@@ -29,7 +29,7 @@ def test_agents(client: dodo) -> List[AgentState]:
     for i in range(2):
         # Create agent as hidden using direct HTTP call (SDK might not support hidden parameter yet)
         response = httpx.post(
-            f"{client._client._base_url}/v1/agents/",
+            f"{client.base_url}/v1/agents",
             json={
                 "name": f"test_agent_hidden_{i}",
                 "tags": ["test", "hidden"],
@@ -37,7 +37,7 @@ def test_agents(client: dodo) -> List[AgentState]:
                 "embedding": "openai/text-embedding-3-small",
                 "hidden": True,
             },
-            headers=client._client._headers,
+            headers=client.headers,
             timeout=10.0,
         )
         response.raise_for_status()
@@ -68,9 +68,9 @@ def test_internal_agents_count_exclude_hidden(client: dodo, test_agents: List[Ag
     # Make a request to the internal endpoint
     # Note: We need to use the raw HTTP client since the SDK might not have this endpoint
     response = httpx.get(
-        f"{client._client._base_url}/v1/_internal_agents/count",
+        f"{client.base_url}/v1/_internal_agents/count",
         params={"exclude_hidden": True},
-        headers=client._client._headers,
+        headers=client.headers,
         timeout=10.0,
     )
 
@@ -84,9 +84,9 @@ def test_internal_agents_count_exclude_hidden(client: dodo, test_agents: List[Ag
 
     # Get the total count with hidden agents included
     response_with_hidden = httpx.get(
-        f"{client._client._base_url}/v1/_internal_agents/count",
+        f"{client.base_url}/v1/_internal_agents/count",
         params={"exclude_hidden": False},
-        headers=client._client._headers,
+        headers=client.headers,
         timeout=10.0,
     )
 
@@ -103,9 +103,9 @@ def test_internal_agents_count_include_all(client: dodo, test_agents: List[Agent
     when exclude_hidden=False.
     """
     response = httpx.get(
-        f"{client._client._base_url}/v1/_internal_agents/count",
+        f"{client.base_url}/v1/_internal_agents/count",
         params={"exclude_hidden": False},
-        headers=client._client._headers,
+        headers=client.headers,
         timeout=10.0,
     )
 
@@ -123,8 +123,8 @@ def test_internal_agents_count_default_behavior(client: dodo, test_agents: List[
     """
     # Call without specifying exclude_hidden (should default to True)
     response = httpx.get(
-        f"{client._client._base_url}/v1/_internal_agents/count",
-        headers=client._client._headers,
+        f"{client.base_url}/v1/_internal_agents/count",
+        headers=client.headers,
         timeout=10.0,
     )
 
@@ -137,9 +137,9 @@ def test_internal_agents_count_default_behavior(client: dodo, test_agents: List[
 
     # This should be the same as explicitly setting exclude_hidden=True
     response_explicit = httpx.get(
-        f"{client._client._base_url}/v1/_internal_agents/count",
+        f"{client.base_url}/v1/_internal_agents/count",
         params={"exclude_hidden": True},
-        headers=client._client._headers,
+        headers=client.headers,
         timeout=10.0,
     )
 

@@ -9,8 +9,7 @@ import pytest
 import requests
 from anthropic.types.beta.messages import BetaMessageBatch, BetaMessageBatchRequestCounts
 from dotenv import load_dotenv
-# from dodo.client.client import DodoClient as dodo
-dodo = None
+from dodo.client.client import DodoClient as dodo
 
 from dodo.server.db import db_registry
 from dodo.services.organization_manager import OrganizationManager
@@ -58,13 +57,14 @@ def server_url() -> str:
     return url
 
 
-# @pytest.fixture(scope="session")
-# def client(server_url: str) -> dodo:
-#     """
-#     Creates and returns a synchronous dodo REST client for testing.
-#     """
-#     client_instance = dodo(base_url=server_url)
-#     yield client_instance
+@pytest.fixture(scope="session")
+def client(server_url: str) -> dodo:
+    """
+    Creates and returns a synchronous dodo REST client for testing.
+    """
+    password = os.getenv("DODO_SERVER_PASSWORD", "dodo-secret")
+    client_instance = dodo(base_url=server_url, token=password)
+    yield client_instance
 
 
 @pytest.fixture(autouse=True)

@@ -9,7 +9,7 @@ import os
 import threading
 import time
 
-from dodo_client import CreateBlock, dodo as dodoSDKClient, MessageCreate
+from dodo.client import CreateBlock, dodo as dodoSDKClient, MessageCreate
 
 SERVER_PORT = 8283
 

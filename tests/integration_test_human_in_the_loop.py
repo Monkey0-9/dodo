@@ -4,7 +4,7 @@ from typing import Any, List
 from unittest.mock import patch
 
 import pytest
-from dodo_client import APIError, dodo
+from dodo.client import APIError, dodo
 from dodo.client.types import AgentState, MessageCreateParam, Tool
 
 from dodo.adapters.simple_llm_stream_adapter import SimpleLLMStreamAdapter

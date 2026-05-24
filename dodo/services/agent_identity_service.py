@@ -2,6 +2,7 @@ import logging
 from typing import List, Optional
 from dodo.orm.sandbox_config import AgentEnvironmentVariable
 from dodo.schemas.secret import Secret
+from dodo.log import get_logger
 
 logger = logging.getLogger(__name__)
 

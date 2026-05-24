@@ -86,8 +86,9 @@ async def openai_get_model_list_async(
         # Handle HTTP errors (e.g., response 4XX, 5XX)
         try:
             error_response = http_err.response.json()
-        except Exception:
-            error_response = {"status_code": http_err.response.status_code, "text": http_err.response.text}
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
+        error_response = {"status_code": http_err.response.status_code, "text": http_err.response.text}
         logger.debug(f"Got HTTPError, exception={http_err}, response={error_response}")
         raise http_err
     except httpx.RequestError as req_err:
@@ -231,7 +232,7 @@ def openai_chat_completions_process_stream(
     # Count the prompt tokens
     # TODO move to post-request?
     chat_history = [m.model_dump(exclude_none=True) for m in chat_completion_request.messages]
-    # print(chat_history)
+    # logger.info(chat_history)
 
     prompt_tokens = num_tokens_from_messages(
         messages=chat_history,

@@ -212,7 +212,16 @@ export const Settings = () => {
               Discard Changes
             </button>
             <button 
-              onClick={() => alert('Configuration saved successfully!')}
+              onClick={async () => {
+                if (!org) return;
+                try {
+                  const nameInput = document.querySelector('input[title="Workspace Name"]') as HTMLInputElement;
+                  await api.organizations.update(org.id, { name: nameInput.value });
+                  alert('Configuration saved successfully!');
+                } catch (error) {
+                  alert('Failed to save configuration: ' + (error instanceof Error ? error.message : String(error)));
+                }
+              }}
               className="px-8 py-2.5 rounded-lg bg-linear-to-r from-primary to-secondary text-on-primary font-bold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
             >
               Save Configuration

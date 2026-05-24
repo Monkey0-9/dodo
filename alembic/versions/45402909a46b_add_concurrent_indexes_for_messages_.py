@@ -21,23 +21,41 @@ def upgrade() -> None:
     connection = op.get_bind()
     connection.commit()
     autocommit_connection = connection.execution_options(isolation_level="AUTOCOMMIT")
-    autocommit_connection.exec_driver_sql(
-        """
-        CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_on_updated_at
-        ON messages USING btree (updated_at)
-        """
-    )
-    autocommit_connection.exec_driver_sql(
-        """
-        CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_messages_agent_conversation_sequence
-        ON messages USING btree (agent_id, conversation_id, sequence_id)
-        """
-    )
+    if connection.dialect.name == "sqlite":
+        autocommit_connection.exec_driver_sql(
+            """
+            CREATE INDEX IF NOT EXISTS idx_messages_on_updated_at
+            ON messages (updated_at)
+            """
+        )
+        autocommit_connection.exec_driver_sql(
+            """
+            CREATE INDEX IF NOT EXISTS ix_messages_agent_conversation_sequence
+            ON messages (agent_id, conversation_id, sequence_id)
+            """
+        )
+    else:
+        autocommit_connection.exec_driver_sql(
+            """
+            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_on_updated_at
+            ON messages USING btree (updated_at)
+            """
+        )
+        autocommit_connection.exec_driver_sql(
+            """
+            CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_messages_agent_conversation_sequence
+            ON messages USING btree (agent_id, conversation_id, sequence_id)
+            """
+        )
 
 
 def downgrade() -> None:
     connection = op.get_bind()
     connection.commit()
     autocommit_connection = connection.execution_options(isolation_level="AUTOCOMMIT")
-    autocommit_connection.exec_driver_sql("DROP INDEX CONCURRENTLY IF EXISTS ix_messages_agent_conversation_sequence")
-    autocommit_connection.exec_driver_sql("DROP INDEX CONCURRENTLY IF EXISTS idx_messages_on_updated_at")
+    if connection.dialect.name == "sqlite":
+        autocommit_connection.exec_driver_sql("DROP INDEX IF EXISTS ix_messages_agent_conversation_sequence")
+        autocommit_connection.exec_driver_sql("DROP INDEX IF EXISTS idx_messages_on_updated_at")
+    else:
+        autocommit_connection.exec_driver_sql("DROP INDEX CONCURRENTLY IF EXISTS ix_messages_agent_conversation_sequence")
+        autocommit_connection.exec_driver_sql("DROP INDEX CONCURRENTLY IF EXISTS idx_messages_on_updated_at")

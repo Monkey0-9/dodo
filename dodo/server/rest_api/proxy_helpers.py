@@ -326,6 +326,7 @@ async def inject_memory_context(
         return modified_data
 
     except Exception as e:
+
         logger.exception(f"[{proxy_name}] Failed to inject memory context: {e}")
         return request_data
 
@@ -562,6 +563,7 @@ async def get_or_create_claude_code_agent(
         return new_agent
 
     except Exception as e:
+
         logger.exception(f"Failed to create Claude Code agent: {e}")
         raise
 

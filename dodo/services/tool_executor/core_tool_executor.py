@@ -178,7 +178,8 @@ class dodoCoreToolExecutor(ToolExecutor):
                     try:
                         tz = ZoneInfo(agent_state.timezone)
                         now = now_utc.astimezone(tz)
-                    except Exception:
+                    except Exception as e:
+                        logger.exception(f"Unexpected error: {e}")
                         now = now_utc
                 else:
                     now = now_utc
@@ -212,8 +213,10 @@ class dodoCoreToolExecutor(ToolExecutor):
                                 days = total_seconds // 86400
                                 time_delta_str = f"{days}d ago"
 
-                        except Exception:
-                            # Fallback to ISO format if timezone conversion fails
+                        except Exception as e:
+
+                            logger.exception(f"Unexpected error: {e}")
+        # Fallback to ISO format if timezone conversion fails
                             formatted_timestamp = str(timestamp)
                     else:
                         # Use ISO format if no timezone is set
@@ -633,7 +636,7 @@ class dodoCoreToolExecutor(ToolExecutor):
                     # Block doesn't exist, which is what we want for adding
                     pass
 
-                content = "\n".join(action["content_lines"]).rstrip("\n")
+                    content = "\n".join(action["content_lines"]).rstrip("\n")
                 await self.memory_create(
                     agent_state,
                     actor,

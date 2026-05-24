@@ -1,4 +1,4 @@
-﻿"""Git HTTP Smart Protocol endpoints (proxied to memfs service).
+"""Git HTTP Smart Protocol endpoints (proxied to memfs service).
 
 This module proxies `/v1/git/*` requests to the external memfs service, which
 handles git smart HTTP protocol (clone, push, pull).
@@ -72,11 +72,11 @@ async def _sync_after_push(actor_id: str, agent_id: str) -> None:
 
     try:
         actor = await _server_instance.user_manager.get_actor_by_id_async(actor_id)
-    except Exception:
+        org_id = actor.organization_id
+    except Exception as e:
+        logger.exception(f"Unexpected error: {e}")
         logger.exception("Failed to resolve actor for post-push sync (actor_id=%s)", actor_id)
         return
-
-    org_id = actor.organization_id
 
     # Sync blocks to Postgres (if using GitEnabledBlockManager).
     #
@@ -150,7 +150,8 @@ async def _sync_after_push(actor_id: str, agent_id: str) -> None:
             )
             synced += 1
             logger.info("Synced block %s to PostgreSQL", label)
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             logger.exception(
                 "Failed to sync block %s to PostgreSQL (agent=%s) [path=%s nested=%s]",
                 label,
@@ -189,7 +190,8 @@ async def _sync_after_push(actor_id: str, agent_id: str) -> None:
                     actor=actor,
                 )
                 logger.info("Detached block %s from agent (removed from git)", label)
-        except Exception:
+        except Exception as e:
+            logger.exception(f"Unexpected error: {e}")
             logger.exception("Failed detaching removed blocks during post-push sync (agent=%s)", agent_id)
 
     total_ms = (time.perf_counter() - started_at) * 1000
@@ -350,7 +352,8 @@ async def proxy_git_http(
                     sync_ms,
                     total_from_receive_pack_ms,
                 )
-            except Exception:
+            except Exception as e:
+                logger.exception(f"Unexpected error: {e}")
                 logger.exception("Failed to trigger deferred post-push sync (agent_id=%s)", pushed_agent_id)
 
     return StreamingResponse(

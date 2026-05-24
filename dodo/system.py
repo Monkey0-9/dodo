@@ -1,4 +1,4 @@
-﻿import json
+import json
 from typing import Any, Optional
 
 from dodo.log import get_logger
@@ -172,11 +172,11 @@ def package_system_message(system_message, timezone, message_type="system_alert"
     # error handling for recursive packaging
     try:
         message_json = json.loads(system_message)
-        if "type" in message_json and message_json["type"] == message_type:
+        if isinstance(message_json, dict) and message_json.get("type") == message_type:
             logger.warning(f"Attempted to pack a system message that is already packed. Not packing: '{system_message}'")
             return system_message
     except Exception:
-        pass  # do nothing, expected behavior that the message is not JSON
+        pass  # expected behavior that the message is not JSON
 
     formatted_time = get_local_time(timezone=timezone)
     packaged_message = {
@@ -271,7 +271,7 @@ def unpack_message(packed_message: str) -> str:
 
     try:
         message_json = json.loads(packed_message)
-        if type(message_json) is not dict:
+        if not isinstance(message_json, dict):
             return packed_message
     except Exception:
         return packed_message
@@ -283,12 +283,9 @@ def unpack_message(packed_message: str) -> str:
         logger.warning(f"Was unable to find 'message' field in packed message object: '{packed_message}'")
         return packed_message
     else:
-        try:
-            message_type = message_json["type"]
-        except Exception:
-            return packed_message
-
+        message_type = message_json.get("type")
         if message_type != "user_message":
             return packed_message
         return message_json.get("message")
+
 

@@ -207,8 +207,8 @@ class TiktokenCounter(TokenCounter):
             except KeyError:
                 logger.debug(f"Model {self.model} not found in tiktoken. Using cl100k_base encoding.")
                 encoding = tiktoken.get_encoding("cl100k_base")
-            result = len(encoding.encode(text))
-            logger.debug(f"TiktokenCounter.count_text_tokens: completed successfully, tokens={result}")
+                result = len(encoding.encode(text))
+                logger.debug(f"TiktokenCounter.count_text_tokens: completed successfully, tokens={result}")
             return result
         except Exception as e:
             logger.error(f"TiktokenCounter.count_text_tokens: FAILED with {type(e).__name__}: {e}, text_length={text_length}")

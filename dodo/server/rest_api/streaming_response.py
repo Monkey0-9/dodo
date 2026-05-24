@@ -211,7 +211,7 @@ async def cancellation_aware_stream_wrapper(
                     # Log warning but don't fail the stream if cancellation check fails
                     logger.warning(f"Failed to check run cancellation for run {run_id}: {e}")
 
-                last_cancellation_check = current_time
+                    last_cancellation_check = current_time
 
             yield chunk
 

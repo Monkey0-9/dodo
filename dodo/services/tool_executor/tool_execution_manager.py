@@ -27,6 +27,8 @@ from dodo.services.tool_executor.mcp_tool_executor import ExternalMCPToolExecuto
 from dodo.services.tool_executor.sandbox_tool_executor import SandboxToolExecutor
 from dodo.services.tool_executor.tool_executor_base import ToolExecutor
 from dodo.utils import get_friendly_error_msg
+logger = get_logger(__name__)
+
 
 
 class ToolExecutorFactory:

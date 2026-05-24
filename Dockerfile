@@ -97,6 +97,12 @@ COPY init.sql /docker-entrypoint-initdb.d/
 
 EXPOSE 8283 5432 6379 4317 4318
 
+# Set up non-root user for security
+RUN groupadd -r dodo && useradd -r -g dodo dodo && \
+    chown -R dodo:dodo /app
+
+USER dodo
+
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["./dodo/server/startup.sh"]
 

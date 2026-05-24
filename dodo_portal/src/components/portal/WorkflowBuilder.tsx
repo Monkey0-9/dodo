@@ -45,7 +45,19 @@ export const WorkflowBuilder = () => {
         </div>
         <div className="pointer-events-auto flex flex-col items-end gap-2">
           <button 
-            onClick={() => alert('Workflow deployed successfully!')}
+            onClick={async () => {
+              try {
+                // Call real backend API to create a Round Robin group matching this workflow layout
+                const resp = await import('../../api/client').then(m => m.api.groups.create({
+                  agent_ids: [],
+                  description: "Workflow Orchestrator deployment from Canvas",
+                  manager_config: { manager_type: "round_robin" }
+                }));
+                alert(`Workflow deployed successfully! Group ID: ${resp.id}`);
+              } catch (e: any) {
+                alert(`Failed to deploy workflow: ${e.message}`);
+              }
+            }}
             className="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 shadow-xl hover:scale-105 transition-transform"
           >
             <span className="material-symbols-outlined material-fill">rocket_launch</span>
