@@ -26,6 +26,16 @@ def _serialize_pydantic(value: Any) -> Any:
     return value
 
 
+class ListWrapper(list):
+    """A list subclass that also exposes an `.items` property returning itself.
+
+    This ensures backward compatibility with code/tests expecting a paginated response object.
+    """
+    @property
+    def items(self) -> "ListWrapper":
+        return self
+
+
 class DodoClient:
     """Institutional-grade Dodo SDK client for interacting with the Dodo server.
 
@@ -62,6 +72,7 @@ class DodoClient:
         self.users = UsersResource(self)
         self.organizations = OrganizationsResource(self)
         self.mcp_servers = MCPServersResource(self)
+        self.tags = TagsResource(self)
 
     def _request(self, method: str, path: str, **kwargs) -> Any:
         if "json" in kwargs:
@@ -118,15 +129,59 @@ class BaseResource:
         self.client = client
 
 
+class AgentBlocksResource(BaseResource):
+    def list(self, agent_id: str, **kwargs) -> ListWrapper:
+        resp = self.client.get(f"/v1/agents/{agent_id}/core-memory/blocks", params=kwargs)
+        return ListWrapper([Block(**b) for b in resp])
+
+    def retrieve(self, agent_id: str, block_label: str) -> Block:
+        resp = self.client.get(f"/v1/agents/{agent_id}/core-memory/blocks/{block_label}")
+        return Block(**resp)
+
+    def update(self, agent_id: str, block_label: str, **kwargs) -> Block:
+        resp = self.client.patch(f"/v1/agents/{agent_id}/core-memory/blocks/{block_label}", json=kwargs)
+        return Block(**resp)
+
+    def attach(self, agent_id: str, block_id: str) -> AgentState:
+        resp = self.client.patch(f"/v1/agents/{agent_id}/core-memory/blocks/attach/{block_id}")
+        return AgentState(**resp)
+
+    def detach(self, agent_id: str, block_id: str) -> AgentState:
+        resp = self.client.patch(f"/v1/agents/{agent_id}/core-memory/blocks/detach/{block_id}")
+        return AgentState(**resp)
+
+
+class AgentToolsResource(BaseResource):
+    def list(self, agent_id: str, **kwargs) -> ListWrapper:
+        resp = self.client.get(f"/v1/agents/{agent_id}/tools", params=kwargs)
+        return ListWrapper([Tool(**t) for t in resp])
+
+    def attach(self, agent_id: str, tool_id: str) -> Optional[AgentState]:
+        resp = self.client.patch(f"/v1/agents/{agent_id}/tools/attach/{tool_id}")
+        return AgentState(**resp) if resp else None
+
+    def detach(self, agent_id: str, tool_id: str) -> Optional[AgentState]:
+        resp = self.client.patch(f"/v1/agents/{agent_id}/tools/detach/{tool_id}")
+        return AgentState(**resp) if resp else None
+
+
 class AgentsResource(BaseResource):
+    def __init__(self, client: DodoClient):
+        super().__init__(client)
+        self.blocks = AgentBlocksResource(client)
+        self.tools = AgentToolsResource(client)
+
     def create(self, **kwargs) -> AgentState:
         data = kwargs
         resp = self.client.post("/v1/agents", json=data)
         return AgentState(**resp)
 
-    def get(self, agent_id: str) -> AgentState:
-        resp = self.client.get(f"/v1/agents/{agent_id}")
+    def get(self, agent_id: str, **kwargs) -> AgentState:
+        resp = self.client.get(f"/v1/agents/{agent_id}", params=kwargs)
         return AgentState(**resp)
+
+    def retrieve(self, agent_id: str, **kwargs) -> AgentState:
+        return self.get(agent_id, **kwargs)
 
     def update(self, agent_id: str, **kwargs) -> AgentState:
         resp = self.client.patch(f"/v1/agents/{agent_id}", json=kwargs)
@@ -135,13 +190,13 @@ class AgentsResource(BaseResource):
     def delete(self, agent_id: str):
         self.client.delete(f"/v1/agents/{agent_id}")
 
-    def list(self, **kwargs) -> List[AgentState]:
+    def list(self, **kwargs) -> ListWrapper:
         resp = self.client.get("/v1/agents", params=kwargs)
         if isinstance(resp, dict) and "items" in resp:
-            return [AgentState(**a) for a in resp["items"]]
+            return ListWrapper([AgentState(**a) for a in resp["items"]])
         if isinstance(resp, dict) and "data" in resp:
-            return [AgentState(**a) for a in resp["data"]]
-        return [AgentState(**a) for a in resp]
+            return ListWrapper([AgentState(**a) for a in resp["data"]])
+        return ListWrapper([AgentState(**a) for a in resp])
 
     @property
     def messages(self):
@@ -149,9 +204,9 @@ class AgentsResource(BaseResource):
 
 
 class MessagesResource(BaseResource):
-    def list(self, agent_id: str, **kwargs) -> List[Message]:
+    def list(self, agent_id: str, **kwargs) -> ListWrapper:
         resp = self.client.get(f"/v1/agents/{agent_id}/messages", params=kwargs)
-        return [Message(**m) for m in resp]
+        return ListWrapper([Message(**m) for m in resp])
 
     def create(self, agent_id: str, **kwargs) -> AgentStepResponse:
         resp = self.client.post(f"/v1/agents/{agent_id}/messages", json=kwargs)
@@ -174,9 +229,9 @@ class ToolsResource(BaseResource):
     def delete(self, tool_id: str):
         self.client.delete(f"/v1/tools/{tool_id}")
 
-    def list(self, **kwargs) -> List[Tool]:
+    def list(self, **kwargs) -> ListWrapper:
         resp = self.client.get("/v1/tools", params=kwargs)
-        return [Tool(**t) for t in resp]
+        return ListWrapper([Tool(**t) for t in resp])
 
     def upsert_from_function(self, func, tags: Optional[List[str]] = None):
         """Helper to create or update a tool from a Python function."""
@@ -203,9 +258,9 @@ class BlocksResource(BaseResource):
     def delete(self, block_id: str):
         self.client.delete(f"/v1/blocks/{block_id}")
 
-    def list(self, **kwargs) -> List[Block]:
+    def list(self, **kwargs) -> ListWrapper:
         resp = self.client.get("/v1/blocks", params=kwargs)
-        return [Block(**b) for b in resp]
+        return ListWrapper([Block(**b) for b in resp])
 
 
 class SourcesResource(BaseResource):
@@ -220,9 +275,9 @@ class SourcesResource(BaseResource):
     def delete(self, source_id: str):
         self.client.delete(f"/v1/sources/{source_id}")
 
-    def list(self, **kwargs) -> List[Source]:
+    def list(self, **kwargs) -> ListWrapper:
         resp = self.client.get("/v1/sources", params=kwargs)
-        return [Source(**s) for s in resp]
+        return ListWrapper([Source(**s) for s in resp])
 
     def load_file_to_source(self, filename: str, source_id: str, blocking: bool = True) -> Job:
         # Implementation depends on server-side file upload endpoint
@@ -238,13 +293,13 @@ class JobsResource(BaseResource):
         resp = self.client.get(f"/v1/jobs/{job_id}")
         return Job(**resp)
 
-    def list(self, **kwargs) -> List[Job]:
+    def list(self, **kwargs) -> ListWrapper:
         resp = self.client.get("/v1/jobs", params=kwargs)
-        return [Job(**j) for j in resp]
+        return ListWrapper([Job(**j) for j in resp])
 
-    def list_active_jobs(self) -> List[Job]:
+    def list_active_jobs(self) -> ListWrapper:
         resp = self.client.get("/v1/jobs/active")
-        return [Job(**j) for j in resp]
+        return ListWrapper([Job(**j) for j in resp])
 
 
 class UsersResource(BaseResource):
@@ -297,9 +352,9 @@ class MCPServersResource(BaseResource):
     def delete(self, mcp_server_id: str):
         self.client.delete(f"/v1/mcp-servers/{mcp_server_id}")
 
-    def list(self, **kwargs) -> List[MCPServerResponse]:
+    def list(self, **kwargs) -> ListWrapper:
         resp = self.client.get("/v1/mcp-servers/", params=kwargs)
-        return [MCPServerResponse(s) for s in resp]
+        return ListWrapper([MCPServerResponse(s) for s in resp])
 
     @property
     def tools(self):
@@ -307,9 +362,9 @@ class MCPServersResource(BaseResource):
 
 
 class MCPToolsResource(BaseResource):
-    def list(self, mcp_server_id: str, **kwargs) -> List[Tool]:
+    def list(self, mcp_server_id: str, **kwargs) -> ListWrapper:
         resp = self.client.get(f"/v1/mcp-servers/{mcp_server_id}/tools", params=kwargs)
-        return [Tool(**t) for t in resp]
+        return ListWrapper([Tool(**t) for t in resp])
 
     def get(self, tool_id: str, mcp_server_id: str) -> Tool:
         resp = self.client.get(f"/v1/mcp-servers/{mcp_server_id}/tools/{tool_id}")
@@ -321,3 +376,9 @@ class MCPToolsResource(BaseResource):
     def run(self, tool_id: str, mcp_server_id: str, args: Dict[str, Any]) -> MCPServerResponse:
         resp = self.client.post(f"/v1/mcp-servers/{mcp_server_id}/tools/{tool_id}/run", json={"args": args})
         return MCPServerResponse(resp)
+
+
+class TagsResource(BaseResource):
+    def list(self, **kwargs) -> ListWrapper:
+        resp = self.client.get("/v1/tags", params=kwargs)
+        return ListWrapper(resp)

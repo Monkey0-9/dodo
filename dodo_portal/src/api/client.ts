@@ -20,6 +20,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'x-project': 'default',
+    'Authorization': 'Bearer dodo-secret',
   },
 });
 

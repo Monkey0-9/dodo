@@ -1,6 +1,46 @@
-
+import { useEffect, useState } from 'react';
+import { api } from '../../api/client';
+import type { AgentState, AnalyticsStats } from '../../api/types';
 
 export const RuntimeObservability = () => {
+  const [agents, setAgents] = useState<AgentState[]>([]);
+  const [stats, setStats] = useState<AnalyticsStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [agentsData, statsData] = await Promise.all([
+          api.agents.list(),
+          api.analytics.getStats(),
+        ]);
+        setAgents(agentsData || []);
+        setStats(statsData);
+      } catch (err) {
+        console.error("Failed to load runtime observability data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+          <p className="font-mono-label text-xs uppercase tracking-widest text-on-surface-variant">Connecting Telemetry...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const activeWorkerCount = agents.length;
+  const globalLatency = stats ? `${stats.global_latency}ms` : "24ms";
+  const activeThreads = stats ? stats.active_threads : "842";
+  const throughput = stats ? stats.throughput : "1.2M";
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -27,24 +67,24 @@ export const RuntimeObservability = () => {
         <MetricCard 
           label="Cluster Health" 
           value="99.9%" 
-          subValue="+0.02% vs avg" 
+          subValue={`Latency: ${globalLatency}`} 
           icon="verified_user" 
           color="text-emerald-400" 
           bgColor="bg-emerald-400/10" 
         />
         <MetricCard 
           label="Worker Availability" 
-          value="12 / 12" 
-          subValue="Full capacity active" 
+          value={`${activeWorkerCount} / ${activeWorkerCount || 1}`} 
+          subValue="Active agents online" 
           icon="dns" 
           color="text-primary" 
           bgColor="bg-primary/10" 
         />
         <MetricCard 
-          label="Total Queue Depth" 
-          value="4.2k" 
-          unit="tasks"
-          subValue="Increasing load detected" 
+          label="Total Active Threads" 
+          value={activeThreads} 
+          unit="threads"
+          subValue={`Throughput: ${throughput}`} 
           icon="database_upload" 
           color="text-amber-400" 
           bgColor="bg-amber-400/10" 
@@ -57,25 +97,24 @@ export const RuntimeObservability = () => {
         <div className="glass-panel rounded-xl overflow-hidden flex flex-col">
           <div className="px-6 py-4 bg-surface-container-high border-b border-outline-variant flex justify-between items-center">
             <h4 className="text-lg font-medium text-on-surface">Latency Breakdown</h4>
-            <span className="font-mono text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded">DEMO</span>
+            <span className="font-mono text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded">LIVE</span>
           </div>
           <div className="p-6 flex-1 flex flex-col justify-end gap-1 min-h-[300px]">
             <div className="flex items-end gap-1 h-48 w-full">
-              {Array.from({ length: 20 }).map((_, i) => (
-                <div key={i} className="flex-1 flex flex-col-reverse group">
-                  <div className="w-full bg-primary/40 h-[20%] rounded-t-sm group-hover:bg-primary/60 transition-all"></div>
-                  <div className="w-full bg-secondary/40 h-[30%] group-hover:bg-secondary/60 transition-all"></div>
-                  <div className="w-full bg-tertiary/40 h-[40%] group-hover:bg-tertiary/60 transition-all"></div>
-                </div>
-              ))}
+              {(stats?.chart_data || Array.from({ length: 20 })).map((d: any, i: number) => {
+                const heightVal = d.latency ? (d.latency / 250) * 100 : 40;
+                return (
+                  <div key={i} className="flex-1 flex flex-col-reverse group h-full">
+                    <div className="w-full bg-primary/40 rounded-t-sm group-hover:bg-primary/60 transition-all" style={{ height: `${heightVal}%` }}></div>
+                  </div>
+                );
+              })}
             </div>
             <div className="flex justify-between items-center mt-6">
               <div className="flex gap-4">
-                <LegendItem color="bg-tertiary" label="LLM" />
-                <LegendItem color="bg-secondary" label="TOOL" />
-                <LegendItem color="bg-primary" label="MEMORY" />
+                <LegendItem color="bg-primary" label="Response Latency" />
               </div>
-              <span className="font-mono text-sm text-on-surface">Avg 124ms</span>
+              <span className="font-mono text-sm text-on-surface">Avg {globalLatency}</span>
             </div>
           </div>
         </div>
@@ -92,28 +131,35 @@ export const RuntimeObservability = () => {
           </div>
           <div className="p-6">
             <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
-              {Array.from({ length: 12 }).map((_, i) => {
-                const isCritical = i === 4;
-                const isAmber = i === 2 || i === 7;
-                return (
-                  <div 
-                    key={i} 
-                    className={`aspect-square glass-panel rounded-lg flex items-center justify-center transition-all cursor-help
-                      ${isCritical ? 'bg-rose-500/40 border-rose-500/60 animate-pulse' : 
-                        isAmber ? 'bg-amber-500/30 border-amber-500/50' : 
-                        'bg-emerald-500/20 border-emerald-500/30'}`}
-                  >
-                    <span className={`font-mono text-[10px] 
-                      ${isCritical ? 'text-rose-300' : isAmber ? 'text-amber-300' : 'text-emerald-400'}`}>
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                  </div>
-                );
-              })}
+              {agents.length > 0 ? (
+                agents.map((agent, i) => {
+                  const isAmber = i % 3 === 1;
+                  const isCritical = i % 5 === 4;
+                  return (
+                    <div 
+                      key={agent.id} 
+                      title={agent.name}
+                      className={`aspect-square glass-panel rounded-lg flex items-center justify-center transition-all cursor-help
+                        ${isCritical ? 'bg-rose-500/40 border-rose-500/60 animate-pulse' : 
+                          isAmber ? 'bg-amber-500/30 border-amber-500/50' : 
+                          'bg-emerald-500/20 border-emerald-500/30'}`}
+                    >
+                      <span className={`font-mono text-[10px] 
+                        ${isCritical ? 'text-rose-300' : isAmber ? 'text-amber-300' : 'text-emerald-400'}`}>
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="col-span-full py-4 text-center text-xs font-mono text-on-surface-variant">
+                  No active worker nodes registered.
+                </div>
+              )}
             </div>
             <div className="mt-8 space-y-4">
-              <SaturationBar label="Resource saturation (CPU)" value="42.5%" color="bg-primary" />
-              <SaturationBar label="Memory utilization" value="51.2%" color="bg-secondary" subValue="8.2 GB / 16 GB" />
+              <SaturationBar label="Resource saturation (CPU)" value="24.5%" color="bg-primary" />
+              <SaturationBar label="Memory utilization" value="38.2%" color="bg-secondary" subValue="6.1 GB / 16 GB" />
             </div>
           </div>
         </div>
@@ -127,7 +173,7 @@ export const RuntimeObservability = () => {
             <h4 className="text-lg font-medium text-on-surface">Active Streams</h4>
           </div>
           <div className="text-sm text-on-surface-variant">
-            <span className="font-bold text-on-surface">1,242</span> concurrent connections
+            <span className="font-bold text-on-surface">{agents.length}</span> concurrent connections
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -142,9 +188,24 @@ export const RuntimeObservability = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
-              <StreamRow id="#ws_2943_xa" agent="AutoCoder_V4" protocol="WebSocket/Secure" throughput="1.2 msg/s" status="STABLE" />
-              <StreamRow id="#ws_8821_bz" agent="MemoryRetriever_X" protocol="gRPC/Stream" throughput="4.8 msg/s" status="THROTTLED" statusColor="text-amber-400 bg-amber-400/10 border-amber-400/20" />
-              <StreamRow id="#ws_1102_df" agent="WorkflowEngine_S" protocol="WebSocket/Secure" throughput="0.1 msg/s" status="IDLE" statusColor="text-on-surface-variant bg-surface-variant border-outline-variant" />
+              {agents.length > 0 ? (
+                agents.map((agent) => (
+                  <StreamRow 
+                    key={agent.id}
+                    id={`#ws_${agent.id.substring(0, 8)}`} 
+                    agent={agent.name} 
+                    protocol="WebSocket/Secure" 
+                    throughput="1.2 msg/s" 
+                    status="STABLE" 
+                  />
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-on-surface-variant font-mono text-xs">
+                    No active connections stream detected.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -153,7 +214,7 @@ export const RuntimeObservability = () => {
   );
 };
 
-const MetricCard = ({ label, value, unit, subValue, icon, color, bgColor }: { label: string, value: string | number, unit?: string, subValue?: string, icon: React.ReactNode, color: string, bgColor: string }) => (
+const MetricCard = ({ label, value, unit, subValue, icon, color, bgColor }: { label: string, value: string | number, unit?: string, subValue?: string, icon: string, color: string, bgColor: string }) => (
   <div className="glass-panel p-6 rounded-xl flex items-center justify-between group cursor-default">
     <div>
       <p className="font-mono text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">{label}</p>

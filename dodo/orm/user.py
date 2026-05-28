@@ -1,4 +1,4 @@
-﻿from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,6 +17,7 @@ class User(SqlalchemyBase, OrganizationMixin):
     __pydantic_model__ = PydanticUser
 
     name: Mapped[str] = mapped_column(nullable=False, doc="The display name of the user.")
+    password_hash: Mapped[Optional[str]] = mapped_column(nullable=True, doc="The hashed password of the user for credentials authentication.")
 
     # relationships
     organization: Mapped["Organization"] = relationship("Organization", back_populates="users")

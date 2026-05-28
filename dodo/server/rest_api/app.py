@@ -316,6 +316,8 @@ def create_application() -> "FastAPI":
         )
 
     debug_mode = "--debug" in sys.argv
+    if debug_mode:
+        settings.debug = True
     app = FastAPI(
         swagger_ui_parameters={"docExpansion": "none"},
         # openapi_tags=TAGS_METADATA,

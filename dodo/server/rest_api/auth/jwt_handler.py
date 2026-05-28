@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request, WebSocket
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 
@@ -36,8 +36,11 @@ def create_refresh_token(data: dict):
     return encoded_jwt
 
 
-async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)):
-    """Dependency injection to get the current user from JWT."""
+async def get_current_user(
+    request: Request = None,
+    websocket: WebSocket = None,
+):
+    """Dependency injection to get the current user from JWT, supporting HTTP and WebSocket."""
     from dodo.settings import settings
     if settings.debug:
         from dodo.schemas.user import User as PydanticUser
@@ -52,6 +55,21 @@ async def get_current_user(token: Optional[str] = Depends(oauth2_scheme)):
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    connection = request or websocket
+    if connection is None:
+        raise credentials_exception
+
+    token = None
+    authorization = connection.headers.get("Authorization")
+    if authorization:
+        scheme, _, param = authorization.partition(" ")
+        if scheme.lower() == "bearer":
+            token = param
+    else:
+        # Check query parameters (e.g. for WebSockets)
+        token = connection.query_params.get("token")
+
     if not token:
         raise credentials_exception
 
