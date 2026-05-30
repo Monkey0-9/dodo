@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api/client';
+import { useAppStore } from '../../store/appStore';
 
 export const AgentManagement = ({ onSelectAgent }: { onSelectAgent: (id: string) => void }) => {
   const [agents, setAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const agentListRefreshKey = useAppStore((s) => s.agentListRefreshKey);
+  const addNotification = useAppStore((s) => s.addNotification);
 
   useEffect(() => {
+    setLoading(true);
     const fetchAgents = async () => {
       try {
         const data = await api.agents.list();
@@ -13,12 +17,14 @@ export const AgentManagement = ({ onSelectAgent }: { onSelectAgent: (id: string)
       } catch (error) {
         console.error('Failed to fetch agents:', error);
         setAgents([]);
+        addNotification({ level: 'error', title: 'Failed to Load Agents', message: 'Check backend connection.' });
       } finally {
         setLoading(false);
       }
     };
     fetchAgents();
-  }, []);
+  }, [agentListRefreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   if (loading) {
     return (
