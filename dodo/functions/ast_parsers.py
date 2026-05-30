@@ -186,10 +186,13 @@ def get_function_name_and_docstring(source_code: str, name: Optional[str] = None
         # Parse the source code into an AST
         tree = ast.parse(source_code)
 
-        # Find the last function definition
+        # Find the function definition
         function_def = None
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
+                if name is not None and node.name == name:
+                    function_def = node
+                    break
                 function_def = node
 
         if not function_def:

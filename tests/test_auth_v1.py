@@ -7,7 +7,7 @@ client = TestClient(app)
 
 def test_login_success():
     # Use the default password from env or the hardcoded one in router
-    password = os.getenv("DODO_SERVER_PASSWORD", "dodo-secret")
+    password = os.getenv("DODO_SERVER_PASSWORD", "dodo")
     response = client.post(
         "/v1/auth/login",
         data={"username": "admin", "password": password}
@@ -30,7 +30,7 @@ def test_protected_route_without_auth():
     assert response.status_code == 401
 
 def test_protected_route_with_jwt():
-    password = os.getenv("DODO_SERVER_PASSWORD", "dodo-secret")
+    password = os.getenv("DODO_SERVER_PASSWORD", "dodo")
     login_response = client.post(
         "/v1/auth/login",
         data={"username": "admin", "password": password}

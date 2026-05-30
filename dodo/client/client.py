@@ -77,6 +77,24 @@ class DodoClient:
     def _request(self, method: str, path: str, **kwargs) -> Any:
         if "json" in kwargs:
             kwargs["json"] = _serialize_pydantic(kwargs["json"])
+
+        # If token is not a JWT and we are not calling the login route, perform a lazy login
+        clean_path = path.strip("/")
+        if self.token and self.token.count(".") != 2 and clean_path != "v1/auth/login" and not clean_path.startswith("v1/health") and not clean_path.startswith("v1/ready"):
+            try:
+                resp = self.client.post(
+                    "/v1/auth/login",
+                    data={"username": "admin", "password": self.token},
+                    headers={"Content-Type": "application/x-www-form-urlencoded"}
+                )
+                if resp.status_code == 200:
+                    jwt_token = resp.json().get("access_token")
+                    self.token = jwt_token
+                    self.headers["Authorization"] = f"Bearer {jwt_token}"
+                    self.client.headers["Authorization"] = f"Bearer {jwt_token}"
+            except Exception:
+                pass
+
         try:
             resp = self.client.request(method, path, **kwargs)
             resp.raise_for_status()

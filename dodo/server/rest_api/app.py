@@ -176,7 +176,7 @@ def generate_password():
     return secrets.token_urlsafe(16)
 
 
-random_password = os.getenv("DODO_SERVER_PASSWORD", "dodo-secret")
+from dodo.server.rest_api.routers.v1.auth import MASTER_PASSWORD as random_password
 
 
 @asynccontextmanager
@@ -901,8 +901,7 @@ def create_application() -> "FastAPI":
     app.include_router(auth_v1_router, prefix=API_PREFIX)
     app.include_router(health_v1_router, prefix=API_PREFIX)
 
-    # Use optional auth in debug mode
-    auth_deps = [Depends(get_current_user)] if not settings.debug else []
+    auth_deps = [Depends(get_current_user)]
 
     for route in v1_routes:
         app.include_router(route, prefix=API_PREFIX, dependencies=auth_deps)

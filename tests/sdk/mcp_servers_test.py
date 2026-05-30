@@ -73,7 +73,7 @@ def client(server_url: str) -> dodo:
     """
     Creates and returns a synchronous dodo REST client for testing.
     """
-    password = os.getenv("DODO_SERVER_PASSWORD", "dodo-secret")
+    password = os.getenv("DODO_SERVER_PASSWORD", "dodo")
     client_instance = dodo(base_url=server_url, token=password)
     yield client_instance
 

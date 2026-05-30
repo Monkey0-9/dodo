@@ -1486,7 +1486,7 @@ class AgentManager:
                             agents_to_delete.append(sleeptime_agent)
                         except NoResultFound:
                             pass  # agent already deleted
-                            sleeptime_agent_group = await GroupModel.read_async(
+                    sleeptime_agent_group = await GroupModel.read_async(
                         db_session=session, identifier=agent.multi_agent_group.id, actor=actor
                     )
                     sleeptime_group_to_delete = sleeptime_agent_group

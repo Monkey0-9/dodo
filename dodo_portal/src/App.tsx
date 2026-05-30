@@ -14,6 +14,7 @@ import { Governance } from './components/portal/Governance';
 import { Topology } from './components/portal/Topology';
 import { Chat } from './components/Chat';
 import { CreateAgentModal } from './components/CreateAgentModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { AnimatePresence } from 'framer-motion';
 
 function App() {
@@ -24,25 +25,70 @@ function App() {
 
   const handleAgentCreated = () => {
     setRefreshKey(prev => prev + 1);
-    console.log('Agent created, refresh key:', refreshKey);
   };
 
   return (
     <Layout currentPath={currentPath} onNavigate={setCurrentPath} onCreateAgent={() => setIsModalOpen(true)}>
-      {currentPath === 'dashboard' && <Dashboard onNavigate={setCurrentPath} />}
-      {currentPath === 'agents' && (
-        <AgentManagement key={refreshKey} onSelectAgent={setSelectedAgentId} />
+      {currentPath === 'dashboard' && (
+        <ErrorBoundary label="Dashboard">
+          <Dashboard onNavigate={setCurrentPath} />
+        </ErrorBoundary>
       )}
-      {currentPath === 'memory' && <MemoryExplorer />}
-      {currentPath === 'runtime' && <RuntimeObservability />}
-      {currentPath === 'workflows' && <WorkflowBuilder />}
-      {currentPath === 'tools' && <ToolRegistry />}
-      {currentPath === 'logs' && <LiveLogs />}
-      {currentPath === 'analytics' && <Analytics />}
-      {currentPath === 'settings' && <Settings />}
-      {currentPath === 'playground' && <Playground />}
-      {currentPath === 'governance' && <Governance />}
-      {currentPath === 'topology' && <Topology />}
+      {currentPath === 'agents' && (
+        <ErrorBoundary label="Agent Management">
+          <AgentManagement key={refreshKey} onSelectAgent={setSelectedAgentId} />
+        </ErrorBoundary>
+      )}
+      {currentPath === 'memory' && (
+        <ErrorBoundary label="Memory Explorer">
+          <MemoryExplorer />
+        </ErrorBoundary>
+      )}
+      {currentPath === 'runtime' && (
+        <ErrorBoundary label="Runtime Observability">
+          <RuntimeObservability />
+        </ErrorBoundary>
+      )}
+      {currentPath === 'workflows' && (
+        <ErrorBoundary label="Workflow Builder">
+          <WorkflowBuilder />
+        </ErrorBoundary>
+      )}
+      {currentPath === 'tools' && (
+        <ErrorBoundary label="Tool Registry">
+          <ToolRegistry />
+        </ErrorBoundary>
+      )}
+      {currentPath === 'logs' && (
+        <ErrorBoundary label="Live Logs">
+          <LiveLogs />
+        </ErrorBoundary>
+      )}
+      {currentPath === 'analytics' && (
+        <ErrorBoundary label="Analytics">
+          <Analytics />
+        </ErrorBoundary>
+      )}
+      {currentPath === 'settings' && (
+        <ErrorBoundary label="Settings">
+          <Settings />
+        </ErrorBoundary>
+      )}
+      {currentPath === 'playground' && (
+        <ErrorBoundary label="Playground">
+          <Playground />
+        </ErrorBoundary>
+      )}
+      {currentPath === 'governance' && (
+        <ErrorBoundary label="Governance">
+          <Governance />
+        </ErrorBoundary>
+      )}
+      {currentPath === 'topology' && (
+        <ErrorBoundary label="Topology Canvas">
+          <Topology />
+        </ErrorBoundary>
+      )}
 
       {/* Chat Drawer */}
       <AnimatePresence>

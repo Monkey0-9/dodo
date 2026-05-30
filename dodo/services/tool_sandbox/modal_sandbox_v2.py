@@ -1,4 +1,4 @@
-﻿"""
+"""
 This runs tool calls within an isolated modal sandbox. This does this by doing the following:
 1. deploying modal functions that embed the original functions
 2. dynamically executing tools with arguments passed in at runtime
@@ -21,7 +21,7 @@ from dodo.services.tool_sandbox.base import AsyncToolSandboxBase
 from dodo.services.tool_sandbox.modal_constants import DEFAULT_MAX_CONCURRENT_INPUTS, DEFAULT_PYTHON_VERSION
 from dodo.services.tool_sandbox.modal_deployment_manager import ModalDeploymentManager
 from dodo.services.tool_sandbox.modal_version_manager import ModalVersionManager
-from dodo.services.tool_sandbox.safe_pickle import SafePickleError, safe_pickle_dumps, sanitize_for_pickle
+from dodo.services.tool_sandbox.safe_pickle import serialize_to_json_compatible
 from dodo.settings import tool_settings
 from dodo.types import JsonDict
 from dodo.utils import get_friendly_error_msg
@@ -145,15 +145,14 @@ class AsyncToolSandboxModalV2(AsyncToolSandboxBase):
         def tool_executor(
             tool_source: str,
             tool_name: str,
-            args_pickled: bytes,
-            agent_state_pickled: bytes | None,
+            args_json: str,
+            agent_state_json: str | None,
             inject_agent_state: bool,
             is_async: bool,
             args_schema_code: str | None,
             environment_vars: Dict[str, Any],
         ) -> Dict[str, Any]:
-            """Execute tool in Modal container."""
-            # Execute the modal_executor code in a clean namespace
+            """Execute tool in Modal container using JSON serialization."""
 
             # Create a module-like namespace for executor
             executor_namespace = {
@@ -169,8 +168,8 @@ class AsyncToolSandboxModalV2(AsyncToolSandboxBase):
             return executor_namespace["execute_tool_wrapper"](
                 tool_source=tool_source,
                 tool_name=tool_name,
-                args_pickled=args_pickled,
-                agent_state_pickled=agent_state_pickled,
+                args_json=args_json,
+                agent_state_json=agent_state_json,
                 inject_agent_state=inject_agent_state,
                 is_async=is_async,
                 args_schema_code=args_schema_code,
@@ -229,26 +228,21 @@ class AsyncToolSandboxModalV2(AsyncToolSandboxBase):
 
             args_schema_code = add_imports_and_pydantic_schemas_for_args(self.tool.args_json_schema)
 
-        # Serialize arguments and agent state with safety checks
+        # Serialize arguments and agent state as JSON (no pickle)
+        import json as _json
         try:
-            args_pickled = safe_pickle_dumps(self.args)
-        except SafePickleError as e:
-            logger.warning(f"Failed to pickle args, attempting sanitization: {e}")
-            sanitized_args = sanitize_for_pickle(self.args)
-            try:
-                args_pickled = safe_pickle_dumps(sanitized_args)
-            except SafePickleError:
-                # Final fallback: convert to string representation
-                args_pickled = safe_pickle_dumps(str(self.args))
+            args_json = _json.dumps(serialize_to_json_compatible(self.args))
+        except Exception as e:
+            logger.warning(f"Failed to JSON-serialize args, using string fallback: {e}")
+            args_json = _json.dumps({"__raw_args": str(self.args)})
 
-            agent_state_pickled = None
+        agent_state_json = None
         if self.inject_agent_state and agent_state:
             try:
-                agent_state_pickled = safe_pickle_dumps(agent_state)
-            except SafePickleError as e:
-                logger.warning(f"Failed to pickle agent state: {e}")
-                # For agent state, we prefer to skip injection rather than send corrupted data
-                agent_state_pickled = None
+                agent_state_json = agent_state.model_dump_json()
+            except Exception as e:
+                logger.warning(f"Failed to JSON-serialize agent state: {e}")
+                agent_state_json = None
                 self.inject_agent_state = False
 
         try:
@@ -259,8 +253,8 @@ class AsyncToolSandboxModalV2(AsyncToolSandboxBase):
                     "app_name": self._deployment_manager._app_name,
                     "version": self._version_hash,
                     "env_vars": list(envs),
-                    "args_size": len(args_pickled),
-                    "agent_state_size": len(agent_state_pickled) if agent_state_pickled else 0,
+                    "args_size": len(args_json),
+                    "agent_state_size": len(agent_state_json) if agent_state_json else 0,
                     "inject_agent_state": self.inject_agent_state,
                 },
             )
@@ -285,8 +279,8 @@ class AsyncToolSandboxModalV2(AsyncToolSandboxBase):
                         app.tool_executor.remote.aio(
                             tool_source=self.tool.source_code,
                             tool_name=self.tool.name,
-                            args_pickled=args_pickled,
-                            agent_state_pickled=agent_state_pickled,
+                            args_json=args_json,
+                            agent_state_json=agent_state_json,
                             inject_agent_state=self.inject_agent_state,
                             is_async=self.is_async_function,
                             args_schema_code=args_schema_code,

@@ -4,9 +4,20 @@ from typing import Optional
 
 from fastapi import Depends, HTTPException, status, Request, WebSocket
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
+import jwt
+from jwt import PyJWTError as JWTError
 
-SECRET_KEY = os.getenv("JWT_SECRET", "super-secret-key-change-in-production")
+import secrets
+import warnings
+
+_secret = os.getenv("JWT_SECRET")
+if not _secret:
+    warnings.warn(
+        "JWT_SECRET environment variable is not set. Generating a temporary random key for this session."
+    )
+    _secret = secrets.token_urlsafe(32)
+
+SECRET_KEY = _secret
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "15"))
 
@@ -41,15 +52,6 @@ async def get_current_user(
     websocket: WebSocket = None,
 ):
     """Dependency injection to get the current user from JWT, supporting HTTP and WebSocket."""
-    from dodo.settings import settings
-    if settings.debug:
-        from dodo.schemas.user import User as PydanticUser
-        return PydanticUser(
-            id="user-00000000-0000-0000-0000-000000000000",
-            name="Default Admin",
-            organization_id="org-00000000-0000-0000-0000-000000000000"
-        )
-
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -73,16 +75,6 @@ async def get_current_user(
     if not token:
         raise credentials_exception
 
-    # Development-friendly authentication bypass
-    bypass_password = os.getenv("DODO_SERVER_PASSWORD", "dodo-secret")
-    if token == bypass_password:
-        from dodo.schemas.user import User as PydanticUser
-        return PydanticUser(
-            id="user-00000000-0000-0000-0000-000000000000",
-            name="Default Admin",
-            organization_id="org-00000000-0000-0000-0000-000000000000"
-        )
-
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
@@ -100,14 +92,14 @@ async def get_current_user(
             # Fallback for default system user
             is_fallback = (
                 user_id == "user-default-admin" or
-                user_id == "user-00000000-0000-0000-0000-000000000000"
+                user_id == "user-00000000-0000-4000-8000-000000000000"
             )
             if is_fallback:
                 from dodo.schemas.user import User as PydanticUser
                 return PydanticUser(
-                    id="user-00000000-0000-0000-0000-000000000000",
+                    id="user-00000000-0000-4000-8000-000000000000",
                     name="Default Admin",
-                    organization_id="org-00000000-0000-0000-0000-000000000000"
+                    organization_id="org-00000000-0000-4000-8000-000000000000"
                 )
             raise credentials_exception
         return user

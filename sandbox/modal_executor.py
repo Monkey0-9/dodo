@@ -1,10 +1,13 @@
-﻿"""Modal function executor for tool sandbox v2.
+"""Modal function executor for tool sandbox v2.
 
 This module contains the executor function that runs inside Modal containers
 to execute tool functions with dynamically passed arguments.
+
+Security: Uses JSON serialization instead of pickle to prevent arbitrary code execution.
 """
 
 import faulthandler
+import json
 import signal
 from typing import Any, Dict
 
@@ -25,15 +28,35 @@ SAFE_IMPORT_MODULES = {
 }
 
 
+def _json_serialize(obj: Any) -> Any:
+    """Recursively convert an object to JSON-serializable primitives."""
+    if obj is None:
+        return None
+    if isinstance(obj, (str, int, float, bool)):
+        return obj
+    if isinstance(obj, (list, tuple, set)):
+        return [_json_serialize(x) for x in obj]
+    if isinstance(obj, dict):
+        return {str(k): _json_serialize(v) for k, v in obj.items()}
+    if hasattr(obj, "model_dump") and callable(obj.model_dump):
+        return _json_serialize(obj.model_dump())
+    if hasattr(obj, "dict") and callable(obj.dict):
+        return _json_serialize(obj.dict())
+    return str(obj)
+
+
 class ModalFunctionExecutor:
-    """Executes tool functions in Modal with dynamic argument passing."""
+    """Executes tool functions in Modal with dynamic argument passing.
+    
+    Uses JSON for all serialization — no pickle to prevent arbitrary code execution.
+    """
 
     @staticmethod
     def execute_tool_dynamic(
         tool_source: str,
         tool_name: str,
-        args_pickled: bytes,
-        agent_state_pickled: bytes | None,
+        args_json: str,
+        agent_state_json: str | None,
         inject_agent_state: bool,
         is_async: bool,
         args_schema_code: str | None,
@@ -42,9 +65,9 @@ class ModalFunctionExecutor:
 
         This function runs inside the Modal container and receives all parameters
         at runtime rather than having them embedded in a script.
+        Uses JSON instead of pickle for security.
         """
         import asyncio
-        import pickle
         import sys
         import traceback
         from io import StringIO
@@ -61,27 +84,34 @@ class ModalFunctionExecutor:
             sys.stdout = stdout_capture
             sys.stderr = stderr_capture
 
-            # Safely unpickle arguments with size validation
-            if not args_pickled:
+            # Safely parse JSON arguments
+            if not args_json:
                 raise ValueError("No arguments provided")
 
-            if len(args_pickled) > 10 * 1024 * 1024:  # 10MB limit
-                raise ValueError(f"Pickled args too large: {len(args_pickled)} bytes")
+            if len(args_json) > 10 * 1024 * 1024:  # 10MB limit
+                raise ValueError(f"JSON args too large: {len(args_json)} bytes")
 
             try:
-                args = pickle.loads(args_pickled)
+                args = json.loads(args_json)
             except Exception as e:
-                raise ValueError(f"Failed to unpickle arguments: {e}")
+                raise ValueError(f"Failed to parse JSON arguments: {e}")
 
             agent_state = None
-            if agent_state_pickled:
-                if len(agent_state_pickled) > 10 * 1024 * 1024:  # 10MB limit
-                    raise ValueError(f"Pickled agent state too large: {len(agent_state_pickled)} bytes")
+            if agent_state_json:
+                if len(agent_state_json) > 10 * 1024 * 1024:  # 10MB limit
+                    raise ValueError(f"JSON agent state too large: {len(agent_state_json)} bytes")
                 try:
-                    agent_state = pickle.loads(agent_state_pickled)
+                    agent_state_dict = json.loads(agent_state_json)
+                    # Reconstruct AgentState from JSON
+                    try:
+                        from dodo.schemas.agent import AgentState
+                        agent_state = AgentState.model_validate(agent_state_dict)
+                    except Exception:
+                        # Fall back to dict if AgentState is not available
+                        agent_state = agent_state_dict
                 except Exception as e:
                     # Log but don't fail - agent state is optional
-                    print(f"Warning: Failed to unpickle agent state: {e}", file=sys.stderr)
+                    print(f"Warning: Failed to parse agent state JSON: {e}", file=sys.stderr)
                     agent_state = None
 
             exec_globals = {
@@ -140,21 +170,19 @@ class ModalFunctionExecutor:
             else:
                 result = func(**kwargs)
 
-            try:
-                from pydantic import BaseModel, ConfigDict
+            # Serialize result to JSON-safe format
+            serialized_result = _json_serialize(result)
 
-                class _TempResultWrapper(BaseModel):
-                    model_config = ConfigDict(arbitrary_types_allowed=True)
-                    result: Any
-
-                wrapped = _TempResultWrapper(result=result)
-                serialized_result = wrapped.model_dump()["result"]
-            except (ImportError, Exception):
-                serialized_result = str(result)
+            # Serialize agent_state to JSON-safe dict for return
+            agent_state_out = None
+            if agent_state is not None:
+                agent_state_out = _json_serialize(
+                    agent_state.model_dump() if hasattr(agent_state, "model_dump") else agent_state
+                )
 
             return {
                 "result": serialized_result,
-                "agent_state": agent_state,
+                "agent_state": agent_state_out,
                 "stdout": stdout_capture.getvalue(),
                 "stderr": stderr_capture.getvalue(),
                 "error": None,
@@ -202,73 +230,73 @@ def setup_signal_handlers():
     signal.signal(signal.SIGSEGV, handle_segfault)
     signal.signal(signal.SIGABRT, handle_abort)
 
-    @modal.method()
-    def execute_tool_wrapper(
-        self,
-        tool_source: str,
-        tool_name: str,
-        args_pickled: bytes,
-        agent_state_pickled: bytes | None,
-        inject_agent_state: bool,
-        is_async: bool,
-        args_schema_code: str | None,
-        environment_vars: Dict[str, str],
-    ) -> Dict[str, Any]:
-        """Wrapper function that runs in Modal container with enhanced error handling."""
-        import os
+
+def execute_tool_wrapper(
+    tool_source: str,
+    tool_name: str,
+    args_json: str,
+    agent_state_json: str | None,
+    inject_agent_state: bool,
+    is_async: bool,
+    args_schema_code: str | None,
+    environment_vars: Dict[str, str],
+) -> Dict[str, Any]:
+    """Wrapper function that runs in Modal container with enhanced error handling.
+    
+    Accepts JSON strings instead of pickled bytes for security.
+    """
+    import os
+    import sys
+    import traceback
+
+    # Setup signal handlers for better crash debugging
+    setup_signal_handlers()
+
+    # Enable fault handler with file output
+    try:
+        faulthandler.enable(file=sys.stderr, all_threads=True)
+    except Exception:
+        pass  # Faulthandler might not be available
+
+    # Set resource limits to prevent runaway processes (Linux-only)
+    try:
         import resource
-        import sys
+        # Limit memory usage to 1GB
+        resource.setrlimit(resource.RLIMIT_AS, (1024 * 1024 * 1024, 1024 * 1024 * 1024))
+        # Limit stack size to 8MB (default is often unlimited)
+        resource.setrlimit(resource.RLIMIT_STACK, (8 * 1024 * 1024, 8 * 1024 * 1024))
+    except Exception:
+        pass  # Resource limits might not be available on all platforms
 
-        # Setup signal handlers for better crash debugging
-        setup_signal_handlers()
+    # Set environment variables
+    for key, value in environment_vars.items():
+        os.environ[key] = str(value)
 
-        # Enable fault handler with file output
-        try:
-            faulthandler.enable(file=sys.stderr, all_threads=True)
-        except Exception:
-            pass  # Faulthandler might not be available
+    # Add debugging environment variables
+    os.environ["PYTHONFAULTHANDLER"] = "1"
+    os.environ["PYTHONDEVMODE"] = "1"
 
-        # Set resource limits to prevent runaway processes
-        try:
-            # Limit memory usage to 1GB
-            resource.setrlimit(resource.RLIMIT_AS, (1024 * 1024 * 1024, 1024 * 1024 * 1024))
-            # Limit stack size to 8MB (default is often unlimited)
-            resource.setrlimit(resource.RLIMIT_STACK, (8 * 1024 * 1024, 8 * 1024 * 1024))
-        except Exception:
-            pass  # Resource limits might not be available
-
-        # Set environment variables
-        for key, value in environment_vars.items():
-            os.environ[key] = str(value)
-
-        # Add debugging environment variables
-        os.environ["PYTHONFAULTHANDLER"] = "1"
-        os.environ["PYTHONDEVMODE"] = "1"
-
-        try:
-            # Execute the tool
-            return ModalFunctionExecutor.execute_tool_dynamic(
-                tool_source=tool_source,
-                tool_name=tool_name,
-                args_pickled=args_pickled,
-                agent_state_pickled=agent_state_pickled,
-                inject_agent_state=inject_agent_state,
-                is_async=is_async,
-                args_schema_code=args_schema_code,
-            )
-        except Exception as e:
-            import traceback
-
-            # Enhanced error reporting
-            return {
-                "result": None,
-                "agent_state": None,
-                "stdout": "",
-                "stderr": f"Container execution failed: {traceback.format_exc()}",
-                "error": {
-                    "name": type(e).__name__,
-                    "value": str(e),
-                    "traceback": traceback.format_exc(),
-                },
-            }
-
+    try:
+        # Execute the tool
+        return ModalFunctionExecutor.execute_tool_dynamic(
+            tool_source=tool_source,
+            tool_name=tool_name,
+            args_json=args_json,
+            agent_state_json=agent_state_json,
+            inject_agent_state=inject_agent_state,
+            is_async=is_async,
+            args_schema_code=args_schema_code,
+        )
+    except Exception as e:
+        # Enhanced error reporting
+        return {
+            "result": None,
+            "agent_state": None,
+            "stdout": "",
+            "stderr": f"Container execution failed: {traceback.format_exc()}",
+            "error": {
+                "name": type(e).__name__,
+                "value": str(e),
+                "traceback": traceback.format_exc(),
+            },
+        }

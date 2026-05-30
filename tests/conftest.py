@@ -1,5 +1,10 @@
 import logging
 import os
+
+# Set default password for tests before any imports
+if not os.getenv("DODO_SERVER_PASSWORD"):
+    os.environ["DODO_SERVER_PASSWORD"] = "dodo"
+
 import threading
 import time
 from datetime import datetime, timezone
@@ -18,6 +23,8 @@ from dodo.services.user_manager import UserManager
 
 def pytest_configure(config):
     logging.basicConfig(level=logging.DEBUG)
+    if not os.getenv("DODO_SERVER_PASSWORD"):
+        os.environ["DODO_SERVER_PASSWORD"] = "dodo"
 
 
 @pytest.fixture(scope="session")
@@ -62,7 +69,7 @@ def client(server_url: str) -> dodo:
     """
     Creates and returns a synchronous dodo REST client for testing.
     """
-    password = os.getenv("DODO_SERVER_PASSWORD", "dodo-secret")
+    password = os.getenv("DODO_SERVER_PASSWORD", "dodo")
     client_instance = dodo(base_url=server_url, token=password)
     yield client_instance
 

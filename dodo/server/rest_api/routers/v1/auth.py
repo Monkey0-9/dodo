@@ -7,8 +7,17 @@ import os
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# The single "master" password from env
-MASTER_PASSWORD = os.getenv("DODO_SERVER_PASSWORD", "dodo-secret")
+import secrets
+import warnings
+
+_master = os.getenv("DODO_SERVER_PASSWORD")
+if not _master:
+    warnings.warn(
+        "DODO_SERVER_PASSWORD environment variable is not set. Generating a temporary random password for this session."
+    )
+    _master = secrets.token_urlsafe(16)
+
+MASTER_PASSWORD = _master
 
 @router.post("/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):

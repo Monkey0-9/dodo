@@ -1,4 +1,4 @@
-﻿import base64
+import base64
 import io
 import os
 import pickle
@@ -475,11 +475,13 @@ class ToolExecutionSandbox:
     def parse_best_effort(self, text: str) -> Any:
         if not text:
             return None, None
-        result = pickle.loads(base64.b64decode(text))
+        import json
+        result = json.loads(base64.b64decode(text).decode("utf-8"))
         agent_state = None
-        if result["agent_state"] is not None:
-            agent_state = result["agent_state"]
-        return result["results"], agent_state
+        if result.get("agent_state") is not None:
+            from dodo.schemas.agent import AgentState
+            agent_state = AgentState.model_validate(result["agent_state"])
+        return result.get("results"), agent_state
 
     def generate_execution_script(self, agent_state: AgentState, wrap_print_with_markers: bool = False) -> str:
         """
@@ -500,15 +502,14 @@ class ToolExecutionSandbox:
 
         # dump JSON representation of agent state to re-load
         code = "from typing import *\n"
-        code += "import pickle\n"
         code += "import sys\n"
         code += "import base64\n"
+        code += "import json\n"
 
         # imports to support agent state
         if inject_agent_state:
             code += "import dodo\n"
             code += "from dodo import * \n"
-            import pickle
 
         if self.tool.args_json_schema:
             schema_code = add_imports_and_pydantic_schemas_for_args(self.tool.args_json_schema)
@@ -519,8 +520,8 @@ class ToolExecutionSandbox:
 
         # load the agent state
         if inject_agent_state:
-            agent_state_pickle = pickle.dumps(agent_state)
-            code += f"agent_state = pickle.loads({agent_state_pickle})\n"
+            agent_state_json = agent_state.model_dump_json()
+            code += f"agent_state = AgentState.model_validate_json({repr(agent_state_json)})\n"
         else:
             # agent state is None
             code += "agent_state = None\n"
@@ -557,13 +558,30 @@ class ToolExecutionSandbox:
         # TODO: handle wrapped print
 
         code += (
+            "def __dodo_serialize(obj):\n"
+            "    if obj is None:\n"
+            "        return None\n"
+            "    if isinstance(obj, (str, int, float, bool)):\n"
+            "        return obj\n"
+            "    if isinstance(obj, list):\n"
+            "        return [__dodo_serialize(x) for x in obj]\n"
+            "    if isinstance(obj, dict):\n"
+            "        return {str(k): __dodo_serialize(v) for k, v in obj.items()}\n"
+            "    if hasattr(obj, 'model_dump') and callable(obj.model_dump):\n"
+            "        return __dodo_serialize(obj.model_dump())\n"
+            "    if hasattr(obj, 'dict') and callable(obj.dict):\n"
+            "        return __dodo_serialize(obj.dict())\n"
+            "    return str(obj)\n\n"
+        )
+
+        code += (
             self.LOCAL_SANDBOX_RESULT_VAR_NAME
-            + ' = {"results": '
+            + ' = {"results": __dodo_serialize('
             + self.invoke_function_call(inject_agent_state=inject_agent_state)  # this inject_agent_state is the main difference
-            + ', "agent_state": agent_state}\n'
+            + '), "agent_state": agent_state.model_dump() if hasattr(agent_state, "model_dump") else None}\n'
         )
         code += (
-            f"{self.LOCAL_SANDBOX_RESULT_VAR_NAME} = base64.b64encode(pickle.dumps({self.LOCAL_SANDBOX_RESULT_VAR_NAME})).decode('utf-8')\n"
+            f"{self.LOCAL_SANDBOX_RESULT_VAR_NAME} = base64.b64encode(json.dumps({self.LOCAL_SANDBOX_RESULT_VAR_NAME}).encode('utf-8')).decode('utf-8')\n"
         )
 
         if wrap_print_with_markers:
