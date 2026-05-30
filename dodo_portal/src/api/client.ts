@@ -113,6 +113,22 @@ export const api = {
       } catch (error) {
         throw handleApiError(error);
       }
+    },
+    create: async (data: Partial<Tool>): Promise<Tool> => {
+      try {
+        const response = await apiClient.post('/tools', data);
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
+    },
+    delete: async (id: string): Promise<any> => {
+      try {
+        const response = await apiClient.delete(`/tools/${id}`);
+        return response.data;
+      } catch (error) {
+        throw handleApiError(error);
+      }
     }
   },
   providers: {

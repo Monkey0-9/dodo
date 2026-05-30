@@ -204,6 +204,94 @@ export const Settings = () => {
                 </div>
               </section>
             )}
+
+            {activeTab === 'keys' && (
+              <section className="lg:col-span-12 glass-panel p-6 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded bg-primary/10 text-primary">
+                      <span className="material-symbols-outlined">key</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-on-surface">API Gateways & Keys</h3>
+                  </div>
+                  <button className="bg-primary/10 text-primary px-3 py-1 rounded text-xs font-bold hover:bg-primary/20 transition-colors">Generate Key</button>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-surface-container rounded-lg border border-outline-variant/30">
+                    <div>
+                      <p className="font-bold text-on-surface">Production Orchestrator Key</p>
+                      <p className="text-xs text-on-surface-variant font-mono mt-1">dodo_live_************************3a9f</p>
+                    </div>
+                    <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[9px] font-mono uppercase rounded border border-emerald-500/20 tracking-widest font-bold">Active</span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-surface-container rounded-lg border border-outline-variant/30">
+                    <div>
+                      <p className="font-bold text-on-surface">HR Presentation Test Token</p>
+                      <p className="text-xs text-on-surface-variant font-mono mt-1">dodo_test_************************9b2d</p>
+                    </div>
+                    <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[9px] font-mono uppercase rounded border border-emerald-500/20 tracking-widest font-bold">Active</span>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {activeTab === 'security' && (
+              <section className="lg:col-span-12 glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 rounded bg-error/10 text-error">
+                    <span className="material-symbols-outlined">security</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-on-surface">Security & Control Center</h3>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="p-4 bg-surface-container rounded-lg border border-outline-variant/30 flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-on-surface text-sm">Two-Factor Authentication (MFA)</p>
+                      <p className="text-xs text-on-surface-variant mt-1">Enforce biometric or app OTP codes on login.</p>
+                    </div>
+                    <input title="MFA Toggle" type="checkbox" defaultChecked className="accent-primary w-4 h-4" />
+                  </div>
+                  <div className="p-4 bg-surface-container rounded-lg border border-outline-variant/30 flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-on-surface text-sm">Strict TLS Encryption</p>
+                      <p className="text-xs text-on-surface-variant mt-1">Reject insecure connections automatically.</p>
+                    </div>
+                    <input title="TLS Toggle" type="checkbox" defaultChecked className="accent-primary w-4 h-4" />
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {activeTab === 'billing' && (
+              <section className="lg:col-span-12 glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded bg-secondary/10 text-secondary">
+                      <span className="material-symbols-outlined">payments</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-on-surface">Billing & Subscriptions</h3>
+                  </div>
+                  <span className="px-3 py-1 bg-primary/20 text-primary border border-primary/30 rounded-full font-mono text-[10px] uppercase font-bold tracking-wider">Enterprise Tier</span>
+                </div>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="p-4 bg-surface-container rounded-lg border border-outline-variant/30">
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">Credits Consumed</p>
+                    <p className="text-2xl font-bold text-on-surface mt-2">$142.50</p>
+                    <p className="text-xs text-on-surface-variant mt-1">Out of $1,000.00 limit</p>
+                  </div>
+                  <div className="p-4 bg-surface-container rounded-lg border border-outline-variant/30">
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">Next Invoice Date</p>
+                    <p className="text-2xl font-bold text-on-surface mt-2">June 15, 2026</p>
+                    <p className="text-xs text-on-surface-variant mt-1">Automated charging enabled</p>
+                  </div>
+                  <div className="p-4 bg-surface-container rounded-lg border border-outline-variant/30">
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">Payment Profile</p>
+                    <p className="text-2xl font-bold text-on-surface mt-2">Visa **** 4892</p>
+                    <p className="text-xs text-on-surface-variant mt-1">Google Corp Card</p>
+                  </div>
+                </div>
+              </section>
+            )}
           </div>
 
           {/* Footer Actions */}

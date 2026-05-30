@@ -31,7 +31,7 @@ function App() {
     <Layout currentPath={currentPath} onNavigate={setCurrentPath} onCreateAgent={() => setIsModalOpen(true)}>
       {currentPath === 'dashboard' && <Dashboard onNavigate={setCurrentPath} />}
       {currentPath === 'agents' && (
-        <AgentManagement onSelectAgent={setSelectedAgentId} />
+        <AgentManagement key={refreshKey} onSelectAgent={setSelectedAgentId} />
       )}
       {currentPath === 'memory' && <MemoryExplorer />}
       {currentPath === 'runtime' && <RuntimeObservability />}

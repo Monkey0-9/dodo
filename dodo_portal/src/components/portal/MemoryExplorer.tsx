@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api/client';
+import { NewKnowledgeBlockModal } from '../NewKnowledgeBlockModal';
 
 export const MemoryExplorer = () => {
   const [blocks, setBlocks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const fetchBlocks = async () => {
     try {
@@ -54,6 +56,13 @@ export const MemoryExplorer = () => {
             <span className="material-symbols-outlined text-[18px]">smart_toy</span>
             Filter by agent
             <span className="material-symbols-outlined text-[18px]">expand_more</span>
+          </button>
+          <button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 bg-primary/10 border border-primary/30 text-primary px-3 py-2 rounded-lg text-xs hover:bg-primary/20 transition-all active:scale-95 duration-100 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            New Knowledge Block
           </button>
         </div>
         <div className="absolute right-0 top-0 w-1/3 h-full bg-linear-to-l from-primary/5 to-transparent pointer-events-none"></div>
@@ -185,6 +194,12 @@ export const MemoryExplorer = () => {
           <span>Tue 12:00 AM</span>
         </div>
       </section>
+
+      <NewKnowledgeBlockModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={fetchBlocks}
+      />
     </div>
   );
 };

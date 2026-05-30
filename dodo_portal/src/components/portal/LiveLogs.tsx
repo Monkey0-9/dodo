@@ -16,6 +16,20 @@ export const LiveLogs = () => {
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   const connect = useCallback(() => {
+    if (import.meta.env.VITE_DEMO_MODE === 'true') {
+      const interval = setInterval(() => {
+        if (isPaused) return;
+        const log = {
+          time: new Date().toLocaleTimeString(),
+          source: ['AGENT_CORE', 'MEM_CLUSTER', 'ROUTER', 'AUTH'][Math.floor(Math.random() * 4)],
+          level: ['INFO', 'DEBUG', 'WARN', 'ERROR'][Math.floor(Math.random() * 4)],
+          message: 'Simulated log message from demo mock engine.',
+        };
+        setLogs(prev => [...prev.slice(-199), log]);
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+
     const url = api.logs.getStreamUrl();
     const ws = new WebSocket(url);
 
@@ -34,8 +48,11 @@ export const LiveLogs = () => {
   }, [isPaused]);
 
   useEffect(() => {
-    connect();
-    return () => wsRef.current?.close();
+    const cleanup = connect();
+    return () => {
+      if (typeof cleanup === 'function') cleanup();
+      wsRef.current?.close();
+    };
   }, [connect]);
 
   useEffect(() => {

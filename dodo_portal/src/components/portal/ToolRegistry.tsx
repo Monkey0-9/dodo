@@ -1,22 +1,25 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api/client';
+import { AddToolModal } from '../AddToolModal';
 
 export const ToolRegistry = () => {
   const [tools, setTools] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const fetchTools = async () => {
+    try {
+      const data = await api.tools.list();
+      setTools(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to fetch tools:', error);
+      setTools([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTools = async () => {
-      try {
-        const data = await api.tools.list();
-        setTools(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Failed to fetch tools:', error);
-        setTools([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchTools();
   }, []);
 
@@ -39,7 +42,10 @@ export const ToolRegistry = () => {
           <h2 className="text-3xl font-bold text-on-surface">Tool Registry</h2>
           <p className="text-on-surface-variant mt-1 text-lg">{tools.length} active tools available. Configure orchestration capabilities and external integrations.</p>
         </div>
-        <button className="flex items-center gap-2 bg-surface-container-high border border-outline-variant px-5 py-2.5 rounded-lg hover:bg-surface-bright transition-all active:scale-95 text-on-surface">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 bg-surface-container-high border border-outline-variant px-5 py-2.5 rounded-lg hover:bg-surface-bright transition-all active:scale-95 text-on-surface cursor-pointer"
+        >
           <span className="material-symbols-outlined text-primary">add</span>
           <span className="font-mono-label uppercase tracking-widest text-[11px]">Add Tool</span>
         </button>
@@ -58,6 +64,16 @@ export const ToolRegistry = () => {
             success="100%" 
             latency="--" 
             active={true}
+            onDelete={async () => {
+              if (confirm(`Are you sure you want to delete tool "${tool.name}"?`)) {
+                try {
+                  await api.tools.delete(tool.id);
+                  fetchTools();
+                } catch (err: any) {
+                  alert(`Failed to delete tool: ${err.message}`);
+                }
+              }
+            }}
           />
         )) : (
           <div className="col-span-full py-20 text-center glass-panel rounded-3xl">
@@ -66,11 +82,17 @@ export const ToolRegistry = () => {
           </div>
         )}
       </div>
+
+      <AddToolModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchTools}
+      />
     </div>
   );
 };
 
-const ToolCard = ({ title, category, icon, status, version, success, latency, active, iconColor = "text-primary", statusColor = "bg-secondary/10 text-secondary" }: { title: string, category: string, icon: React.ReactNode, status: string, version: string, success: string, latency: string, active?: boolean, iconColor?: string, statusColor?: string }) => (
+const ToolCard = ({ title, category, icon, status, version, success, latency, active, onDelete, iconColor = "text-primary", statusColor = "bg-secondary/10 text-secondary" }: { title: string, category: string, icon: React.ReactNode, status: string, version: string, success: string, latency: string, active?: boolean, onDelete?: () => void, iconColor?: string, statusColor?: string }) => (
   <div className="glass-panel rounded-xl p-5 hover:border-primary/50 transition-all group relative">
     <div className="flex justify-between items-start mb-6">
       <div className="flex items-center gap-4">
@@ -102,6 +124,16 @@ const ToolCard = ({ title, category, icon, status, version, success, latency, ac
           <p className="text-on-surface text-xl font-bold">{latency}</p>
         </div>
       </div>
+      {onDelete && (
+        <div className="flex justify-end pt-2 border-t border-outline-variant/10">
+          <button 
+            onClick={onDelete}
+            className="text-error hover:text-error/80 text-[10px] font-mono uppercase tracking-widest flex items-center gap-1 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[14px]">delete</span> Delete
+          </button>
+        </div>
+      )}
     </div>
   </div>
 );

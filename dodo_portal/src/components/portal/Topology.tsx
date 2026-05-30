@@ -7,6 +7,15 @@ export const Topology = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedNode, setSelectedNode] = useState<TopologyNode | null>(null);
 
+  const getNodeCoords = (nodeId: string) => {
+    if (!data) return { x: 50, y: 50 };
+    const index = data.nodes.findIndex(n => n.id === nodeId);
+    if (index === -1) return { x: 50, y: 50 };
+    const x = 20 + (index * 30) % 60;
+    const y = 20 + (index * 20) % 60;
+    return { x, y };
+  };
+
   useEffect(() => {
     const fetchTopology = async () => {
       try {
@@ -116,17 +125,24 @@ export const Topology = () => {
               );
             })}
 
-            {/* Connection Lines (SVG) - Simplified Auto-mapping */}
+            {/* Connection Lines (SVG) - Dynamic mapping */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-40">
-              <circle cx="50%" cy="50%" r="150" fill="none" stroke="var(--color-primary)" strokeWidth="0.5" strokeDasharray="10 10" className="animate-spin-slow" />
-              {data.links.map((link, i) => (
-                <line 
-                  key={i}
-                  x1="50%" y1="50%" x2="25%" y2="25%" 
-                  stroke={link.type === 'data' ? 'var(--color-secondary)' : 'var(--color-tertiary)'} 
-                  strokeWidth="1" strokeDasharray="4 4" 
-                />
-              ))}
+              {data.links.map((link, i) => {
+                const sourceCoords = getNodeCoords(link.source);
+                const targetCoords = getNodeCoords(link.target);
+                return (
+                  <line 
+                    key={i}
+                    x1={`${sourceCoords.x}%`} 
+                    y1={`${sourceCoords.y}%`} 
+                    x2={`${targetCoords.x}%`} 
+                    y2={`${targetCoords.y}%`} 
+                    stroke={link.type === 'data' ? 'var(--color-secondary)' : 'var(--color-tertiary)'} 
+                    strokeWidth="1.5" 
+                    strokeDasharray="4 4" 
+                  />
+                );
+              })}
             </svg>
           </div>
         </div>
