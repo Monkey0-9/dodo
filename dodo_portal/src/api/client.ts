@@ -20,8 +20,33 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'x-project': 'default',
-    'Authorization': 'Bearer dodo-secret',
   },
+});
+
+import { setupDemoMock } from './demoMock';
+if (import.meta.env.VITE_DEMO_MODE === 'true') {
+  setupDemoMock(apiClient);
+}
+
+let tokenPromise: Promise<string> | null = null;
+
+apiClient.interceptors.request.use(async (config) => {
+  if (!tokenPromise) {
+    tokenPromise = axios.post(`${API_BASE_URL}/auth/login`, new URLSearchParams({
+      username: 'user-default-admin',
+      password: 'dodo'
+    }), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    }).then(res => res.data.access_token).catch(err => {
+      console.error('Frontend login failed', err);
+      return '';
+    });
+  }
+  const token = await tokenPromise;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 const handleApiError = (error: unknown) => {
