@@ -4,8 +4,8 @@ import openai
 
 from dodo.agents.base_agent import BaseAgent
 from dodo.schemas.agent import AgentState
-from dodo.schemas.enums import MessageRole
 from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.enums import MessageRole
 from dodo.schemas.message import Message, MessageCreate
 from dodo.schemas.openai.chat_completion_request import ChatCompletionRequest
 from dodo.schemas.user import User

@@ -7,10 +7,10 @@ import pytest
 from dodo.agents.dodo_agent_v2 import dodoAgentV2
 from dodo.schemas.agent import AgentState, AgentType
 from dodo.schemas.block import Block
-from dodo.schemas.embedding_config import EmbeddingConfig
-from dodo.schemas.enums import MessageRole
 from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.dodo_request import ClientSkillSchema
+from dodo.schemas.embedding_config import EmbeddingConfig
+from dodo.schemas.enums import MessageRole
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.memory import Memory
 from dodo.schemas.message import Message

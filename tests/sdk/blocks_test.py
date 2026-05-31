@@ -1,6 +1,6 @@
 ﻿from conftest import create_test_module
-from dodo.client import UnprocessableEntityError
 
+from dodo.client import UnprocessableEntityError
 from dodo.constants import CORE_MEMORY_BLOCK_CHAR_LIMIT
 
 BLOCKS_CREATE_PARAMS = [

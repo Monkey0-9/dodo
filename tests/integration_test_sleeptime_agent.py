@@ -5,9 +5,9 @@ import time
 import pytest
 import requests
 from dotenv import load_dotenv
+
 from dodo.client import APIError, dodo
 from dodo.client.types import CreateBlockParam, MessageCreateParam
-
 from dodo.constants import DEFAULT_HUMAN
 from dodo.utils import get_human_text, get_persona_text
 

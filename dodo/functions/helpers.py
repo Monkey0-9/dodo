@@ -12,8 +12,9 @@ import humps
 from pydantic import BaseModel, Field, create_model
 
 from dodo.constants import DEFAULT_MESSAGE_TOOL, DEFAULT_MESSAGE_TOOL_KWARG
-from dodo.schemas.message import Message
 from dodo.log import get_logger
+from dodo.schemas.message import Message
+
 logger = get_logger(__name__)
 
 

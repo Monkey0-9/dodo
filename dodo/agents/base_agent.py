@@ -9,11 +9,11 @@ from dodo.helpers.datetime_helpers import get_utc_time
 from dodo.log import get_logger
 from dodo.prompts.prompt_generator import PromptGenerator
 from dodo.schemas.agent import AgentState
-from dodo.schemas.enums import MessageStreamStatus
 from dodo.schemas.dodo_message import LegacydodoMessage, dodoMessage
 from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.dodo_response import dodoResponse
-from dodo.schemas.dodo_stop_reason import dodoStopReason, StopReasonType
+from dodo.schemas.dodo_stop_reason import StopReasonType, dodoStopReason
+from dodo.schemas.enums import MessageStreamStatus
 from dodo.schemas.message import Message, MessageCreate, MessageUpdate
 from dodo.schemas.provider_trace import BillingContext
 from dodo.schemas.usage import dodoUsageStatistics

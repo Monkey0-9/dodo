@@ -6,7 +6,6 @@ It uses secure JSON serialization instead of pickle to prevent arbitrary code ex
 """
 
 import json
-import sys
 from typing import Any, Optional, Tuple
 
 from dodo.log import get_logger

@@ -29,7 +29,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.background import BackgroundTask
 
 from dodo.log import get_logger
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.services.memory_repo.path_mapping import memory_block_label_from_markdown_path
 
 logger = get_logger(__name__)

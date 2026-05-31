@@ -1,7 +1,7 @@
 ﻿from typing import List
 
-from dodo.schemas.enums import MessageRole
 from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.enums import MessageRole
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import Message
 

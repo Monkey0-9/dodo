@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from dodo.errors import dodoInvalidArgumentError
 from dodo.schemas.enums import JobStatus
 from dodo.schemas.job import Job
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 from dodo.settings import settings
 from dodo.validators import JobId

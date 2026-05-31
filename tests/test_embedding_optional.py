@@ -12,9 +12,9 @@ import warnings
 
 import pytest
 from dotenv import load_dotenv
+
 from dodo.client import dodo as dodoSDKClient
 from dodo.client.types import CreateBlockParam
-
 from tests.utils import wait_for_server
 
 # Constants

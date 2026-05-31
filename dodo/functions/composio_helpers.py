@@ -12,8 +12,9 @@ from composio.exceptions import (
 
 from dodo.constants import COMPOSIO_ENTITY_ENV_VAR_KEY
 from dodo.functions.async_composio_toolset import AsyncComposioToolSet
-from dodo.utils import run_async_task
 from dodo.log import get_logger
+from dodo.utils import run_async_task
+
 logger = get_logger(__name__)
 
 
@@ -81,7 +82,7 @@ async def execute_composio_action_async(
         logger.exception(f"Unexpected error in Composio SDK while executing action '{action_name}': {e}")
         raise RuntimeError(f"An unexpected error occurred in Composio SDK while executing action '{action_name}': {str(e)}")
 
-    if "error" in response and response["error"]:
+    if response.get("error"):
         raise RuntimeError(f"Error while executing action '{action_name}': {str(response['error'])}")
 
     return response.get("data")

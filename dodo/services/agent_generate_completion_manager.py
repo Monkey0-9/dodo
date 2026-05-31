@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from dodo.errors import LLMError
 from dodo.llm_api.llm_client import LLMClient
 from dodo.log import get_logger
-from dodo.schemas.enums import AgentType, MessageRole
 from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.enums import AgentType, MessageRole
 from dodo.schemas.message import Message
 from dodo.schemas.usage import dodoUsageStatistics
 

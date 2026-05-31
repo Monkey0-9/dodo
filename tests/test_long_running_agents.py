@@ -6,8 +6,8 @@ import httpx
 import pytest
 import requests
 from dotenv import load_dotenv
-from dodo.client import dodo, MessageCreate, TextContent
 
+from dodo.client import MessageCreate, TextContent, dodo
 from tests.helpers.utils import upload_test_agentfile_from_disk
 
 RESEARCH_INSTRUCTIONS = "\n    Lead Name: Kian Jones\n    Lead Title: Software Engineer\n    Lead LinkedIn URL: https://www.linkedin.com/in/kian-jones\n    Company Name: dodo\n    Company Domain: dodo.com\n    Company Industry: technology/software/ai\n    \n**Research Instructions**\n"

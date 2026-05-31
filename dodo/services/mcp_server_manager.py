@@ -794,7 +794,10 @@ class MCPServerManager:
             # Convert the SQLAlchemy Tool object to PydanticTool
             return mcp_server.to_pydantic()
 
-    # No occurrences found in first 800 lines, checking rest of file
+    @enforce_types
+    async def get_mcp_servers_by_ids_async(self, mcp_server_ids: list[str], actor: PydanticUser) -> List[MCPServer]:
+        """Fetch multiple MCP servers by their IDs."""
+        if not mcp_server_ids:
             return []
 
         async with db_registry.async_session() as session:

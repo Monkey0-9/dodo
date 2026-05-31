@@ -12,9 +12,9 @@ import pytest
 from dodo.agents.agent_loop import AgentLoop
 from dodo.constants import TOOL_CALL_DENIAL_ON_CANCEL
 from dodo.schemas.agent import CreateAgent
+from dodo.schemas.dodo_request import dodoStreamingRequest
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import MessageRole, RunStatus
-from dodo.schemas.dodo_request import dodoStreamingRequest
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import MessageCreate
 from dodo.schemas.run import Run as PydanticRun

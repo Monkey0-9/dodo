@@ -20,10 +20,10 @@ from dodo.config import dodoConfig
 from dodo.helpers import ToolRulesSolver
 from dodo.jobs.llm_batch_job_polling import poll_running_llm_batches
 from dodo.schemas.agent import AgentState, CreateAgent
-from dodo.schemas.enums import AgentStepStatus, JobStatus, MessageRole, ProviderType
-from dodo.schemas.job import BatchJob
 from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.dodo_request import dodoBatchRequest
+from dodo.schemas.enums import AgentStepStatus, JobStatus, MessageRole, ProviderType
+from dodo.schemas.job import BatchJob
 from dodo.schemas.llm_batch_job import AgentStepState
 from dodo.schemas.message import MessageCreate
 from dodo.schemas.tool_rule import InitToolRule

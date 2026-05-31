@@ -1,5 +1,5 @@
 from dodo.server.rest_api.routers.v1.agents import router as agents_router
-from dodo.server.rest_api.routers.v1.auth import router as auth_router
+from dodo.server.rest_api.routers.v1.analytics import router as analytics_router
 from dodo.server.rest_api.routers.v1.anthropic import router as anthropic_router
 from dodo.server.rest_api.routers.v1.archives import router as archives_router
 from dodo.server.rest_api.routers.v1.blocks import router as blocks_router
@@ -9,7 +9,6 @@ from dodo.server.rest_api.routers.v1.embeddings import router as embeddings_rout
 from dodo.server.rest_api.routers.v1.folders import router as folders_router
 from dodo.server.rest_api.routers.v1.git_http import router as git_http_router
 from dodo.server.rest_api.routers.v1.groups import router as groups_router
-from dodo.server.rest_api.routers.v1.health import router as health_router
 from dodo.server.rest_api.routers.v1.identities import router as identities_router
 from dodo.server.rest_api.routers.v1.internal_agents import router as internal_agents_router
 from dodo.server.rest_api.routers.v1.internal_blocks import router as internal_blocks_router
@@ -18,6 +17,7 @@ from dodo.server.rest_api.routers.v1.internal_search import router as internal_s
 from dodo.server.rest_api.routers.v1.internal_templates import router as internal_templates_router
 from dodo.server.rest_api.routers.v1.jobs import router as jobs_router
 from dodo.server.rest_api.routers.v1.llms import router as llm_router
+from dodo.server.rest_api.routers.v1.logs import router as logs_router
 from dodo.server.rest_api.routers.v1.mcp_servers import router as mcp_servers_router
 from dodo.server.rest_api.routers.v1.messages import router as messages_router
 from dodo.server.rest_api.routers.v1.organizations import router as organizations_router
@@ -33,8 +33,6 @@ from dodo.server.rest_api.routers.v1.telemetry import router as telemetry_router
 from dodo.server.rest_api.routers.v1.tools import router as tools_router
 from dodo.server.rest_api.routers.v1.voice import router as voice_router
 from dodo.server.rest_api.routers.v1.zai import router as zai_router
-from dodo.server.rest_api.routers.v1.analytics import router as analytics_router
-from dodo.server.rest_api.routers.v1.logs import router as logs_router
 
 ROUTERS = [
     anthropic_router,

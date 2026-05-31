@@ -8,8 +8,8 @@ from dodo.log import get_logger
 from dodo.orm.errors import NoResultFound
 from dodo.prompts.gpt_system import get_system_text
 from dodo.schemas.block import Block, BlockUpdate
-from dodo.schemas.enums import LLMCallType, MessageRole
 from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.enums import LLMCallType, MessageRole
 from dodo.schemas.message import Message, MessageCreate
 from dodo.schemas.user import User
 from dodo.services.agent_manager import AgentManager

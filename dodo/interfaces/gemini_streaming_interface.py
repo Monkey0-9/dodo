@@ -18,17 +18,17 @@ from dodo.log import get_logger
 from dodo.schemas.dodo_message import (
     ApprovalRequestMessage,
     AssistantMessage,
-    dodoMessage,
     ReasoningMessage,
     ToolCallDelta,
     ToolCallMessage,
+    dodoMessage,
 )
 from dodo.schemas.dodo_message_content import (
     ReasoningContent,
     TextContent,
     ToolCallContent,
 )
-from dodo.schemas.dodo_stop_reason import dodoStopReason, StopReasonType
+from dodo.schemas.dodo_stop_reason import StopReasonType, dodoStopReason
 from dodo.schemas.message import Message
 from dodo.schemas.openai.chat_completion_response import FunctionCall, ToolCall
 from dodo.server.rest_api.streaming_response import RunCancelledException

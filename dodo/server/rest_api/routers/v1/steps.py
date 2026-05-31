@@ -4,17 +4,18 @@ from typing import List, Literal, Optional
 from fastapi import APIRouter, Body, Depends, Header, Query
 from pydantic import BaseModel, Field
 
+from dodo.log import get_logger
 from dodo.schemas.dodo_message import dodoMessageUnion
 from dodo.schemas.message import Message
 from dodo.schemas.provider_trace import ProviderTrace
 from dodo.schemas.step import Step
 from dodo.schemas.step_metrics import StepMetrics
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 from dodo.services.step_manager import FeedbackType
 from dodo.settings import settings
 from dodo.validators import StepId
-from dodo.log import get_logger
+
 logger = get_logger(__name__)
 
 

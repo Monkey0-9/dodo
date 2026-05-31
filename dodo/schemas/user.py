@@ -4,8 +4,8 @@ from typing import Optional
 from pydantic import Field
 
 from dodo.constants import DEFAULT_ORG_ID
-from dodo.schemas.enums import PrimitiveType
 from dodo.schemas.dodo_base import dodoBase
+from dodo.schemas.enums import PrimitiveType
 from dodo.validators import UserId
 
 

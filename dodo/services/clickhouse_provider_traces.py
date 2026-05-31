@@ -5,9 +5,10 @@ from typing import Any
 from urllib.parse import urlparse
 
 from dodo.helpers.singleton import singleton
+from dodo.log import get_logger
 from dodo.schemas.provider_trace import ProviderTrace
 from dodo.settings import settings
-from dodo.log import get_logger
+
 logger = get_logger(__name__)
 
 

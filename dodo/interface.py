@@ -7,9 +7,10 @@ from colorama import Fore, Style, init
 from dodo.constants import CLI_WARNING_PREFIX
 from dodo.helpers.json_helpers import json_loads
 from dodo.local_llm.constants import ASSISTANT_MESSAGE_CLI_SYMBOL, INNER_THOUGHTS_CLI_SYMBOL
+from dodo.log import get_logger
 from dodo.schemas.message import Message
 from dodo.utils import printd
-from dodo.log import get_logger
+
 logger = get_logger(__name__)
 
 

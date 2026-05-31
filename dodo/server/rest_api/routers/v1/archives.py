@@ -8,7 +8,7 @@ from dodo.schemas.agent import AgentRelationships
 from dodo.schemas.archive import Archive as PydanticArchive
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.passage import Passage
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 from dodo.settings import settings
 from dodo.validators import ArchiveId, PassageId

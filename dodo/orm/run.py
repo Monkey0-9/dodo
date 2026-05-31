@@ -7,9 +7,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dodo.orm.mixins import OrganizationMixin, ProjectMixin, TemplateMixin
 from dodo.orm.sqlalchemy_base import SqlalchemyBase
+from dodo.schemas.dodo_stop_reason import StopReasonType
 from dodo.schemas.enums import RunStatus
 from dodo.schemas.job import dodoRequestConfig
-from dodo.schemas.dodo_stop_reason import StopReasonType
 from dodo.schemas.run import Run as PydanticRun
 
 if TYPE_CHECKING:

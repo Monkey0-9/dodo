@@ -19,7 +19,7 @@ from dodo.otel.tracing import trace_method
 from dodo.schemas.agent import AgentState
 from dodo.schemas.block import Block as PydanticBlock
 from dodo.schemas.conversation import Conversation as PydanticConversation, CreateConversation, UpdateConversation
-from dodo.schemas.dodo_message import dodoMessage, MessageType
+from dodo.schemas.dodo_message import MessageType, dodoMessage
 from dodo.schemas.message import Message as PydanticMessage
 from dodo.schemas.user import User as PydanticUser
 from dodo.server.db import db_registry

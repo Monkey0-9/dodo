@@ -15,20 +15,20 @@ from dodo.constants import DEFAULT_MESSAGE_TOOL, DEFAULT_MESSAGE_TOOL_KWARG
 from dodo.helpers.datetime_helpers import is_utc_datetime
 from dodo.interface import AgentInterface
 from dodo.local_llm.constants import INNER_THOUGHTS_KWARG
-from dodo.schemas.enums import MessageStreamStatus
 from dodo.schemas.dodo_message import (
     AssistantMessage,
     HiddenReasoningMessage,
-    LegacyFunctionCallMessage,
     LegacydodoMessage,
-    dodoMessage,
+    LegacyFunctionCallMessage,
     ReasoningMessage,
     ToolCall,
     ToolCallDelta,
     ToolCallMessage,
     ToolReturnMessage,
+    dodoMessage,
 )
 from dodo.schemas.dodo_message_content import ReasoningContent, RedactedReasoningContent, TextContent
+from dodo.schemas.enums import MessageStreamStatus
 from dodo.schemas.message import Message
 from dodo.schemas.openai.chat_completion_response import ChatCompletionChunkResponse
 from dodo.server.rest_api.json_parser import OptimisticJSONParser

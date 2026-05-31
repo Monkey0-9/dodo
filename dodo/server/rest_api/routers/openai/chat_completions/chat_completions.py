@@ -1,7 +1,7 @@
 ﻿import asyncio
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List, Union
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from openai.types.chat.completion_create_params import CompletionCreateParams
 
@@ -11,7 +11,7 @@ from dodo.log import get_logger
 from dodo.schemas.message import Message, MessageCreate
 from dodo.schemas.user import User
 from dodo.server.rest_api.chat_completions_interface import ChatCompletionsStreamingInterface
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 
 # TODO this belongs in a controller!
 from dodo.server.rest_api.utils import get_user_message_from_chat_completions_request, sse_async_generator

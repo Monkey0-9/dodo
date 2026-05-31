@@ -12,10 +12,10 @@ from starlette.responses import StreamingResponse
 
 from dodo.constants import DEFAULT_GENERATE_TOOL_MODEL_HANDLE
 from dodo.errors import (
+    LLMError,
     dodoInvalidArgumentError,
     dodoMCPConnectionError,
     dodoMCPTimeoutError,
-    LLMError,
 )
 from dodo.functions.functions import derive_openai_json_schema
 from dodo.functions.mcp_client.exceptions import MCPTimeoutError
@@ -25,14 +25,14 @@ from dodo.llm_api.llm_client import LLMClient
 from dodo.log import get_logger
 from dodo.orm.mcp_oauth import OAuthSessionStatus
 from dodo.prompts.gpt_system import get_system_text
-from dodo.schemas.enums import AgentType, LLMCallType, MessageRole, ToolType
 from dodo.schemas.dodo_message import ToolReturnMessage
 from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.enums import AgentType, LLMCallType, MessageRole, ToolType
 from dodo.schemas.mcp import UpdateSSEMCPServer, UpdateStdioMCPServer, UpdateStreamableHTTPMCPServer
 from dodo.schemas.message import Message
 from dodo.schemas.pip_requirement import PipRequirement
 from dodo.schemas.tool import Tool, ToolCreate, ToolRunFromSource, ToolSearchRequest, ToolSearchResult, ToolUpdate
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.rest_api.streaming_response import StreamingResponseWithStatusCode
 from dodo.server.server import SyncServer
 from dodo.services.mcp.oauth_utils import MCPOAuthSession, drill_down_exception, oauth_stream_event

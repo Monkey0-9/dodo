@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from dodo.errors import dodoInvalidArgumentError
 from dodo.helpers.tpuf_client import TurbopufferClient, should_use_tpuf_for_messages
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 
 router = APIRouter(prefix="/_internal_search", tags=["_internal_search"])

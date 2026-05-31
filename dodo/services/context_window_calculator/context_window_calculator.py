@@ -5,8 +5,8 @@ from openai.types.beta.function_tool import FunctionTool as OpenAITool
 
 from dodo.log import get_logger
 from dodo.schemas.agent import AgentState
-from dodo.schemas.enums import MessageRole
 from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.enums import MessageRole
 from dodo.schemas.memory import ContextWindowOverview
 from dodo.schemas.message import Message
 from dodo.schemas.user import User as PydanticUser

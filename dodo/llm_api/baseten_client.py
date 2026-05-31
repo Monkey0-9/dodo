@@ -12,7 +12,6 @@ from dodo.schemas.enums import AgentType
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import Message as PydanticMessage
 from dodo.settings import model_settings
-from dodo.log import get_logger
 
 logger = logging.getLogger(__name__)
 

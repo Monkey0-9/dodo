@@ -1,7 +1,8 @@
 import asyncio
 import json
 import logging
-from typing import List, Set
+from typing import Set
+
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 router = APIRouter(prefix="/logs", tags=["logs"])
@@ -35,7 +36,7 @@ async def stream_logs(websocket: WebSocket):
     await websocket.accept()
     queue = asyncio.Queue()
     log_handler.queues.add(queue)
-    
+
     try:
         while True:
             log_entry = await queue.get()
@@ -56,7 +57,7 @@ async def stream_logs(websocket: WebSocket):
                     "level": "INFO",
                     "message": log_entry
                 }
-            
+
             await websocket.send_text(json.dumps(structured_log))
     except WebSocketDisconnect:
         pass

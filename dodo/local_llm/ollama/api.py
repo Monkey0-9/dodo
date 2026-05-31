@@ -4,6 +4,7 @@ from dodo.errors import LocalLLMError
 from dodo.local_llm.settings.settings import get_completions_settings
 from dodo.local_llm.utils import post_json_auth_request
 from dodo.log import get_logger
+
 logger = get_logger(__name__)
 
 

@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, AsyncGenerator
 from dodo.constants import DEFAULT_MAX_STEPS
 from dodo.log import get_logger
 from dodo.schemas.agent import AgentState
-from dodo.schemas.enums import MessageStreamStatus
-from dodo.schemas.dodo_message import LegacydodoMessage, dodoMessage, MessageType
+from dodo.schemas.dodo_message import LegacydodoMessage, MessageType, dodoMessage
 from dodo.schemas.dodo_response import dodoResponse
+from dodo.schemas.enums import MessageStreamStatus
 from dodo.schemas.message import MessageCreate
 from dodo.schemas.user import User
 

@@ -10,15 +10,16 @@ from dodo.interfaces.anthropic_streaming_interface import AnthropicStreamingInte
 from dodo.interfaces.openai_streaming_interface import OpenAIStreamingInterface
 from dodo.llm_api.llm_client_base import LLMClientBase
 from dodo.llm_api.openai_ws_session import OpenAIWSSessionManager
+from dodo.log import get_logger
 from dodo.otel.tracing import log_attributes, safe_json_dumps, trace_method
-from dodo.schemas.enums import LLMCallType, ProviderType
 from dodo.schemas.dodo_message import dodoMessage
+from dodo.schemas.enums import LLMCallType, ProviderType
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.provider_trace import BillingContext, ProviderTrace
 from dodo.schemas.user import User
 from dodo.settings import settings
 from dodo.utils import safe_create_task
-from dodo.log import get_logger
+
 logger = get_logger(__name__)
 
 

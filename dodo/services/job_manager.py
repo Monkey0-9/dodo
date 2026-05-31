@@ -12,10 +12,10 @@ from dodo.orm.job import Job as JobModel
 from dodo.orm.sqlalchemy_base import AccessType
 from dodo.orm.step import Step as StepModel
 from dodo.otel.tracing import log_event, trace_method
-from dodo.schemas.enums import JobStatus, JobType, MessageRole, PrimitiveType
-from dodo.schemas.job import BatchJob as PydanticBatchJob, Job as PydanticJob, JobUpdate, dodoRequestConfig
 from dodo.schemas.dodo_message import dodoMessage
 from dodo.schemas.dodo_stop_reason import StopReasonType
+from dodo.schemas.enums import JobStatus, JobType, MessageRole, PrimitiveType
+from dodo.schemas.job import BatchJob as PydanticBatchJob, Job as PydanticJob, JobUpdate, dodoRequestConfig
 from dodo.schemas.message import Message as PydanticMessage
 from dodo.schemas.run import Run as PydanticRun
 from dodo.schemas.step import Step as PydanticStep

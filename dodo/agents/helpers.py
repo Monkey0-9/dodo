@@ -6,16 +6,16 @@ from uuid import UUID, uuid4
 if TYPE_CHECKING:
     from dodo.schemas.tool import Tool
 
-from dodo.errors import dodoError, PendingApprovalError
+from dodo.errors import PendingApprovalError, dodoError
 from dodo.helpers import ToolRulesSolver
 from dodo.log import get_logger
 from dodo.otel.tracing import trace_method
 from dodo.schemas.agent import AgentState
-from dodo.schemas.enums import MessageRole
 from dodo.schemas.dodo_message import MessageType
 from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.dodo_response import dodoResponse
-from dodo.schemas.dodo_stop_reason import dodoStopReason, StopReasonType
+from dodo.schemas.dodo_stop_reason import StopReasonType, dodoStopReason
+from dodo.schemas.enums import MessageRole
 from dodo.schemas.message import ApprovalCreate, Message, MessageCreate, MessageCreateBase
 from dodo.schemas.tool_execution_result import ToolExecutionResult
 from dodo.schemas.usage import dodoUsageStatistics

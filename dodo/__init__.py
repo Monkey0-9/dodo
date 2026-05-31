@@ -24,12 +24,12 @@ except ImportError:
 # # imports for easier access
 from dodo.schemas.agent import AgentState as AgentState
 from dodo.schemas.block import Block as Block
+from dodo.schemas.dodo_message import dodoErrorMessage as dodoErrorMessage, dodoMessage as dodoMessage, dodoPing as dodoPing
+from dodo.schemas.dodo_stop_reason import dodoStopReason as dodoStopReason
 from dodo.schemas.embedding_config import EmbeddingConfig as EmbeddingConfig
 from dodo.schemas.enums import JobStatus as JobStatus
 from dodo.schemas.file import FileMetadata as FileMetadata
 from dodo.schemas.job import Job as Job
-from dodo.schemas.dodo_message import dodoErrorMessage as dodoErrorMessage, dodoMessage as dodoMessage, dodoPing as dodoPing
-from dodo.schemas.dodo_stop_reason import dodoStopReason as dodoStopReason
 from dodo.schemas.llm_config import LLMConfig as LLMConfig
 from dodo.schemas.memory import (
     ArchivalMemorySummary as ArchivalMemorySummary,

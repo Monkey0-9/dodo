@@ -1,8 +1,8 @@
 ﻿from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall, Function
 
 from dodo.llm_api.openai_client import fill_image_content_in_responses_input
-from dodo.schemas.enums import MessageRole
 from dodo.schemas.dodo_message_content import Base64Image, ImageContent, TextContent
+from dodo.schemas.enums import MessageRole
 from dodo.schemas.message import Message
 
 

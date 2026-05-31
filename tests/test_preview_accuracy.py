@@ -17,9 +17,9 @@ from dodo.config import dodoConfig
 from dodo.schemas.agent import CreateAgent
 from dodo.schemas.block import CreateBlock
 from dodo.schemas.conversation import CreateConversation
+from dodo.schemas.dodo_request import ClientSkillSchema, ClientToolSchema
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import LLMCallType, MessageRole
-from dodo.schemas.dodo_request import ClientSkillSchema, ClientToolSchema
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import MessageCreate
 from dodo.server.server import SyncServer

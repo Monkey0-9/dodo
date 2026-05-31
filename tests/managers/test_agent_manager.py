@@ -21,13 +21,13 @@ from dodo.errors import dodoAgentNotFoundError
 from dodo.orm.file import FileContent as FileContentModel
 from dodo.schemas.agent import CreateAgent, InternalTemplateAgentCreate, UpdateAgent
 from dodo.schemas.block import CreateBlock
+from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.dodo_stop_reason import StopReasonType
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import (
     AgentType,
     MessageRole,
 )
-from dodo.schemas.dodo_message_content import TextContent
-from dodo.schemas.dodo_stop_reason import StopReasonType
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import MessageCreate
 from dodo.schemas.source import Source as PydanticSource
@@ -251,13 +251,14 @@ async def test_compaction_settings_model_uses_separate_llm_config_for_summarizat
     the LLMConfig used for the summarizer request.
     """
 
+    from unittest.mock import AsyncMock
+
     from dodo.schemas.agent import AgentState as PydanticAgentState
     from dodo.schemas.enums import AgentType, MessageRole
     from dodo.schemas.memory import Memory
     from dodo.schemas.message import Message as PydanticMessage
     from dodo.schemas.model import OpenAIModelSettings, OpenAIReasoning
     from dodo.services.summarizer.compact import build_summarizer_llm_config
-    from unittest.mock import AsyncMock
 
     # Base agent LLM config
     base_llm_config = LLMConfig.default_config("gpt-4o-mini")
@@ -1888,10 +1889,10 @@ async def test_agent_state_schema_unchanged(server: SyncServer):
     """
     from dodo.schemas.agent import AgentState, AgentType
     from dodo.schemas.block import Block
+    from dodo.schemas.dodo_message import ApprovalRequestMessage
     from dodo.schemas.embedding_config import EmbeddingConfig
     from dodo.schemas.environment_variables import AgentEnvironmentVariable
     from dodo.schemas.group import Group
-    from dodo.schemas.dodo_message import ApprovalRequestMessage
     from dodo.schemas.llm_config import LLMConfig
     from dodo.schemas.memory import Memory
     from dodo.schemas.model import ModelSettingsUnion

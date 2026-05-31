@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, model_validator
 from dodo.helpers.datetime_helpers import get_utc_time
 from dodo.schemas.agent import AgentState, CreateAgent
 from dodo.schemas.block import Block, CreateBlock
+from dodo.schemas.dodo_message import ApprovalReturn
 from dodo.schemas.enums import MessageRole, PrimitiveType
 from dodo.schemas.file import FileAgent, FileAgentBase, FileMetadata, FileMetadataBase
 from dodo.schemas.group import (
@@ -16,7 +17,6 @@ from dodo.schemas.group import (
     ManagerType,
     RoundRobinManager,
 )
-from dodo.schemas.dodo_message import ApprovalReturn
 from dodo.schemas.mcp import MCPServer
 from dodo.schemas.message import Message, MessageCreate, ToolReturn
 from dodo.schemas.source import Source, SourceCreate

@@ -13,11 +13,11 @@ from dodo.constants import DEFAULT_MAX_MESSAGE_BUFFER_LENGTH, DEFAULT_MIN_MESSAG
 from dodo.orm.errors import NoResultFound
 from dodo.schemas.agent import CreateAgent
 from dodo.schemas.block import CreateBlock
+from dodo.schemas.dodo_message import AssistantMessage, ReasoningMessage, ToolCallMessage
+from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import AgentType, MessageRole, MessageStreamStatus
 from dodo.schemas.group import GroupUpdate, ManagerType, VoiceSleeptimeManagerUpdate
-from dodo.schemas.dodo_message import AssistantMessage, ReasoningMessage, ToolCallMessage
-from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import Message, MessageCreate
 from dodo.schemas.openai.chat_completion_request import ChatCompletionRequest, UserMessage as OpenAIUserMessage

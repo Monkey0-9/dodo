@@ -17,10 +17,10 @@ import uuid
 
 import pytest
 from dotenv import load_dotenv
-from dodo.client import dodo
 
-from dodo.schemas.embedding_config import EmbeddingConfig
+from dodo.client import dodo
 from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import MessageCreate
 from dodo.services.provider_trace_backends.clickhouse import ClickhouseProviderTraceBackend

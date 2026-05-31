@@ -6,8 +6,8 @@ from typing import Any, Dict, Optional
 from pydantic import BaseModel, Field
 
 from dodo.helpers.datetime_helpers import get_utc_time
-from dodo.schemas.enums import PrimitiveType
 from dodo.schemas.dodo_base import OrmMetadataBase
+from dodo.schemas.enums import PrimitiveType
 
 
 class BillingContext(BaseModel):

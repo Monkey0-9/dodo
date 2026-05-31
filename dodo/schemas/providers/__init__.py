@@ -8,10 +8,10 @@ from .bedrock import BedrockProvider
 from .cerebras import CerebrasProvider
 from .chatgpt_oauth import ChatGPTOAuthProvider
 from .deepseek import DeepSeekProvider
+from .dodo import dodoProvider
 from .google_gemini import GoogleAIProvider
 from .google_vertex import GoogleVertexProvider
 from .groq import GroqProvider
-from .dodo import dodoProvider
 from .lmstudio import LMStudioOpenAIProvider
 from .minimax import MiniMaxProvider
 from .mistral import MistralProvider
@@ -36,7 +36,6 @@ __all__ = [
     "GoogleVertexProvider",
     "GroqProvider",
     "LMStudioOpenAIProvider",
-    "dodoProvider",
     "MiniMaxProvider",
     "MistralProvider",
     "OllamaProvider",
@@ -53,5 +52,6 @@ __all__ = [
     "XAIProvider",
     "ZAICodingProvider",
     "ZAIProvider",
+    "dodoProvider",
 ]
 

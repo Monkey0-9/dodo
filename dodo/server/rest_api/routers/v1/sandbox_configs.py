@@ -18,7 +18,7 @@ from dodo.schemas.sandbox_config import (
     SandboxConfigCreate,
     SandboxConfigUpdate,
 )
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 from dodo.services.helpers.tool_execution_helper import create_venv_for_local_sandbox, install_pip_requirements_for_sandbox
 from dodo.validators import SandboxConfigId

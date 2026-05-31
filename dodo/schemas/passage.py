@@ -6,9 +6,9 @@ from pydantic import Field, field_validator
 from dodo import settings
 from dodo.constants import MAX_EMBEDDING_DIM
 from dodo.helpers.datetime_helpers import get_utc_time
+from dodo.schemas.dodo_base import OrmMetadataBase
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import PrimitiveType
-from dodo.schemas.dodo_base import OrmMetadataBase
 
 
 class PassageBase(OrmMetadataBase):

@@ -10,9 +10,10 @@ from rich.markup import escape
 
 from dodo.interface import CLIInterface
 from dodo.local_llm.constants import ASSISTANT_MESSAGE_CLI_SYMBOL, INNER_THOUGHTS_CLI_SYMBOL
+from dodo.log import get_logger
 from dodo.schemas.message import Message
 from dodo.schemas.openai.chat_completion_response import ChatCompletionChunkResponse, ChatCompletionResponse
-from dodo.log import get_logger
+
 logger = get_logger(__name__)
 
 

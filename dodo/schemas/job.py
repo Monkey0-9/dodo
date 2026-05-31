@@ -10,10 +10,10 @@ if TYPE_CHECKING:
 
 from dodo.constants import DEFAULT_MESSAGE_TOOL, DEFAULT_MESSAGE_TOOL_KWARG
 from dodo.helpers.datetime_helpers import get_utc_time
-from dodo.schemas.enums import JobStatus, JobType
 from dodo.schemas.dodo_base import OrmMetadataBase
 from dodo.schemas.dodo_message import MessageType
 from dodo.schemas.dodo_stop_reason import StopReasonType
+from dodo.schemas.enums import JobStatus, JobType
 
 
 class JobBase(OrmMetadataBase):

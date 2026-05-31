@@ -4,9 +4,10 @@ from dodo.agents.base_agent_v2 import BaseAgentV2
 from dodo.agents.dodo_agent_v2 import dodoAgentV2
 from dodo.agents.dodo_agent_v3 import dodoAgentV3
 from dodo.groups.sleeptime_multi_agent import SleeptimeMultiAgent
+from dodo.log import get_logger
 from dodo.schemas.agent import AgentState
 from dodo.schemas.enums import AgentType
-from dodo.log import get_logger
+
 logger = get_logger(__name__)
 
 

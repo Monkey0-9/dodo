@@ -3,9 +3,9 @@ from typing import Dict, Optional
 
 from pydantic import Field
 
+from dodo.schemas.dodo_base import OrmMetadataBase
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import PrimitiveType, VectorDBProvider
-from dodo.schemas.dodo_base import OrmMetadataBase
 
 
 class ArchiveBase(OrmMetadataBase):

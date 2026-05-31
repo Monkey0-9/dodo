@@ -1,10 +1,12 @@
 ﻿import yaml
 
+from dodo.log import get_logger
+
 from ...errors import LLMJSONParsingError
 from ...helpers.json_helpers import json_dumps, json_loads
 from ..json_parser import clean_json
 from .wrapper_base import LLMChatCompletionWrapper
-from dodo.log import get_logger
+
 logger = get_logger(__name__)
 
 

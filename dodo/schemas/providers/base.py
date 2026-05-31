@@ -6,10 +6,10 @@ logger = get_logger(__name__)
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from dodo.schemas.dodo_base import dodoBase
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.embedding_config_overrides import EMBEDDING_HANDLE_OVERRIDES
 from dodo.schemas.enums import PrimitiveType, ProviderCategory, ProviderType
-from dodo.schemas.dodo_base import dodoBase
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.llm_config_overrides import LLM_HANDLE_OVERRIDES
 from dodo.schemas.secret import Secret
@@ -189,7 +189,6 @@ class Provider(ProviderBase):
             GoogleAIProvider,
             GoogleVertexProvider,
             GroqProvider,
-            dodoProvider,
             LMStudioOpenAIProvider,
             MiniMaxProvider,
             MistralProvider,
@@ -202,6 +201,7 @@ class Provider(ProviderBase):
             XAIProvider,
             ZAICodingProvider,
             ZAIProvider,
+            dodoProvider,
         )
 
         if self.base_url == "":

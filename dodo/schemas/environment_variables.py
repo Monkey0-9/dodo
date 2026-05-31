@@ -2,8 +2,8 @@
 
 from pydantic import Field
 
+from dodo.schemas.dodo_base import OrmMetadataBase, dodoBase
 from dodo.schemas.enums import PrimitiveType
-from dodo.schemas.dodo_base import dodoBase, OrmMetadataBase
 from dodo.schemas.secret import Secret
 
 

@@ -17,9 +17,9 @@ from dodo.errors import InvalidInnerMonologueError, InvalidToolCallError, Missin
 from dodo.llm_api.llm_client import LLMClient
 from dodo.local_llm.constants import INNER_THOUGHTS_KWARG
 from dodo.schemas.agent import AgentState, CreateAgent
-from dodo.schemas.embedding_config import EmbeddingConfig
-from dodo.schemas.dodo_message import dodoMessage, ReasoningMessage, ToolCallMessage
+from dodo.schemas.dodo_message import ReasoningMessage, ToolCallMessage, dodoMessage
 from dodo.schemas.dodo_response import dodoResponse
+from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.openai.chat_completion_response import Choice, FunctionCall, Message
 from dodo.utils import get_human_text, get_persona_text

@@ -13,8 +13,6 @@ from dodo.helpers.json_helpers import sanitize_null_bytes
 from dodo.log import get_logger
 
 logger = get_logger(__name__)
-from dodo.schemas.embedding_config import EmbeddingConfig
-from dodo.schemas.enums import ProviderType, ToolRuleType
 from dodo.schemas.dodo_message import ApprovalReturn, MessageReturnType
 from dodo.schemas.dodo_message_content import (
     ImageContent,
@@ -29,6 +27,8 @@ from dodo.schemas.dodo_message_content import (
     ToolCallContent,
     ToolReturnContent,
 )
+from dodo.schemas.embedding_config import EmbeddingConfig
+from dodo.schemas.enums import ProviderType, ToolRuleType
 from dodo.schemas.llm_batch_job import AgentStepState
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import ToolReturn

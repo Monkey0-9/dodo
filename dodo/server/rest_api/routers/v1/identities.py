@@ -13,7 +13,7 @@ from dodo.schemas.identity import (
     IdentityUpdate,
     IdentityUpsert,
 )
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.validators import IdentityId
 
 if TYPE_CHECKING:

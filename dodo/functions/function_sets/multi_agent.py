@@ -1,7 +1,8 @@
 ﻿from typing import Any, Iterable, List
 
-from dodo.settings import settings
 from dodo.log import get_logger
+from dodo.settings import settings
+
 logger = get_logger(__name__)
 
 

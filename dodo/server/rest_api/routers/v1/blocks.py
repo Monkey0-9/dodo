@@ -5,7 +5,7 @@ from fastapi import APIRouter, Body, Depends, Query
 from dodo.orm.errors import NoResultFound
 from dodo.schemas.agent import AgentRelationships, AgentState
 from dodo.schemas.block import Block, BlockResponse, BlockUpdate, CreateBlock
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 from dodo.utils import is_1_0_sdk_version
 from dodo.validators import (

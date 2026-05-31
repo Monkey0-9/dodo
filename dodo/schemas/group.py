@@ -3,8 +3,8 @@ from typing import Annotated, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
-from dodo.schemas.enums import PrimitiveType
 from dodo.schemas.dodo_base import dodoBase
+from dodo.schemas.enums import PrimitiveType
 from dodo.validators import AgentId, BlockId
 
 

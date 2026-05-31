@@ -9,8 +9,8 @@ from dodo.functions.mcp_client.types import (
 )
 from dodo.helpers.url_validation import validate_mcp_server_url
 from dodo.orm.mcp_oauth import OAuthSessionStatus
-from dodo.schemas.enums import PrimitiveType
 from dodo.schemas.dodo_base import dodoBase
+from dodo.schemas.enums import PrimitiveType
 from dodo.schemas.secret import Secret
 
 

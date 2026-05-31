@@ -1,11 +1,12 @@
+from typing import Any, Dict, List, Optional
+
 import httpx
-from typing import Any, Dict, List, Optional, Union
 
 from dodo.errors import dodoError
-from dodo.schemas.agent import AgentState, AgentStepResponse, CreateAgent, UpdateAgent
-from dodo.schemas.block import Block, CreateBlock
+from dodo.schemas.agent import AgentState, AgentStepResponse
+from dodo.schemas.block import Block
 from dodo.schemas.job import Job
-from dodo.schemas.message import Message, MessageCreate
+from dodo.schemas.message import Message
 from dodo.schemas.organization import Organization
 from dodo.schemas.source import Source
 from dodo.schemas.tool import Tool
@@ -105,8 +106,8 @@ class DodoClient:
             # Map specific HTTP status codes to client exceptions
             from dodo.client.types import (
                 BadRequestError,
-                NotFoundError,
                 ConflictError,
+                NotFoundError,
                 UnprocessableEntityError,
             )
             status_code = e.response.status_code

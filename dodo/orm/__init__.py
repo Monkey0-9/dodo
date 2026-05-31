@@ -8,6 +8,7 @@ from dodo.orm.block_history import BlockHistory as BlockHistory
 from dodo.orm.blocks_agents import BlocksAgents as BlocksAgents
 from dodo.orm.blocks_conversations import BlocksConversations as BlocksConversations
 from dodo.orm.blocks_tags import BlocksTags as BlocksTags
+from dodo.orm.circuit_breaker import CircuitBreakerState as CircuitBreakerState
 from dodo.orm.conversation import Conversation as Conversation
 from dodo.orm.conversation_messages import ConversationMessage as ConversationMessage
 from dodo.orm.file import FileMetadata as FileMetadata
@@ -46,6 +47,5 @@ from dodo.orm.step_metrics import StepMetrics as StepMetrics
 from dodo.orm.tool import Tool as Tool
 from dodo.orm.tools_agents import ToolsAgents as ToolsAgents
 from dodo.orm.user import User as User
-from dodo.orm.circuit_breaker import CircuitBreakerState as CircuitBreakerState
 
 

@@ -17,7 +17,6 @@ from dodo.otel.sqlalchemy_instrumentation import (
     teardown_sqlalchemy_sync_instrumentation,
 )
 from dodo.server.db import db_registry
-from dodo.log import get_logger
 
 logger = logging.getLogger(__name__)
 

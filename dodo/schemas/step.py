@@ -3,9 +3,9 @@ from typing import Dict, List, Literal, Optional
 
 from pydantic import Field
 
-from dodo.schemas.enums import PrimitiveType, StepStatus
 from dodo.schemas.dodo_base import dodoBase
 from dodo.schemas.dodo_stop_reason import StopReasonType
+from dodo.schemas.enums import PrimitiveType, StepStatus
 from dodo.schemas.message import Message
 
 

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 
 from dodo.schemas.enums import ProviderCategory, ProviderType
 from dodo.schemas.model import EmbeddingModel, Model
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 
 if TYPE_CHECKING:
     from dodo.server.server import SyncServer

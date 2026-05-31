@@ -1,6 +1,7 @@
-from typing import Any, Dict, Optional
-from dodo.schemas.llm_config import LLMConfig
+from typing import Any, Dict
+
 from dodo.log import get_logger
+from dodo.schemas.llm_config import LLMConfig
 
 logger = get_logger(__name__)
 
@@ -35,6 +36,6 @@ def apply_thinking_config(data: Dict[str, Any], llm_config: LLMConfig) -> None:
             "type": "enabled",
             "budget_tokens": thinking_budget,
         }
-    
+
     # temperature may only be set to 1 when thinking is enabled.
     data["temperature"] = 1.0

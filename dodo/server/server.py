@@ -15,7 +15,6 @@ from dodo.config import dodoConfig
 from dodo.constants import dodo_TOOL_EXECUTION_DIR
 from dodo.data_sources.connectors import DataConnector, load_data
 from dodo.errors import (
-    HandleNotFoundError,
     dodoInvalidArgumentError,
     dodoMCPConnectionError,
 )
@@ -33,13 +32,13 @@ from dodo.otel.tracing import log_event, trace_method
 from dodo.prompts.gpt_system import get_system_text
 from dodo.schemas.agent import AgentState, CreateAgent, UpdateAgent
 from dodo.schemas.block import Block, BlockUpdate, CreateBlock
+from dodo.schemas.dodo_message import MessageType, ToolReturnMessage, dodoMessage
 from dodo.schemas.embedding_config import EmbeddingConfig
 
 # openai schemas
 from dodo.schemas.enums import AgentType, JobStatus, ProviderCategory, ProviderType, ToolSourceType
 from dodo.schemas.group import GroupCreate, SleeptimeManager, VoiceSleeptimeManager
 from dodo.schemas.job import Job, JobUpdate
-from dodo.schemas.dodo_message import dodoMessage, MessageType, ToolReturnMessage
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.memory import Memory
 from dodo.schemas.message import Message
@@ -54,7 +53,6 @@ from dodo.schemas.providers import (
     GoogleAIProvider,
     GoogleVertexProvider,
     GroqProvider,
-    dodoProvider,
     LMStudioOpenAIProvider,
     MiniMaxProvider,
     OllamaProvider,
@@ -66,6 +64,7 @@ from dodo.schemas.providers import (
     VLLMProvider,
     XAIProvider,
     ZAIProvider,
+    dodoProvider,
 )
 from dodo.schemas.sandbox_config import LocalSandboxConfig, SandboxConfigCreate
 from dodo.schemas.secret import Secret
@@ -212,8 +211,6 @@ class SyncServer(object):
 
         # collect providers (always has dodo as a default)
         from dodo.constants import dodo_MODEL_ENDPOINT
-        from dodo.schemas.providers import OpenAIProvider
-        from dodo.schemas.secret import Secret
 
         self._enabled_providers: List[Provider] = [
             dodoProvider(name="dodo", base_url=dodo_MODEL_ENDPOINT),

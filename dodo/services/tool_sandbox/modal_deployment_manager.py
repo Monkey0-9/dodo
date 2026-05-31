@@ -1,4 +1,4 @@
-﻿"""
+"""
 Modal Deployment Manager - Handles deployment orchestration with optional locking.
 
 This module separates deployment logic from the main sandbox execution,
@@ -211,12 +211,10 @@ class ModalDeploymentManager:
             return app, version_hash
 
         except Exception as e:
-
             logger.exception(f"Unexpected error: {e}")
-        if deployment_key:
+            if deployment_key:
                 self.version_manager.complete_deployment(deployment_key)
             raise
-
     async def _register_deployment(
         self,
         sbx_config: SandboxConfig,

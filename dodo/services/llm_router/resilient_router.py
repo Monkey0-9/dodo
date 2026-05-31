@@ -1,12 +1,13 @@
 import asyncio
 import time
-from typing import Optional, Tuple, TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from sqlalchemy import select
+
 from dodo.log import get_logger
-from dodo.server.db import db_registry
 from dodo.orm.circuit_breaker import CircuitBreakerState
 from dodo.otel.metric_registry import MetricRegistry
+from dodo.server.db import db_registry
 
 if TYPE_CHECKING:
     from dodo.schemas.llm_config import LLMConfig
@@ -161,7 +162,7 @@ class ResilientRoutingClient:
                 stmt = select(CircuitBreakerState).where(CircuitBreakerState.handle == cb.handle)
                 result = await session.execute(stmt)
                 db_state = result.scalar_one_or_none()
-                
+
                 if db_state:
                     for key, value in state_data.items():
                         setattr(db_state, key, value)

@@ -11,9 +11,9 @@ from dodo.orm.conversation_messages import ConversationMessage
 from dodo.orm.errors import NoResultFound
 from dodo.orm.message import Message as MessageModel
 from dodo.otel.tracing import trace_method
-from dodo.schemas.enums import MessageRole, PrimitiveType
 from dodo.schemas.dodo_message import dodoMessageUpdateUnion
-from dodo.schemas.dodo_message_content import ImageSourceType, dodoImage, MessageContentType
+from dodo.schemas.dodo_message_content import ImageSourceType, MessageContentType, dodoImage
+from dodo.schemas.enums import MessageRole, PrimitiveType
 from dodo.schemas.message import Message as PydanticMessage, MessageSearchResult, MessageUpdate
 from dodo.schemas.user import User as PydanticUser
 from dodo.server.db import db_registry

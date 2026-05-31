@@ -24,8 +24,8 @@ from dodo.errors import LLMAuthenticationError
 from dodo.llm_api.anthropic_client import AnthropicClient
 from dodo.llm_api.google_ai_client import GoogleAIClient
 from dodo.llm_api.openai_client import OpenAIClient
-from dodo.schemas.enums import AgentType, LLMCallType, MessageRole
 from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.enums import AgentType, LLMCallType, MessageRole
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import Message
 from dodo.settings import model_settings

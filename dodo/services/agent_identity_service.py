@@ -1,8 +1,5 @@
 import logging
-from typing import List, Optional
-from dodo.orm.sandbox_config import AgentEnvironmentVariable
-from dodo.schemas.secret import Secret
-from dodo.log import get_logger
+from typing import List
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +11,7 @@ class AgentIdentityService:
     async def get_identities(self, agent_id: str) -> List[str]:
         # Placeholder for identity logic
         return []
-        
+
     async def add_identity(self, agent_id: str, identity_id: str):
         logger.info(f"Adding identity {identity_id} to agent {agent_id}")
         pass

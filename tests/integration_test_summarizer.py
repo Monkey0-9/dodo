@@ -16,10 +16,10 @@ import pytest
 from dodo.agents.dodo_agent_v3 import dodoAgentV3
 from dodo.config import dodoConfig
 from dodo.schemas.agent import CreateAgent
-from dodo.schemas.embedding_config import EmbeddingConfig
-from dodo.schemas.enums import MessageRole
 from dodo.schemas.dodo_message import EventMessage, SummaryMessage
 from dodo.schemas.dodo_message_content import TextContent, ToolCallContent, ToolReturnContent
+from dodo.schemas.embedding_config import EmbeddingConfig
+from dodo.schemas.enums import MessageRole
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import Message as PydanticMessage
 from dodo.server.server import SyncServer

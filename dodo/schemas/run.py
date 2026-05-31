@@ -4,10 +4,10 @@ from typing import Optional
 from pydantic import ConfigDict, Field
 
 from dodo.helpers.datetime_helpers import get_utc_time
-from dodo.schemas.enums import PrimitiveType, RunStatus
-from dodo.schemas.job import dodoRequestConfig
 from dodo.schemas.dodo_base import dodoBase
 from dodo.schemas.dodo_stop_reason import StopReasonType
+from dodo.schemas.enums import PrimitiveType, RunStatus
+from dodo.schemas.job import dodoRequestConfig
 
 
 class RunBase(dodoBase):

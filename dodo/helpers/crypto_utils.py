@@ -9,8 +9,9 @@ from typing import Optional
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
-from dodo.settings import settings
 from dodo.log import get_logger
+from dodo.settings import settings
+
 logger = get_logger(__name__)
 
 

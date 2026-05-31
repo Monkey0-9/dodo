@@ -12,8 +12,8 @@ from dodo.interfaces.gemini_streaming_interface import SimpleGeminiStreamingInte
 from dodo.interfaces.openai_streaming_interface import SimpleOpenAIResponsesStreamingInterface, SimpleOpenAIStreamingInterface
 from dodo.llm_api.openai_client import OpenAIClient
 from dodo.otel.tracing import log_attributes, safe_json_dumps, trace_method
-from dodo.schemas.enums import ProviderType
 from dodo.schemas.dodo_message import dodoMessage
+from dodo.schemas.enums import ProviderType
 from dodo.schemas.provider_trace import ProviderTrace
 from dodo.schemas.user import User
 from dodo.server.rest_api.streaming_response import get_cancellation_event_for_run

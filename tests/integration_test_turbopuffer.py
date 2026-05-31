@@ -6,9 +6,9 @@ import pytest
 
 from dodo.config import dodoConfig
 from dodo.helpers.tpuf_client import TurbopufferClient, should_use_tpuf, should_use_tpuf_for_messages
+from dodo.schemas.dodo_message_content import ReasoningContent, TextContent, ToolCallContent, ToolReturnContent
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import MessageRole, TagMatchMode, VectorDBProvider
-from dodo.schemas.dodo_message_content import ReasoningContent, TextContent, ToolCallContent, ToolReturnContent
 from dodo.schemas.message import Message as PydanticMessage
 from dodo.schemas.passage import Passage
 from dodo.server.server import SyncServer

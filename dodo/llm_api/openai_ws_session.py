@@ -26,7 +26,6 @@ from openai.types.responses import (
     ResponseIncompleteEvent,
 )
 from openai.types.responses.response_stream_event import ResponseStreamEvent
-from dodo.log import get_logger
 
 logger = logging.getLogger(__name__)
 

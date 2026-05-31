@@ -4,8 +4,8 @@ from typing import List, Optional
 
 from pydantic import Field
 
-from dodo.schemas.enums import FileProcessingStatus, PrimitiveType
 from dodo.schemas.dodo_base import dodoBase
+from dodo.schemas.enums import FileProcessingStatus, PrimitiveType
 
 
 class FileStatus(str, Enum):

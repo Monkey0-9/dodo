@@ -7,10 +7,9 @@ import time
 import pytest
 import requests
 from dotenv import load_dotenv
-from dodo.client import dodo
-from dodo.client.types import AgentState, MessageCreateParam, ToolReturnMessage
-from dodo.client.types import SystemMessage
 
+from dodo.client import dodo
+from dodo.client.types import AgentState, MessageCreateParam, SystemMessage, ToolReturnMessage
 from tests.helpers.utils import retry_until_success
 
 

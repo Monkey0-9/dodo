@@ -2,6 +2,7 @@
 
 from dodo.adapters.dodo_llm_adapter import dodoLLMAdapter
 from dodo.helpers.datetime_helpers import get_utc_timestamp_ns
+from dodo.log import get_logger
 from dodo.otel.tracing import log_attributes, safe_json_dumps, trace_method
 from dodo.schemas.dodo_message import dodoMessage
 from dodo.schemas.dodo_message_content import OmittedReasoningContent, ReasoningContent, TextContent
@@ -10,7 +11,7 @@ from dodo.schemas.usage import normalize_cache_tokens, normalize_reasoning_token
 from dodo.schemas.user import User
 from dodo.settings import settings
 from dodo.utils import safe_create_task
-from dodo.log import get_logger
+
 logger = get_logger(__name__)
 
 

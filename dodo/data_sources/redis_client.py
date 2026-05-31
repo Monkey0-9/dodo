@@ -17,6 +17,7 @@ from dodo.errors import ConversationBusyError, MemoryRepoBusyError
 from dodo.log import get_logger
 from dodo.otel.metric_registry import MetricRegistry
 from dodo.settings import settings
+
 logger = get_logger(__name__)
 
 

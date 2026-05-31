@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
-from dodo.server.rest_api.auth.jwt_handler import get_current_user
+
 from dodo.schemas.user import User
+from dodo.server.rest_api.auth.jwt_handler import get_current_user
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 

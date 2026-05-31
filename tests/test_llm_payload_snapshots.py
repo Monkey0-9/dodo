@@ -4,12 +4,7 @@ LLM Payload Snapshot Tests — Phase 5: Reliability & CI Hardening
 Tests that key LLM client request builders produce stable, expected payloads.
 These prevent silent regressions when refactoring provider clients.
 """
-import json
-import pytest
-from unittest.mock import MagicMock, patch
 from dodo.schemas.llm_config import LLMConfig
-from dodo.schemas.enums import ProviderType
-
 
 # ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -34,7 +29,6 @@ class TestAnthropicPayloadSnapshots:
 
     def test_basic_model_name_stripped_of_provider_prefix(self):
         """Model names with 'anthropic/' prefix should be stripped correctly."""
-        from dodo.llm_api.anthropic_client import AnthropicClient
         cfg = make_llm_config("anthropic/claude-3-haiku-20240307")
         # Strip prefix logic
         model_name = cfg.model
@@ -93,7 +87,7 @@ class TestBetaBuilderModule:
 
     def test_structured_outputs_beta_for_strict_supported_model(self):
         """Strict mode on supported model should add structured-outputs beta."""
-        from dodo.llm_api.anthropic.beta_builder import build_beta_headers, _supports_structured_outputs
+        from dodo.llm_api.anthropic.beta_builder import _supports_structured_outputs, build_beta_headers
         cfg = make_llm_config("claude-opus-4-6-20250514")
         cfg.strict = True
         if _supports_structured_outputs(cfg.model):
@@ -149,7 +143,7 @@ class TestBrandSanitization:
     def test_no_nexus_in_constants(self):
         """dodo/constants.py should not reference 'Nexus'."""
         import importlib.util
-        spec = importlib.util.spec_from_file_location("constants", "dodo/constants.py")
+        importlib.util.spec_from_file_location("constants", "dodo/constants.py")
         # Simply read the file text
         with open("dodo/constants.py", "r", encoding="utf-8", errors="ignore") as f:
             content = f.read()

@@ -1,7 +1,7 @@
 ﻿from dodo.constants import DEFAULT_MAX_STEPS
 from dodo.schemas.agent import AgentState
-from dodo.schemas.enums import DuplicateFileHandling
 from dodo.schemas.dodo_message import MessageType
+from dodo.schemas.enums import DuplicateFileHandling
 from dodo.schemas.message import MessageCreate
 from dodo.schemas.user import User
 

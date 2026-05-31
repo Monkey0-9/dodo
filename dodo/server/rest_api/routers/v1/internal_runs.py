@@ -3,10 +3,10 @@ from typing import List, Literal, Optional
 
 from fastapi import APIRouter, Depends, Query
 
-from dodo.schemas.enums import ComparisonOperator, RunStatus
 from dodo.schemas.dodo_stop_reason import StopReasonType
+from dodo.schemas.enums import ComparisonOperator, RunStatus
 from dodo.schemas.run import Run
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 
 router = APIRouter(prefix="/_internal_runs", tags=["_internal_runs"])

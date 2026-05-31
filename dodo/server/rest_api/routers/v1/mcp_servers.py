@@ -19,8 +19,8 @@ from dodo.schemas.tool import Tool
 from dodo.schemas.tool_execution_result import ToolExecutionResult
 from dodo.server.rest_api.dependencies import (
     HeaderParams,
-    get_headers,
     get_dodo_server,
+    get_headers,
 )
 from dodo.server.rest_api.streaming_response import StreamingResponseWithStatusCode
 from dodo.server.server import SyncServer

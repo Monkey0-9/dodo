@@ -5,15 +5,15 @@ if TYPE_CHECKING:
 
     from dodo.schemas.tool_execution_result import ToolExecutionResult
 
-from dodo.agents.helpers import _create_dodo_response, serialize_message_history
 from dodo.agents.dodo_agent import dodoAgent
+from dodo.agents.helpers import _create_dodo_response, serialize_message_history
 from dodo.constants import DEFAULT_MAX_STEPS
 from dodo.otel.tracing import trace_method
 from dodo.schemas.agent import AgentState
 from dodo.schemas.block import BlockUpdate
-from dodo.schemas.enums import MessageStreamStatus, ToolType
-from dodo.schemas.dodo_message import LegacydodoMessage, dodoMessage, MessageType
+from dodo.schemas.dodo_message import LegacydodoMessage, MessageType, dodoMessage
 from dodo.schemas.dodo_response import dodoResponse
+from dodo.schemas.enums import MessageStreamStatus, ToolType
 from dodo.schemas.message import MessageCreate
 from dodo.schemas.tool_rule import ChildToolRule, ContinueToolRule, InitToolRule, TerminalToolRule
 from dodo.schemas.user import User

@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 
 from dodo.constants import dodo_MULTI_AGENT_TOOL_MODULE_NAME
 from dodo.functions.helpers import generate_model_from_args_json_schema
+from dodo.log import get_logger
 from dodo.otel.tracing import trace_method
 from dodo.schemas.agent import AgentState
 from dodo.schemas.enums import ToolSourceType, ToolType
@@ -19,7 +20,7 @@ from dodo.services.helpers.tool_parser_helper import convert_param_to_str_value,
 from dodo.services.sandbox_config_manager import SandboxConfigManager
 from dodo.services.tool_manager import ToolManager
 from dodo.types import JsonDict, JsonValue
-from dodo.log import get_logger
+
 logger = get_logger(__name__)
 
 

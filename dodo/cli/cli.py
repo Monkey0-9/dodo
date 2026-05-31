@@ -52,8 +52,9 @@ def server(
 
 
 def version() -> str:
-    import dodo
     import typer
+
+    import dodo
 
     typer.echo(dodo.__version__)
     return dodo.__version__

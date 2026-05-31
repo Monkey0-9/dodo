@@ -4,8 +4,8 @@ from typing import Optional
 from pydantic import Field
 
 from dodo.helpers.datetime_helpers import get_utc_time
-from dodo.schemas.enums import PrimitiveType
 from dodo.schemas.dodo_base import dodoBase
+from dodo.schemas.enums import PrimitiveType
 from dodo.utils import create_random_username
 
 

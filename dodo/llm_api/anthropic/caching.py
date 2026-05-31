@@ -1,7 +1,7 @@
 from typing import Any, Dict, List
-from dodo.schemas.llm_config import LLMConfig
 
-def apply_cache_control(messages: List[Dict[str, Any]], tools: List[Dict[str, Any]] = None) -> None:
+
+def apply_cache_control(messages: List[Dict[str, Any]], tools: List[Dict[str, Any]] | None = None) -> None:
     """Apply Anthropic ephemeral cache control to messages and tools."""
     # Add cache control to the last tool
     if tools and len(tools) > 0:

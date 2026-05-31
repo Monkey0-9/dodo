@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import Field
 
 from dodo.constants import DEFAULT_MESSAGE_TOOL, DEFAULT_MESSAGE_TOOL_KWARG
+from dodo.schemas.dodo_message import MessageType, dodoMessageUnion, dodoMessageUpdateUnion
 from dodo.schemas.group import Group, GroupCreate, GroupUpdate, ManagerType
-from dodo.schemas.dodo_message import dodoMessageUnion, dodoMessageUpdateUnion, MessageType
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 from dodo.validators import GroupId, MessageId
 

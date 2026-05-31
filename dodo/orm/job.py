@@ -6,9 +6,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dodo.orm.mixins import UserMixin
 from dodo.orm.sqlalchemy_base import SqlalchemyBase
+from dodo.schemas.dodo_stop_reason import StopReasonType
 from dodo.schemas.enums import JobStatus, JobType
 from dodo.schemas.job import Job as PydanticJob, dodoRequestConfig
-from dodo.schemas.dodo_stop_reason import StopReasonType
 
 if TYPE_CHECKING:
     from dodo.orm.message import Message

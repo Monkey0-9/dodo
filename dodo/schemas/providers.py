@@ -4,15 +4,15 @@ from typing import List, Literal, Optional
 
 import aiohttp
 import requests
-from pydantic import BaseModel, Field, model_validator
-
-from dodo.constants import DEFAULT_EMBEDDING_CHUNK_SIZE, dodo_MODEL_ENDPOINT, LLM_MAX_TOKENS, MIN_CONTEXT_WINDOW
 from dodo.llm_api.azure_openai import get_azure_chat_completions_endpoint, get_azure_embeddings_endpoint
 from dodo.llm_api.azure_openai_constants import AZURE_MODEL_TO_CONTEXT_LENGTH
+from pydantic import BaseModel, Field, model_validator
+
+from dodo.constants import DEFAULT_EMBEDDING_CHUNK_SIZE, LLM_MAX_TOKENS, MIN_CONTEXT_WINDOW, dodo_MODEL_ENDPOINT
+from dodo.schemas.dodo_base import dodoBase
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.embedding_config_overrides import EMBEDDING_HANDLE_OVERRIDES
 from dodo.schemas.enums import ProviderCategory, ProviderType
-from dodo.schemas.dodo_base import dodoBase
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.llm_config_overrides import LLM_HANDLE_OVERRIDES
 from dodo.settings import model_settings
@@ -1537,8 +1537,9 @@ class BedrockProvider(Provider):
 
     def check_api_key(self):
         """Check if the Bedrock credentials are valid"""
-        from dodo.errors import LLMAuthenticationError
         from dodo.llm_api.aws_bedrock import bedrock_get_model_list
+
+        from dodo.errors import LLMAuthenticationError
 
         try:
             # For BYOK providers, use the custom credentials

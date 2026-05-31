@@ -11,7 +11,7 @@ from dodo.schemas.agent import CreateAgent
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import ProviderCategory, ProviderType
 from dodo.schemas.llm_config import LLMConfig
-from dodo.schemas.providers import dodoProvider, OpenAIProvider, ProviderCreate
+from dodo.schemas.providers import OpenAIProvider, ProviderCreate, dodoProvider
 from dodo.server.server import SyncServer
 from dodo.services.organization_manager import OrganizationManager
 from dodo.services.provider_manager import ProviderManager

@@ -10,9 +10,9 @@ from unittest.mock import patch
 import pytest
 import requests
 from dotenv import load_dotenv
-from dodo.client import dodo
 from sqlalchemy import delete
 
+from dodo.client import dodo
 from dodo.functions.function_sets.base import core_memory_append, core_memory_replace
 from dodo.orm.sandbox_config import SandboxConfig, SandboxEnvironmentVariable
 from dodo.schemas.agent import AgentState, CreateAgent

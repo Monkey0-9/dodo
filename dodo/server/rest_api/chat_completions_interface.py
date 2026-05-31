@@ -8,8 +8,8 @@ from openai.types.chat.chat_completion_chunk import ChatCompletionChunk, Choice,
 from dodo.constants import DEFAULT_MESSAGE_TOOL, DEFAULT_MESSAGE_TOOL_KWARG
 from dodo.local_llm.constants import INNER_THOUGHTS_KWARG
 from dodo.log import get_logger
-from dodo.schemas.enums import MessageStreamStatus
 from dodo.schemas.dodo_message import dodoMessage
+from dodo.schemas.enums import MessageStreamStatus
 from dodo.schemas.message import Message
 from dodo.schemas.openai.chat_completion_response import ChatCompletionChunkResponse
 from dodo.server.rest_api.json_parser import OptimisticJSONParser

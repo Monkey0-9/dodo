@@ -4,8 +4,8 @@ from typing import List, Optional
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
 from dodo.constants import CORE_MEMORY_BLOCK_CHAR_LIMIT, DEFAULT_HUMAN_BLOCK_DESCRIPTION, DEFAULT_PERSONA_BLOCK_DESCRIPTION
-from dodo.schemas.enums import PrimitiveType
 from dodo.schemas.dodo_base import dodoBase
+from dodo.schemas.enums import PrimitiveType
 
 # block of the LLM context
 

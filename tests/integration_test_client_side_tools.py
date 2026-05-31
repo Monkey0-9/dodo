@@ -11,6 +11,7 @@ These tests verify that:
 import uuid
 
 import pytest
+
 from dodo.client import dodo
 
 # ------------------------------

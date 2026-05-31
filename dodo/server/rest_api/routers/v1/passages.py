@@ -8,7 +8,7 @@ from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import TagMatchMode
 from dodo.schemas.passage import Passage
 from dodo.schemas.user import User as PydanticUser
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 
 router = APIRouter(prefix="/passages", tags=["passages"])

@@ -6,11 +6,11 @@ import pytest
 from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall as OpenAIToolCall, Function as OpenAIFunction
 
 from dodo.orm.errors import UniqueConstraintViolationError
+from dodo.schemas.dodo_message import UpdateAssistantMessage, UpdateReasoningMessage, UpdateSystemMessage, UpdateUserMessage
+from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.enums import (
     MessageRole,
 )
-from dodo.schemas.dodo_message import UpdateAssistantMessage, UpdateReasoningMessage, UpdateSystemMessage, UpdateUserMessage
-from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.message import Message as PydanticMessage, MessageUpdate
 from dodo.server.server import SyncServer
 

@@ -6,12 +6,13 @@ from pydantic import BaseModel
 from dodo.schemas.agent import AgentState, InternalTemplateAgentCreate
 from dodo.schemas.block import Block, InternalTemplateBlockCreate
 from dodo.schemas.group import Group, InternalTemplateGroupCreate
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 
 router = APIRouter(prefix="/_internal_templates", tags=["_internal_templates"])
 
 from dodo.log import get_logger
+
 logger = get_logger(__name__)
 
 

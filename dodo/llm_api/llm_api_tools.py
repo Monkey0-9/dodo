@@ -7,7 +7,7 @@ from typing import List, Optional, Union
 import requests
 
 from dodo.constants import CLI_WARNING_PREFIX
-from dodo.errors import dodoConfigurationError, RateLimitExceededError
+from dodo.errors import RateLimitExceededError, dodoConfigurationError
 from dodo.llm_api.helpers import unpack_all_inner_thoughts_from_kwargs
 from dodo.log import get_logger
 

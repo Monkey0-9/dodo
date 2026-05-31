@@ -7,8 +7,8 @@ import httpx
 
 from dodo import __version__, system
 from dodo.errors import dodoImageFetchError, dodoInvalidArgumentError
-from dodo.schemas.enums import MessageRole
 from dodo.schemas.dodo_message_content import Base64Image, ImageContent, ImageSourceType, TextContent
+from dodo.schemas.enums import MessageRole
 from dodo.schemas.message import Message, MessageCreate
 
 

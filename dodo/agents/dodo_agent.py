@@ -34,11 +34,11 @@ from dodo.otel.context import get_ctx_attributes
 from dodo.otel.metric_registry import MetricRegistry
 from dodo.otel.tracing import log_event, trace_method, tracer
 from dodo.schemas.agent import AgentState, UpdateAgent
-from dodo.schemas.enums import JobStatus, LLMCallType, ProviderType, StepStatus, ToolType
 from dodo.schemas.dodo_message import MessageType
 from dodo.schemas.dodo_message_content import OmittedReasoningContent, ReasoningContent, RedactedReasoningContent, TextContent
 from dodo.schemas.dodo_response import dodoResponse
-from dodo.schemas.dodo_stop_reason import dodoStopReason, StopReasonType
+from dodo.schemas.dodo_stop_reason import StopReasonType, dodoStopReason
+from dodo.schemas.enums import JobStatus, LLMCallType, ProviderType, StepStatus, ToolType
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import Message, MessageCreateBase
 from dodo.schemas.openai.chat_completion_response import (

@@ -14,8 +14,8 @@ import pytest
 import requests
 from anthropic.types.beta.messages import BetaMessageBatch, BetaMessageBatchRequestCounts
 from dotenv import load_dotenv
-from dodo.client.client import DodoClient as dodo
 
+from dodo.client.client import DodoClient as dodo
 from dodo.server.db import db_registry
 from dodo.services.organization_manager import OrganizationManager
 from dodo.services.user_manager import UserManager

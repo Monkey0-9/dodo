@@ -1,8 +1,10 @@
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import JSONResponse
-from dodo.server.rest_api.auth.jwt_handler import SECRET_KEY, ALGORITHM
 import jwt
 from jwt import PyJWTError as JWTError
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
+
+from dodo.server.rest_api.auth.jwt_handler import ALGORITHM, SECRET_KEY
+
 
 class CheckPasswordMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, password: str):

@@ -17,10 +17,10 @@ from dodo.orm.sqlalchemy_base import SqlalchemyBase
 from dodo.schemas.agent import AgentState as PydanticAgentState
 
 ENCRYPTED_PLACEHOLDER = "<encrypted>"
+from dodo.schemas.dodo_stop_reason import StopReasonType
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import AgentType
 from dodo.schemas.environment_variables import AgentEnvironmentVariable as PydanticAgentEnvVar
-from dodo.schemas.dodo_stop_reason import StopReasonType
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.memory import Memory
 from dodo.schemas.response_format import ResponseFormatUnion

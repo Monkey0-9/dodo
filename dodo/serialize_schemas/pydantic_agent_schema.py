@@ -2,8 +2,8 @@
 
 from pydantic import BaseModel, Field
 
-from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.dodo_message_content import dodoMessageContentUnion
+from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.llm_config import LLMConfig
 
 

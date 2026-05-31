@@ -1,4 +1,4 @@
-﻿import re
+import re
 from abc import abstractmethod
 from enum import Enum
 from typing import Dict, List, Optional
@@ -6,7 +6,6 @@ from typing import Dict, List, Optional
 from mcp import Tool
 from pydantic import BaseModel, Field
 
-from dodo.utils import get_logger
 from dodo.log import get_logger
 
 # MCP Authentication Constants

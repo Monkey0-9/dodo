@@ -7,7 +7,6 @@ import os
 from unittest.mock import patch
 
 import pytest
-
 from dodo.agents.temporal.metrics import (
     ActivityMetrics,
     TemporalMetrics,

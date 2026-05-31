@@ -30,15 +30,15 @@ from dodo.otel.metric_registry import MetricRegistry
 from dodo.schemas.agent import AgentRelationships, AgentState, CreateAgent, UpdateAgent
 from dodo.schemas.agent_file import AgentFileSchema, SkillSchema
 from dodo.schemas.block import BlockResponse, BlockUpdate
-from dodo.schemas.enums import AgentType, MessageRole, RunStatus
-from dodo.schemas.file import AgentFileAttachment, PaginatedAgentFiles
-from dodo.schemas.group import Group
-from dodo.schemas.job import dodoRequestConfig
-from dodo.schemas.dodo_message import dodoMessageUnion, dodoMessageUpdateUnion, MessageType
+from dodo.schemas.dodo_message import MessageType, dodoMessageUnion, dodoMessageUpdateUnion
 from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.dodo_request import dodoAsyncRequest, dodoRequest, dodoStreamingRequest
 from dodo.schemas.dodo_response import dodoResponse, dodoStreamingResponse
 from dodo.schemas.dodo_stop_reason import StopReasonType
+from dodo.schemas.enums import AgentType, MessageRole, RunStatus
+from dodo.schemas.file import AgentFileAttachment, PaginatedAgentFiles
+from dodo.schemas.group import Group
+from dodo.schemas.job import dodoRequestConfig
 from dodo.schemas.mcp_server import ToolExecuteRequest
 from dodo.schemas.memory import (
     ArchivalMemorySearchResponse,
@@ -57,7 +57,7 @@ from dodo.schemas.tool_execution_result import ToolExecutionResult
 from dodo.schemas.usage import dodoUsageStatistics
 from dodo.schemas.user import User
 from dodo.serialize_schemas.pydantic_agent_schema import AgentSchema
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 from dodo.services.lettuce import LettuceClient
 from dodo.services.run_manager import RunManager
@@ -2113,8 +2113,8 @@ async def _process_message_background(
             billing_context=billing_context,
         )
         runs_manager = RunManager()
-        from dodo.schemas.enums import RunStatus
         from dodo.schemas.dodo_stop_reason import StopReasonType
+        from dodo.schemas.enums import RunStatus
 
         # Handle cases where stop_reason might be None (defensive)
         if result.stop_reason and result.stop_reason.stop_reason == "cancelled":
@@ -2138,8 +2138,8 @@ async def _process_message_background(
     except PendingApprovalError as e:
         # Update run status to failed with specific error info
         runs_manager = RunManager()
-        from dodo.schemas.enums import RunStatus
         from dodo.schemas.dodo_stop_reason import StopReasonType
+        from dodo.schemas.enums import RunStatus
 
         await runs_manager.update_run_by_id_async(
             run_id=run_id,
@@ -2149,8 +2149,8 @@ async def _process_message_background(
     except Exception as e:
         # Update run status to failed
         runs_manager = RunManager()
-        from dodo.schemas.enums import RunStatus
         from dodo.schemas.dodo_stop_reason import StopReasonType
+        from dodo.schemas.enums import RunStatus
 
         await runs_manager.update_run_by_id_async(
             run_id=run_id,
@@ -2301,8 +2301,8 @@ async def send_message_async(
 
             async def update_failed_run():
                 runs_manager = RunManager()
-                from dodo.schemas.enums import RunStatus
                 from dodo.schemas.dodo_stop_reason import StopReasonType
+                from dodo.schemas.enums import RunStatus
 
                 await runs_manager.update_run_by_id_async(
                     run_id=run.id,

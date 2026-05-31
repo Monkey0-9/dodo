@@ -33,9 +33,12 @@ from dodo.errors import (
 from dodo.helpers.datetime_helpers import get_utc_time_int
 from dodo.helpers.decorators import deprecated
 from dodo.helpers.json_helpers import sanitize_unicode_surrogates
+from dodo.llm_api.anthropic.beta_builder import build_beta_headers, build_streaming_betas  # noqa: F401 — exposed for tests
+from dodo.llm_api.anthropic.caching import apply_cache_control
+from dodo.llm_api.anthropic.thinking import apply_thinking_config
 from dodo.llm_api.anthropic_constants import ANTHROPIC_MAX_STRICT_TOOLS, ANTHROPIC_STRICT_MODE_ALLOWLIST
-from dodo.llm_api.error_utils import is_insufficient_credits_message
 from dodo.llm_api.client_manager import client_manager
+from dodo.llm_api.error_utils import is_insufficient_credits_message
 from dodo.llm_api.helpers import add_inner_thoughts_to_functions, unpack_all_inner_thoughts_from_kwargs
 from dodo.llm_api.llm_client_base import LLMClientBase
 from dodo.local_llm.constants import INNER_THOUGHTS_KWARG, INNER_THOUGHTS_KWARG_DESCRIPTION
@@ -55,9 +58,6 @@ from dodo.schemas.openai.chat_completion_response import (
 )
 from dodo.schemas.usage import dodoUsageStatistics
 from dodo.settings import model_settings
-from dodo.llm_api.anthropic.thinking import apply_thinking_config
-from dodo.llm_api.anthropic.caching import apply_cache_control
-from dodo.llm_api.anthropic.beta_builder import build_beta_headers, build_streaming_betas  # noqa: F401 — exposed for tests
 
 DUMMY_FIRST_USER_MESSAGE = "User initializing bootup sequence."
 

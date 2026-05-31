@@ -7,10 +7,8 @@ from pathlib import Path
 from sys import stdout
 from typing import Any, Optional
 
-
 from dodo.log_context import get_log_context
 from dodo.settings import log_settings, settings, telemetry_settings
-
 
 selected_log_level = logging.DEBUG if settings.debug else logging.INFO
 

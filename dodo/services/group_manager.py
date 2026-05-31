@@ -11,9 +11,9 @@ from dodo.orm.group import Group as GroupModel
 from dodo.orm.groups_blocks import GroupsBlocks
 from dodo.orm.message import Message as MessageModel
 from dodo.otel.tracing import trace_method
+from dodo.schemas.dodo_message import MessageType, dodoMessage
 from dodo.schemas.enums import PrimitiveType
 from dodo.schemas.group import Group as PydanticGroup, GroupCreate, GroupUpdate, InternalTemplateGroupCreate, ManagerType
-from dodo.schemas.dodo_message import dodoMessage, MessageType
 from dodo.schemas.message import Message as PydanticMessage
 from dodo.schemas.user import User as PydanticUser
 from dodo.server.db import db_registry

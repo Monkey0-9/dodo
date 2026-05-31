@@ -8,10 +8,10 @@ from pydantic import BaseModel, Field
 
 from dodo.errors import dodoInvalidArgumentError
 from dodo.log import get_logger
-from dodo.schemas.enums import MessageRole
 from dodo.schemas.dodo_request import dodoStreamingRequest
+from dodo.schemas.enums import MessageRole
 from dodo.schemas.message import MessageCreate
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 from dodo.services.streaming_service import StreamingService
 

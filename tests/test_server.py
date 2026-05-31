@@ -24,7 +24,7 @@ def mock_openai_client():
         model = llm_config.model if llm_config else "mock-model"
         if "input" in request_data and "messages" not in request_data:
             outputs = []
-            if "tools" in request_data and request_data["tools"]:
+            if request_data.get("tools"):
                 tool_names = []
                 for t in request_data["tools"]:
                     if "name" in t:
@@ -63,7 +63,7 @@ def mock_openai_client():
             }
         else:
             tool_calls = None
-            if "tools" in request_data and request_data["tools"]:
+            if request_data.get("tools"):
                 tool_names = []
                 for t in request_data["tools"]:
                     if "function" in t and "name" in t["function"]:

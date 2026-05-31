@@ -1,14 +1,13 @@
 import os
+import secrets
+import warnings
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import Depends, HTTPException, status, Request, WebSocket
-from fastapi.security import OAuth2PasswordBearer
 import jwt
+from fastapi import HTTPException, Request, WebSocket, status
+from fastapi.security import OAuth2PasswordBearer
 from jwt import PyJWTError as JWTError
-
-import secrets
-import warnings
 
 _secret = os.getenv("JWT_SECRET")
 if not _secret:

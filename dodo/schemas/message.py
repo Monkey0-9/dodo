@@ -21,7 +21,6 @@ from dodo.helpers.datetime_helpers import get_utc_time, is_utc_datetime
 from dodo.helpers.json_helpers import json_dumps
 from dodo.local_llm.constants import INNER_THOUGHTS_KWARG, INNER_THOUGHTS_KWARG_VERTEX
 from dodo.otel.tracing import trace_method
-from dodo.schemas.enums import MessageRole, PrimitiveType
 from dodo.schemas.dodo_base import OrmMetadataBase
 from dodo.schemas.dodo_message import (
     ApprovalRequestMessage,
@@ -30,9 +29,6 @@ from dodo.schemas.dodo_message import (
     AssistantMessage,
     AssistantMessageListResult,
     HiddenReasoningMessage,
-    dodoMessage,
-    dodoMessageReturnUnion,
-    dodoMessageSearchResult,
     MessageType,
     ReasoningMessage,
     ReasoningMessageListResult,
@@ -45,13 +41,14 @@ from dodo.schemas.dodo_message import (
     ToolReturnMessage,
     UserMessage,
     UserMessageListResult,
+    dodoMessage,
+    dodoMessageReturnUnion,
+    dodoMessageSearchResult,
     extract_compaction_stats_from_packed_json,
 )
 from dodo.schemas.dodo_message_content import (
     ImageContent,
     ImageSourceType,
-    dodoMessageContentUnion,
-    dodoToolReturnContentUnion,
     OmittedReasoningContent,
     ReasoningContent,
     RedactedReasoningContent,
@@ -59,8 +56,11 @@ from dodo.schemas.dodo_message_content import (
     TextContent,
     ToolCallContent,
     ToolReturnContent,
+    dodoMessageContentUnion,
+    dodoToolReturnContentUnion,
     get_dodo_message_content_union_str_json_schema,
 )
+from dodo.schemas.enums import MessageRole, PrimitiveType
 from dodo.system import unpack_message
 from dodo.utils import parse_json, parse_json_or_wrap_raw, sanitize_tool_call_id, validate_function_response
 

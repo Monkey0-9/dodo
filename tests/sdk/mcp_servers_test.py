@@ -5,6 +5,7 @@ Uses the dodo SDK client instead of direct HTTP requests.
 """
 
 import os
+
 os.environ["MCP_DISABLE_STDIO"] = "false"
 os.environ["dodo_MCP_DISABLE_STDIO"] = "false"
 import sys
@@ -17,11 +18,11 @@ from typing import Any, Dict, List
 import pytest
 import requests
 from dotenv import load_dotenv
-from dodo.client import BadRequestError, dodo, NotFoundError, UnprocessableEntityError
 
+from dodo.client import BadRequestError, NotFoundError, UnprocessableEntityError, dodo
 from dodo.schemas.agent import AgentState
-from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.dodo_message import ToolCallMessage, ToolReturnMessage
+from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.llm_config import LLMConfig
 
 # ------------------------------

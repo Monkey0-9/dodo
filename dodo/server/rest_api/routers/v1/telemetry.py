@@ -2,11 +2,12 @@
 
 from fastapi import APIRouter, Depends
 
+from dodo.log import get_logger
 from dodo.schemas.provider_trace import ProviderTrace
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 from dodo.settings import settings
-from dodo.log import get_logger
+
 logger = get_logger(__name__)
 
 

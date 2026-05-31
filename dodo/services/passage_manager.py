@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 if TYPE_CHECKING:
     from dodo.orm.sqlalchemy_base import SqlalchemyBase
 
+from async_lru import alru_cache
 from openai import AsyncOpenAI
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +13,6 @@ from sqlalchemy.orm import noload
 
 from dodo.constants import MAX_EMBEDDING_DIM
 from dodo.helpers.decorators import async_redis_cache
-from async_lru import alru_cache
 from dodo.llm_api.llm_client import LLMClient
 from dodo.log import get_logger
 from dodo.orm import ArchivesAgents
@@ -636,11 +636,11 @@ class PassageManager:
             # If archive uses Pinecone, also write to Pinecone (dual-write)
             elif archive.vector_db_provider == VectorDBProvider.PINECONE:
                 try:
+                    from dodo.constants import PINECONE_TEXT_FIELD_NAME
                     from dodo.helpers.pinecone_utils import (
                         should_use_pinecone,
                         upsert_records_to_pinecone_index,
                     )
-                    from dodo.constants import PINECONE_TEXT_FIELD_NAME
 
                     if should_use_pinecone():
                         records = []
@@ -825,11 +825,7 @@ class PassageManager:
                     # Check if archive uses Pinecone and dual-delete
                     elif archive.vector_db_provider == VectorDBProvider.PINECONE:
                         try:
-                            from dodo.helpers.pinecone_utils import (
-                                should_use_pinecone,
-                                PineconeAsyncio,
-                                settings
-                            )
+                            from dodo.helpers.pinecone_utils import PineconeAsyncio, settings, should_use_pinecone
 
                             if should_use_pinecone():
                                 async with PineconeAsyncio(api_key=settings.pinecone_api_key) as pc:

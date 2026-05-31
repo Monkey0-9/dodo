@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from dodo.server.rest_api.auth.jwt_handler import create_access_token
+
 from dodo.log import get_logger
+from dodo.server.rest_api.auth.jwt_handler import create_access_token
+
 logger = get_logger(__name__)
 import os
 
@@ -22,7 +24,7 @@ MASTER_PASSWORD = _master
 @router.post("/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     # For now, we validate against the master password to satisfy Phase 1 requirement
-    # while moving to JWT. In a full production system, this would check against 
+    # while moving to JWT. In a full production system, this would check against
     # the User table's hashed_password.
     if form_data.password != MASTER_PASSWORD:
         raise HTTPException(
@@ -30,7 +32,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             detail="Incorrect password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     # Create a JWT for the "admin" user
     # In a real system, we'd fetch the user from the DB here.
     access_token = create_access_token(data={"sub": "user-default-admin"})

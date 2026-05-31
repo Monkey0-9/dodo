@@ -26,7 +26,7 @@ from dodo.schemas.passage import Passage
 from dodo.schemas.source import Source, SourceCreate, SourceUpdate
 from dodo.schemas.source_metadata import OrganizationSourcesStats
 from dodo.schemas.user import User
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 from dodo.services.file_processor.embedder.openai_embedder import OpenAIEmbedder
 from dodo.services.file_processor.embedder.pinecone_embedder import PineconeEmbedder

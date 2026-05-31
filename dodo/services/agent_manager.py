@@ -57,12 +57,12 @@ from dodo.schemas.agent import (
     UpdateAgent,
 )
 from dodo.schemas.block import DEFAULT_BLOCKS, Block as PydanticBlock, BlockUpdate
+from dodo.schemas.dodo_stop_reason import StopReasonType
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import AgentType, PrimitiveType, TagMatchMode, ToolType, VectorDBProvider
 from dodo.schemas.environment_variables import AgentEnvironmentVariable as PydanticAgentEnvVar
 from dodo.schemas.file import FileMetadata as PydanticFileMetadata
 from dodo.schemas.group import Group as PydanticGroup, ManagerType
-from dodo.schemas.dodo_stop_reason import StopReasonType
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.memory import ContextWindowOverview, Memory
 from dodo.schemas.message import Message, Message as PydanticMessage, MessageCreate, MessageUpdate
@@ -330,10 +330,10 @@ class AgentManager:
         Legacy synchronous wrapper around AgentSerializationManager.export for backwards compatibility.
         """
         from dodo.services.agent_serialization_manager import AgentSerializationManager
+        from dodo.services.file_manager import FileManager
         from dodo.services.group_manager import GroupManager
         from dodo.services.mcp_manager import MCPManager
-        from dodo.services.file_manager import FileManager
-        
+
         manager = AgentSerializationManager(
             agent_manager=self,
             tool_manager=self.tool_manager,
@@ -345,9 +345,9 @@ class AgentManager:
             file_agent_manager=self.file_agent_manager,
             message_manager=self.message_manager,
         )
-        
+
         schema = run_async(manager.export(agent_ids=[agent_id], actor=actor))
-        
+
         if max_steps is not None and schema.agents:
             agent = schema.agents[0]
             if max_steps == 0:
@@ -360,7 +360,7 @@ class AgentManager:
                     other_msgs = [m for m in agent.messages[start_index:] if m.role != "system"]
                     agent.messages = system_msgs + other_msgs
             agent.in_context_message_ids = [m.id for m in agent.messages]
-            
+
         return schema
 
     def deserialize(
@@ -374,10 +374,10 @@ class AgentManager:
         Legacy synchronous wrapper around AgentSerializationManager.import_file for backwards compatibility.
         """
         from dodo.services.agent_serialization_manager import AgentSerializationManager
+        from dodo.services.file_manager import FileManager
         from dodo.services.group_manager import GroupManager
         from dodo.services.mcp_manager import MCPManager
-        from dodo.services.file_manager import FileManager
-        
+
         manager = AgentSerializationManager(
             agent_manager=self,
             tool_manager=self.tool_manager,
@@ -389,14 +389,14 @@ class AgentManager:
             file_agent_manager=self.file_agent_manager,
             message_manager=self.message_manager,
         )
-        
+
         result = run_async(manager.import_file(
             schema=serialized_agent,
             actor=actor,
             append_copy_suffix=append_copy_suffix,
             override_existing_tools=override_existing_tools
         ))
-        
+
         return run_async(self.get_agent_by_id_async(agent_id=result.agent_ids[0], actor=actor))
 
     # ======================================================================================================================

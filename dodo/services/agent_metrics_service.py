@@ -1,6 +1,5 @@
 import logging
 import time
-from dodo.log import get_logger
 
 logger = logging.getLogger(__name__)
 
@@ -19,5 +18,5 @@ class AgentMetricsService:
         duration_ms = duration_ns / 1_000_000
         logger.info(f"Latency tracking [{context}]: {duration_ms:.2f} ms")
         # In a real system, this would push to OTEL or ClickHouse
-        
+
 metrics_service = AgentMetricsService()

@@ -1,8 +1,7 @@
-from dodo.client.client import DodoClient as dodo
-from dodo.client.client import DodoClient
+from dodo.client.client import DodoClient, DodoClient as dodo
 from dodo.client.types import (
-    APIError,
     AgentState,
+    APIError,
     AssistantMessage,
     BadRequestError,
     Block,
@@ -38,8 +37,6 @@ from dodo.client.types import (
 )
 
 __all__ = [
-    "dodo",
-    "DodoClient",
     "APIError",
     "AgentState",
     "AssistantMessage",
@@ -50,6 +47,7 @@ __all__ = [
     "CreateAgent",
     "CreateBlock",
     "CreateBlockParam",
+    "DodoClient",
     "ImageContent",
     "MaxCountPerStepToolRule",
     "Message",
@@ -73,6 +71,7 @@ __all__ = [
     "UnprocessableEntityError",
     "UpdateAgent",
     "UserMessage",
+    "dodo",
     "dodoStopReason",
     "dodoUsageStatistics",
 ]

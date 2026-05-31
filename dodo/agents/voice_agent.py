@@ -18,8 +18,8 @@ from dodo.interfaces.openai_chat_completions_streaming_interface import OpenAICh
 from dodo.log import get_logger
 from dodo.prompts.prompt_generator import PromptGenerator
 from dodo.schemas.agent import AgentState
-from dodo.schemas.enums import AgentType, MessageRole, ToolType
 from dodo.schemas.dodo_response import dodoResponse
+from dodo.schemas.enums import AgentType, MessageRole, ToolType
 from dodo.schemas.message import Message, MessageCreate
 from dodo.schemas.openai.chat_completion_request import (
     AssistantMessage,
@@ -34,8 +34,8 @@ from dodo.schemas.user import User
 from dodo.server.rest_api.utils import (
     convert_in_context_dodo_messages_to_openai,
     create_assistant_messages_from_openai_response,
-    create_input_messages,
     create_dodo_messages_from_llm_response,
+    create_input_messages,
 )
 from dodo.services.agent_manager import AgentManager
 from dodo.services.block_manager import BlockManager

@@ -9,6 +9,7 @@ from typing import Any, List, Optional
 
 import pytest
 import requests
+
 from dodo.client import APIError, DodoClient, dodo
 from dodo.client.types import MessageCreateParam
 
@@ -565,7 +566,6 @@ class TestConversationsSDK:
         import concurrent.futures
 
         from dodo.client import ConflictError
-
         from dodo.settings import settings
 
         # Skip if Redis is not configured
@@ -859,7 +859,6 @@ class TestConversationsSDK:
         import concurrent.futures
 
         from dodo.client import ConflictError
-
         from dodo.settings import settings
 
         # Skip if Redis is not configured

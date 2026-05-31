@@ -4,10 +4,10 @@ import uuid
 
 import pytest
 from dotenv import load_dotenv
-from dodo.client import dodo
 from openai import AsyncOpenAI
 from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
 
+from dodo.client import dodo
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import AgentType, MessageStreamStatus
 from dodo.schemas.llm_config import LLMConfig

@@ -1,11 +1,10 @@
-﻿import copy
+import copy
 from collections import OrderedDict
 from typing import Any, Dict, Optional
 
 from dodo.constants import PRE_EXECUTION_MESSAGE_ARG
-from dodo.schemas.tool import MCP_TOOL_METADATA_SCHEMA_STATUS, MCP_TOOL_METADATA_SCHEMA_WARNINGS
-from dodo.utils import get_logger
 from dodo.log import get_logger
+from dodo.schemas.tool import MCP_TOOL_METADATA_SCHEMA_STATUS, MCP_TOOL_METADATA_SCHEMA_WARNINGS
 
 logger = get_logger(__name__)
 

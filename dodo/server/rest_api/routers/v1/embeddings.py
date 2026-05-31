@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, Header
 
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 
 router = APIRouter(prefix="/embeddings", tags=["embeddings"])

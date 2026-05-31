@@ -7,11 +7,10 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import httpx
 import pytest
 from dotenv import load_dotenv
-from dodo.client import dodo
-from dodo.client.types import MessageCreateParam
-from dodo.client.types import AgentState
 from sqlalchemy import delete
 
+from dodo.client import dodo
+from dodo.client.types import AgentState, MessageCreateParam
 from dodo.orm import SandboxConfig, SandboxEnvironmentVariable
 from tests.utils import wait_for_server
 

@@ -1,4 +1,4 @@
-﻿import html
+import html
 import json
 import re
 from datetime import datetime
@@ -7,22 +7,22 @@ from typing import Any, List, Literal, Optional, Union
 from pydantic import BaseModel, Field, RootModel
 
 from dodo.helpers.json_helpers import json_dumps
-from dodo.schemas.enums import JobStatus
 from dodo.schemas.dodo_message import (
     ApprovalRequestMessage,
     ApprovalResponseMessage,
     AssistantMessage,
     HiddenReasoningMessage,
-    dodoErrorMessage,
-    dodoMessageUnion,
-    dodoPing,
     ReasoningMessage,
     SystemMessage,
     ToolCallMessage,
     ToolReturnMessage,
     UserMessage,
+    dodoErrorMessage,
+    dodoMessageUnion,
+    dodoPing,
 )
 from dodo.schemas.dodo_stop_reason import dodoStopReason
+from dodo.schemas.enums import JobStatus
 from dodo.schemas.message import Message
 from dodo.schemas.openai.chat_completion_response import ChoiceLogprobs
 from dodo.schemas.usage import dodoUsageStatistics
@@ -148,7 +148,7 @@ class dodoResponse(BaseModel):
             except json.JSONDecodeError:
                 return html.escape(json_str)
 
-                html_output = """
+        html_output = """
         <style>
             .message-container, .usage-container {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

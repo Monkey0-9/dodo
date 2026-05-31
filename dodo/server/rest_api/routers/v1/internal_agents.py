@@ -1,7 +1,7 @@
 ﻿from fastapi import APIRouter, Body, Depends, Query
 
 from dodo.schemas.block import Block, BlockUpdate
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 from dodo.validators import AgentId
 

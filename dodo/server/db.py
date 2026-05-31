@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import (
 
 from dodo.database_utils import get_database_uri_for_context
 from dodo.log import get_logger
-from dodo.settings import settings, DatabaseChoice
+from dodo.settings import DatabaseChoice, settings
 
 logger = get_logger(__name__)
 

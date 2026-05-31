@@ -8,14 +8,14 @@ from typing import Any, AsyncIterator, List, Optional
 
 import httpx
 import openai
-from openai import AsyncOpenAI, AsyncStream, OpenAI
+from openai import AsyncStream
 from openai.types import Reasoning
 from openai.types.chat.chat_completion import ChatCompletion
 from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
 from openai.types.responses import ResponseTextConfigParam
 from openai.types.responses.response_stream_event import ResponseStreamEvent
 
-from dodo.constants import dodo_MODEL_ENDPOINT, REQUEST_HEARTBEAT_PARAM
+from dodo.constants import REQUEST_HEARTBEAT_PARAM, dodo_MODEL_ENDPOINT
 from dodo.errors import (
     ContextWindowExceededError,
     ErrorCode,
@@ -32,6 +32,7 @@ from dodo.errors import (
     LLMUnprocessableEntityError,
 )
 from dodo.helpers.json_helpers import sanitize_unicode_surrogates
+from dodo.llm_api.client_manager import client_manager
 from dodo.llm_api.error_utils import is_context_window_overflow_message, is_insufficient_credits_message
 from dodo.llm_api.helpers import (
     add_inner_thoughts_to_functions,
@@ -39,15 +40,14 @@ from dodo.llm_api.helpers import (
     unpack_all_inner_thoughts_from_kwargs,
 )
 from dodo.llm_api.llm_client_base import LLMClientBase
-from dodo.llm_api.client_manager import client_manager
 from dodo.llm_api.openai_ws_session import AsyncStreamCompat, OpenAIWSSessionManager
 from dodo.local_llm.constants import INNER_THOUGHTS_KWARG, INNER_THOUGHTS_KWARG_DESCRIPTION, INNER_THOUGHTS_KWARG_DESCRIPTION_GO_FIRST
 from dodo.log import get_logger
 from dodo.otel.tracing import trace_method
 from dodo.schemas.agent import AgentType
+from dodo.schemas.dodo_message_content import MessageContentType, TextContent
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import ProviderCategory
-from dodo.schemas.dodo_message_content import MessageContentType, TextContent
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import Message as PydanticMessage
 from dodo.schemas.openai.chat_completion_request import (

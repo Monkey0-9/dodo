@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 # tests/test_file_content_flow.py
 import pytest
+import sqlalchemy
 from _pytest.python_api import approx
 from anthropic.types.beta import BetaMessage
 from anthropic.types.beta.messages import BetaMessageBatchIndividualResponse, BetaMessageBatchSucceededResult
@@ -20,7 +21,6 @@ from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMe
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 from sqlalchemy.orm.exc import StaleDataError
-import sqlalchemy
 
 from dodo.config import dodoConfig
 from dodo.constants import (
@@ -33,11 +33,11 @@ from dodo.constants import (
     DEFAULT_ORG_ID,
     DEFAULT_ORG_NAME,
     FILES_TOOLS,
-    dodo_TOOL_EXECUTION_DIR,
-    dodo_TOOL_SET,
     LOCAL_ONLY_MULTI_AGENT_TOOLS,
     MCP_TOOL_TAG_NAME_PREFIX,
     MULTI_AGENT_TOOLS,
+    dodo_TOOL_EXECUTION_DIR,
+    dodo_TOOL_SET,
 )
 from dodo.data_sources.redis_client import NoopAsyncRedisClient, get_redis_client
 from dodo.functions.functions import derive_openai_json_schema, parse_source_code
@@ -51,6 +51,9 @@ from dodo.orm.errors import NoResultFound, UniqueConstraintViolationError
 from dodo.orm.file import FileContent as FileContentModel, FileMetadata as FileMetadataModel
 from dodo.schemas.agent import CreateAgent, UpdateAgent
 from dodo.schemas.block import Block as PydanticBlock, BlockUpdate, CreateBlock
+from dodo.schemas.dodo_message import UpdateAssistantMessage, UpdateReasoningMessage, UpdateSystemMessage, UpdateUserMessage
+from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.dodo_stop_reason import StopReasonType
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import (
     ActorType,
@@ -60,6 +63,7 @@ from dodo.schemas.enums import (
     JobStatus,
     JobType,
     MessageRole,
+    MessageStreamStatus,
     ProviderType,
     SandboxType,
     StepStatus,
@@ -71,9 +75,6 @@ from dodo.schemas.environment_variables import SandboxEnvironmentVariableCreate,
 from dodo.schemas.file import FileMetadata, FileMetadata as PydanticFileMetadata
 from dodo.schemas.identity import IdentityCreate, IdentityProperty, IdentityPropertyType, IdentityType, IdentityUpdate, IdentityUpsert
 from dodo.schemas.job import BatchJob, Job, Job as PydanticJob, JobUpdate, dodoRequestConfig
-from dodo.schemas.dodo_message import UpdateAssistantMessage, UpdateReasoningMessage, UpdateSystemMessage, UpdateUserMessage
-from dodo.schemas.dodo_message_content import TextContent
-from dodo.schemas.dodo_stop_reason import MessageStreamStatus, StopReasonType
 from dodo.schemas.llm_batch_job import AgentStepState, LLMBatchItem
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import Message as PydanticMessage, MessageCreate, MessageUpdate
@@ -732,7 +733,7 @@ def dodo_batch_job(server: SyncServer, default_user) -> Job:
 
 @pytest.fixture
 async def file_attachment(server, default_user, sarah_agent, default_file):
-    assoc, closed_files = await server.file_agent_manager.attach_file(
+    assoc, _closed_files = await server.file_agent_manager.attach_file(
         agent_id=sarah_agent.id,
         file_id=default_file.id,
         file_name=default_file.file_name,
@@ -1037,10 +1038,10 @@ async def test_get_context_window_basic(
     server: SyncServer, comprehensive_test_agent_fixture, default_user, default_file, set_dodo_environment
 ):
     # Test agent creation
-    created_agent, create_agent_request = comprehensive_test_agent_fixture
+    created_agent, _create_agent_request = comprehensive_test_agent_fixture
 
     # Attach a file
-    assoc, closed_files = await server.file_agent_manager.attach_file(
+    assoc, _closed_files = await server.file_agent_manager.attach_file(
         agent_id=created_agent.id,
         file_id=default_file.id,
         file_name=default_file.file_name,
@@ -1284,7 +1285,7 @@ async def test_update_agent_file_fields(server: SyncServer, comprehensive_test_a
 @pytest.mark.asyncio
 async def test_list_agents_select_fields_empty(server: SyncServer, comprehensive_test_agent_fixture, default_user):
     # Create an agent using the comprehensive fixture.
-    created_agent, create_agent_request = comprehensive_test_agent_fixture
+    _created_agent, _create_agent_request = comprehensive_test_agent_fixture
 
     # List agents using an empty list for select_fields.
     agents = await server.agent_manager.list_agents_async(actor=default_user, include_relationships=[])
@@ -1302,7 +1303,7 @@ async def test_list_agents_select_fields_empty(server: SyncServer, comprehensive
 @pytest.mark.asyncio
 async def test_list_agents_select_fields_none(server: SyncServer, comprehensive_test_agent_fixture, default_user):
     # Create an agent using the comprehensive fixture.
-    created_agent, create_agent_request = comprehensive_test_agent_fixture
+    _created_agent, _create_agent_request = comprehensive_test_agent_fixture
 
     # List agents using an empty list for select_fields.
     agents = await server.agent_manager.list_agents_async(actor=default_user, include_relationships=None)
@@ -1319,7 +1320,7 @@ async def test_list_agents_select_fields_none(server: SyncServer, comprehensive_
 
 @pytest.mark.asyncio
 async def test_list_agents_select_fields_specific(server: SyncServer, comprehensive_test_agent_fixture, default_user):
-    created_agent, create_agent_request = comprehensive_test_agent_fixture
+    _created_agent, _create_agent_request = comprehensive_test_agent_fixture
 
     # Choose a subset of valid relationship fields.
     valid_fields = ["tools", "tags"]
@@ -1336,7 +1337,7 @@ async def test_list_agents_select_fields_specific(server: SyncServer, comprehens
 
 @pytest.mark.asyncio
 async def test_list_agents_select_fields_invalid(server: SyncServer, comprehensive_test_agent_fixture, default_user):
-    created_agent, create_agent_request = comprehensive_test_agent_fixture
+    _created_agent, _create_agent_request = comprehensive_test_agent_fixture
 
     # Provide field names that are not recognized.
     invalid_fields = ["foobar", "nonexistent_field"]
@@ -1351,7 +1352,7 @@ async def test_list_agents_select_fields_invalid(server: SyncServer, comprehensi
 
 @pytest.mark.asyncio
 async def test_list_agents_select_fields_duplicates(server: SyncServer, comprehensive_test_agent_fixture, default_user):
-    created_agent, create_agent_request = comprehensive_test_agent_fixture
+    _created_agent, _create_agent_request = comprehensive_test_agent_fixture
 
     # Provide duplicate valid field names.
     duplicate_fields = ["tools", "tools", "tags", "tags"]
@@ -1366,7 +1367,7 @@ async def test_list_agents_select_fields_duplicates(server: SyncServer, comprehe
 
 @pytest.mark.asyncio
 async def test_list_agents_select_fields_mixed(server: SyncServer, comprehensive_test_agent_fixture, default_user):
-    created_agent, create_agent_request = comprehensive_test_agent_fixture
+    _created_agent, _create_agent_request = comprehensive_test_agent_fixture
 
     # Mix valid fields with an invalid one.
     mixed_fields = ["tools", "invalid_field"]
@@ -1383,7 +1384,7 @@ async def test_list_agents_select_fields_mixed(server: SyncServer, comprehensive
 @pytest.mark.asyncio
 async def test_list_agents_ascending(server: SyncServer, default_user):
     # Create two agents with known names
-    agent1 = await server.agent_manager.create_agent_async(
+    await server.agent_manager.create_agent_async(
         agent_create=CreateAgent(
             name="agent_oldest",
             llm_config=LLMConfig.default_config("gpt-4o-mini"),
@@ -1397,7 +1398,7 @@ async def test_list_agents_ascending(server: SyncServer, default_user):
     if USING_SQLITE:
         time.sleep(CREATE_DELAY_SQLITE)
 
-    agent2 = await server.agent_manager.create_agent_async(
+    await server.agent_manager.create_agent_async(
         agent_create=CreateAgent(
             name="agent_newest",
             llm_config=LLMConfig.default_config("gpt-4o-mini"),
@@ -1416,7 +1417,7 @@ async def test_list_agents_ascending(server: SyncServer, default_user):
 @pytest.mark.asyncio
 async def test_list_agents_descending(server: SyncServer, default_user):
     # Create two agents with known names
-    agent1 = await server.agent_manager.create_agent_async(
+    await server.agent_manager.create_agent_async(
         agent_create=CreateAgent(
             name="agent_oldest",
             llm_config=LLMConfig.default_config("gpt-4o-mini"),
@@ -1430,7 +1431,7 @@ async def test_list_agents_descending(server: SyncServer, default_user):
     if USING_SQLITE:
         time.sleep(CREATE_DELAY_SQLITE)
 
-    agent2 = await server.agent_manager.create_agent_async(
+    await server.agent_manager.create_agent_async(
         agent_create=CreateAgent(
             name="agent_newest",
             llm_config=LLMConfig.default_config("gpt-4o-mini"),
@@ -2427,7 +2428,7 @@ async def test_reset_messages_with_existing_messages(server: SyncServer, sarah_a
     deletes them from the database and clears message_ids.
     """
     # 1. Create multiple messages for the agent
-    msg1 = server.message_manager.create_message(
+    server.message_manager.create_message(
         PydanticMessage(
             agent_id=sarah_agent.id,
             role="user",
@@ -2435,7 +2436,7 @@ async def test_reset_messages_with_existing_messages(server: SyncServer, sarah_a
         ),
         actor=default_user,
     )
-    msg2 = server.message_manager.create_message(
+    server.message_manager.create_message(
         PydanticMessage(
             agent_id=sarah_agent.id,
             role="assistant",
@@ -2483,7 +2484,7 @@ async def test_reset_messages_idempotency(server: SyncServer, sarah_agent, defau
     assert await server.message_manager.size_async(agent_id=sarah_agent.id, actor=default_user) == 1
 
     # Second reset should do nothing new
-    reset_agent_again = await server.agent_manager.reset_messages_async(agent_id=sarah_agent.id, actor=default_user)
+    await server.agent_manager.reset_messages_async(agent_id=sarah_agent.id, actor=default_user)
     assert len(reset_agent.message_ids) == 1
     assert await server.message_manager.size_async(agent_id=sarah_agent.id, actor=default_user) == 1
 
@@ -2561,10 +2562,10 @@ async def test_modify_dodo_message(server: SyncServer, sarah_agent, default_user
     messages = server.message_manager.list_messages_for_agent(agent_id=sarah_agent.id, actor=default_user)
     dodo_messages = PydanticMessage.to_dodo_messages_from_list(messages=messages)
 
-    system_message = [msg for msg in dodo_messages if msg.message_type == "system_message"][0]
-    assistant_message = [msg for msg in dodo_messages if msg.message_type == "assistant_message"][0]
-    user_message = [msg for msg in dodo_messages if msg.message_type == "user_message"][0]
-    reasoning_message = [msg for msg in dodo_messages if msg.message_type == "reasoning_message"][0]
+    system_message = next(msg for msg in dodo_messages if msg.message_type == "system_message")
+    assistant_message = next(msg for msg in dodo_messages if msg.message_type == "assistant_message")
+    user_message = next(msg for msg in dodo_messages if msg.message_type == "user_message")
+    reasoning_message = next(msg for msg in dodo_messages if msg.message_type == "reasoning_message")
 
     # user message
     update_user_message = UpdateUserMessage(content="Hello, Sarah!")
@@ -7271,7 +7272,7 @@ async def test_create_sources_with_same_name_raises_error(server: SyncServer, de
         metadata={"type": "medical"},
         embedding_config=DEFAULT_EMBEDDING_CONFIG,
     )
-    source = await server.source_manager.create_source(source=source_pydantic, actor=default_user)
+    await server.source_manager.create_source(source=source_pydantic, actor=default_user)
 
     # Attempting to create another source with the same name should raise an IntegrityError
     source_pydantic = PydanticSource(
@@ -10679,7 +10680,7 @@ async def test_create_mcp_server(mock_get_client, server, default_user):
     # Test with a valid SSEServerConfig
     mcp_server_name = "coingecko"
     server_url = "https://mcp.api.coingecko.com/sse"
-    sse_mcp_config = SSEServerConfig(server_name=mcp_server_name, server_url=server_url)
+    SSEServerConfig(server_name=mcp_server_name, server_url=server_url)
     mcp_sse_server = MCPServer(server_name=mcp_server_name, server_type=MCPServerType.SSE, server_url=server_url)
     created_server = await server.mcp_manager.create_or_update_mcp_server(mcp_sse_server, actor=default_user)
     print(created_server)
@@ -10721,7 +10722,7 @@ async def test_create_mcp_server(mock_get_client, server, default_user):
 async def test_create_mcp_server_with_tools(mock_get_client, server, default_user):
     """Test that creating an MCP server automatically syncs and persists its tools."""
     from dodo.functions.mcp_client.types import MCPToolHealth
-    from dodo.schemas.mcp import MCPServer, MCPServerType, SSEServerConfig
+    from dodo.schemas.mcp import MCPServer, MCPServerType
     from dodo.settings import tool_settings
 
     if tool_settings.mcp_read_from_config:
@@ -11133,7 +11134,7 @@ async def test_mcp_server_delete_removes_all_sessions_for_url_and_user(server, d
 @pytest.mark.asyncio
 async def test_mcp_server_resync_tools(server, default_user, default_organization):
     """Test that resyncing MCP server tools correctly handles added, deleted, and updated tools."""
-    from unittest.mock import AsyncMock, MagicMock, patch
+    from unittest.mock import AsyncMock, patch
 
     from dodo.functions.mcp_client.types import MCPTool, MCPToolHealth
     from dodo.schemas.mcp import MCPServer as PydanticMCPServer, MCPServerType
@@ -11222,7 +11223,7 @@ async def test_mcp_server_resync_tools(server, default_user, default_organizatio
 
         # Verify tool2 was actually deleted
         try:
-            deleted_tool = server.tool_manager.get_tool_by_id(tool_id=tool2.id, actor=default_user)
+            server.tool_manager.get_tool_by_id(tool_id=tool2.id, actor=default_user)
             assert False, "Tool2 should have been deleted"
         except Exception:
             pass  # Expected - tool should be deleted
@@ -11247,7 +11248,7 @@ async def test_mcp_server_resync_tools(server, default_user, default_organizatio
 
 
 async def test_attach_creates_association(server, default_user, sarah_agent, default_file):
-    assoc, closed_files = await server.file_agent_manager.attach_file(
+    assoc, _closed_files = await server.file_agent_manager.attach_file(
         agent_id=sarah_agent.id,
         file_id=default_file.id,
         file_name=default_file.file_name,
@@ -11280,7 +11281,7 @@ async def test_attach_is_idempotent(server, default_user, sarah_agent, default_f
     )
 
     # second attach with different params
-    a2, closed_files = await server.file_agent_manager.attach_file(
+    a2, _closed_files = await server.file_agent_manager.attach_file(
         agent_id=sarah_agent.id,
         file_id=default_file.id,
         file_name=default_file.file_name,
@@ -11367,7 +11368,7 @@ async def test_file_agent_line_tracking(server, default_user, sarah_agent, defau
     assert previous_ranges == {}  # No previous range since it wasn't open before
 
     # Test opening without line range - should clear line info and capture previous range
-    closed_files, was_already_open, previous_ranges = await server.file_agent_manager.enforce_max_open_files_and_open(
+    _closed_files, _was_already_open, previous_ranges = await server.file_agent_manager.enforce_max_open_files_and_open(
         agent_id=sarah_agent.id,
         file_id=file.id,
         file_name=file.file_name,
@@ -11550,7 +11551,7 @@ async def test_list_files_for_agent_paginated_filter_open(
         )
 
     # get only open files
-    open_files, cursor, has_more = await server.file_agent_manager.list_files_for_agent_paginated(
+    open_files, _cursor, has_more = await server.file_agent_manager.list_files_for_agent_paginated(
         agent_id=sarah_agent.id,
         actor=default_user,
         is_open=True,
@@ -11599,7 +11600,7 @@ async def test_list_files_for_agent_paginated_filter_closed(
     assert all(not fa.is_open for fa in page1)
 
     # get second page of closed files
-    page2, cursor2, has_more2 = await server.file_agent_manager.list_files_for_agent_paginated(
+    page2, _cursor2, has_more2 = await server.file_agent_manager.list_files_for_agent_paginated(
         agent_id=sarah_agent.id,
         actor=default_user,
         is_open=False,
@@ -11815,7 +11816,7 @@ async def test_mark_access_bulk(server, default_user, sarah_agent, default_sourc
     # Attach all files (they'll be open by default)
     attached_files = []
     for file in files:
-        file_agent, closed_files = await server.file_agent_manager.attach_file(
+        file_agent, _closed_files = await server.file_agent_manager.attach_file(
             agent_id=sarah_agent.id,
             file_id=file.id,
             file_name=file.file_name,
@@ -11974,7 +11975,7 @@ async def test_lru_eviction_on_open_file(server, default_user, sarah_agent, defa
     time.sleep(0.1)
 
     # Now "open" the last file using the efficient method
-    closed_files, was_already_open, _ = await server.file_agent_manager.enforce_max_open_files_and_open(
+    closed_files, _was_already_open, _ = await server.file_agent_manager.enforce_max_open_files_and_open(
         agent_id=sarah_agent.id,
         file_id=files[-1].id,
         file_name=files[-1].file_name,
@@ -12082,7 +12083,7 @@ async def test_last_accessed_at_updates_correctly(server, default_user, sarah_ag
     )
     file = await server.file_manager.create_file(file_metadata=file_metadata, actor=default_user, text="test content")
 
-    file_agent, closed_files = await server.file_agent_manager.attach_file(
+    file_agent, _closed_files = await server.file_agent_manager.attach_file(
         agent_id=sarah_agent.id,
         file_id=file.id,
         file_name=file.file_name,
@@ -12186,7 +12187,7 @@ async def test_attach_files_bulk_deduplication(server, default_user, sarah_agent
     visible_content_map = {"duplicate_test.txt": "visible content"}
 
     # Bulk attach should deduplicate
-    closed_files = await server.file_agent_manager.attach_files_bulk(
+    await server.file_agent_manager.attach_files_bulk(
         agent_id=sarah_agent.id,
         files_metadata=files_to_attach,
         visible_content_map=visible_content_map,
@@ -12314,7 +12315,7 @@ async def test_attach_files_bulk_mixed_existing_new(server, default_user, sarah_
         new_files.append(file)
 
     # Bulk attach: existing file + new files
-    files_to_attach = [existing_file] + new_files
+    files_to_attach = [existing_file, *new_files]
     visible_content_map = {
         "existing_file.txt": "updated content",
         "new_file_0.txt": "new content 0",

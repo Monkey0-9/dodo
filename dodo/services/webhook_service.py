@@ -2,7 +2,6 @@ import logging
 import os
 
 import httpx
-from dodo.log import get_logger
 
 logger = logging.getLogger(__name__)
 

@@ -11,9 +11,9 @@ from typing import Dict, List, Optional
 from dodo.data_sources.redis_client import AsyncRedisClient
 from dodo.errors import dodoError
 from dodo.log import get_logger
-from dodo.schemas.enums import RunStatus
 from dodo.schemas.dodo_message import dodoErrorMessage
-from dodo.schemas.dodo_stop_reason import dodoStopReason, StopReasonType
+from dodo.schemas.dodo_stop_reason import StopReasonType, dodoStopReason
+from dodo.schemas.enums import RunStatus
 from dodo.schemas.run import RunUpdate
 from dodo.schemas.user import User
 from dodo.server.rest_api.streaming_response import RunCancelledException

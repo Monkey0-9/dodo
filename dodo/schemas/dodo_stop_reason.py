@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from dodo.schemas.enums import MessageStreamStatus, RunStatus
+from dodo.schemas.enums import RunStatus
 
 
 class StopReasonType(str, Enum):

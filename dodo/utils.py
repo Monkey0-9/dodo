@@ -14,6 +14,7 @@ import sys
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
+
 def run_async(coro):
     """Run an async coroutine synchronously, handling already running event loops."""
     try:
@@ -47,9 +48,9 @@ from dodo.constants import (
     DEFAULT_MAX_FILES_OPEN,
     ERROR_MESSAGE_PREFIX,
     FILE_IS_TRUNCATED_WARNING,
-    dodo_DIR,
     MAX_FILENAME_LENGTH,
     TOOL_CALL_ID_MAX_LEN,
+    dodo_DIR,
 )
 from dodo.helpers.json_helpers import json_dumps, json_loads
 from dodo.log import get_logger

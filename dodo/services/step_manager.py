@@ -17,8 +17,8 @@ from dodo.orm.sqlalchemy_base import AccessType
 from dodo.orm.step import Step as StepModel
 from dodo.orm.step_metrics import StepMetrics as StepMetricsModel
 from dodo.otel.tracing import get_trace_id, trace_method
+from dodo.schemas.dodo_stop_reason import StopReasonType, dodoStopReason
 from dodo.schemas.enums import PrimitiveType, StepStatus
-from dodo.schemas.dodo_stop_reason import dodoStopReason, StopReasonType
 from dodo.schemas.message import Message as PydanticMessage
 from dodo.schemas.openai.chat_completion_response import UsageStatistics
 from dodo.schemas.step import Step as PydanticStep

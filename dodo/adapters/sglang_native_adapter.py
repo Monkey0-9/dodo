@@ -15,9 +15,9 @@ from dodo.adapters.simple_llm_request_adapter import SimpleLLMRequestAdapter
 from dodo.helpers.datetime_helpers import get_utc_timestamp_ns
 from dodo.llm_api.sglang_native_client import SGLangNativeClient
 from dodo.log import get_logger
-from dodo.schemas.enums import ProviderType
 from dodo.schemas.dodo_message import dodoMessage
 from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.enums import ProviderType
 from dodo.schemas.model import ModelSettingsUnion
 from dodo.schemas.openai.chat_completion_response import (
     ChatCompletionResponse,

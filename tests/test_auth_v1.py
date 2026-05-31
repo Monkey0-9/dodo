@@ -1,7 +1,8 @@
-import pytest
-from fastapi.testclient import TestClient
-from dodo.server.rest_api.app import app
 import os
+
+from fastapi.testclient import TestClient
+
+from dodo.server.rest_api.app import app
 
 client = TestClient(app)
 
@@ -36,11 +37,11 @@ def test_protected_route_with_jwt():
         data={"username": "admin", "password": password}
     )
     token = login_response.json()["access_token"]
-    
+
     response = client.get(
         "/v1/agents",
         headers={"Authorization": f"Bearer {token}"}
     )
-    # Even if it returns 200 or 500 (depending on DB setup in test), 
+    # Even if it returns 200 or 500 (depending on DB setup in test),
     # as long as it's not 401, the middleware passed.
     assert response.status_code != 401

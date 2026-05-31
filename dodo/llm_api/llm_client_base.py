@@ -8,6 +8,7 @@ from openai import AsyncStream, Stream
 from openai.types.chat.chat_completion_chunk import ChatCompletionChunk
 
 from dodo.errors import ErrorCode, LLMConnectionError, LLMError
+from dodo.log import get_logger
 from dodo.otel.tracing import log_event, trace_method
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import AgentType, LLMCallType, ProviderCategory
@@ -18,7 +19,7 @@ from dodo.schemas.provider_trace import BillingContext, ProviderTrace
 from dodo.schemas.usage import dodoUsageStatistics
 from dodo.services.telemetry_manager import TelemetryManager
 from dodo.settings import settings
-from dodo.log import get_logger
+
 logger = get_logger(__name__)
 
 

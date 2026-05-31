@@ -9,13 +9,13 @@ from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMe
 
 from dodo.errors import dodoInvalidArgumentError
 from dodo.orm.errors import NoResultFound
+from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.dodo_stop_reason import StopReasonType
 from dodo.schemas.enums import (
     MessageRole,
     RunStatus,
 )
 from dodo.schemas.job import dodoRequestConfig
-from dodo.schemas.dodo_message_content import TextContent
-from dodo.schemas.dodo_stop_reason import StopReasonType
 from dodo.schemas.message import Message, Message as PydanticMessage, ToolReturn
 from dodo.schemas.openai.chat_completion_response import UsageStatistics
 from dodo.schemas.run import Run as PydanticRun, RunUpdate

@@ -8,6 +8,7 @@ These tests verify:
 """
 
 import pytest
+
 from dodo.client import dodo
 
 

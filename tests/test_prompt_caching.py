@@ -22,6 +22,7 @@ import os
 import uuid
 
 import pytest
+
 from dodo.client import DodoClient
 from dodo.client.types import MessageCreateParam
 

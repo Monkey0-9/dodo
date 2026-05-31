@@ -13,11 +13,11 @@ from dodo.orm.run import Run as RunModel
 from dodo.orm.run_metrics import RunMetrics as RunMetricsModel
 from dodo.orm.sqlalchemy_base import AccessType
 from dodo.otel.tracing import log_event, trace_method
-from dodo.schemas.enums import AgentType, ComparisonOperator, MessageRole, PrimitiveType, RunStatus
-from dodo.schemas.job import dodoRequestConfig
 from dodo.schemas.dodo_message import dodoMessage
 from dodo.schemas.dodo_response import dodoResponse
-from dodo.schemas.dodo_stop_reason import dodoStopReason, StopReasonType
+from dodo.schemas.dodo_stop_reason import StopReasonType, dodoStopReason
+from dodo.schemas.enums import AgentType, ComparisonOperator, MessageRole, PrimitiveType, RunStatus
+from dodo.schemas.job import dodoRequestConfig
 from dodo.schemas.message import Message as PydanticMessage
 from dodo.schemas.run import Run as PydanticRun, RunUpdate
 from dodo.schemas.run_metrics import RunMetrics as PydanticRunMetrics

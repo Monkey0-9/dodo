@@ -4,12 +4,12 @@ from pydantic import ConfigDict, Field, model_validator
 
 from dodo.constants import (
     FUNCTION_RETURN_CHAR_LIMIT,
+    MCP_TOOL_TAG_NAME_PREFIX,
     dodo_BUILTIN_TOOL_MODULE_NAME,
     dodo_CORE_TOOL_MODULE_NAME,
     dodo_FILES_TOOL_MODULE_NAME,
     dodo_MULTI_AGENT_TOOL_MODULE_NAME,
     dodo_VOICE_TOOL_MODULE_NAME,
-    MCP_TOOL_TAG_NAME_PREFIX,
 )
 from dodo.schemas.enums import PrimitiveType
 
@@ -20,8 +20,8 @@ from dodo.functions.functions import get_json_schema_from_module
 from dodo.functions.mcp_client.types import MCPTool
 from dodo.functions.schema_generator import generate_tool_schema_for_mcp
 from dodo.log import get_logger
-from dodo.schemas.enums import ToolType
 from dodo.schemas.dodo_base import dodoBase
+from dodo.schemas.enums import ToolType
 from dodo.schemas.npm_requirement import NpmRequirement
 from dodo.schemas.pip_requirement import PipRequirement
 

@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock
 import pytest
 
 from dodo.agents.base_agent import BaseAgent
-from dodo.schemas.enums import MessageRole
 from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.enums import MessageRole
 from dodo.schemas.message import Message
 from dodo.services.summarizer.enums import SummarizationMode
 from dodo.services.summarizer.summarizer import Summarizer

@@ -13,9 +13,9 @@ from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 from dodo.orm.custom_columns import ApprovalsColumn, MessageContentColumn, ToolCallColumn, ToolReturnColumn
 from dodo.orm.mixins import AgentMixin, OrganizationMixin
 from dodo.orm.sqlalchemy_base import SqlalchemyBase
-from dodo.schemas.enums import MessageRole
 from dodo.schemas.dodo_message import ApprovalReturn
 from dodo.schemas.dodo_message_content import MessageContent, TextContent, TextContent as PydanticTextContent
+from dodo.schemas.enums import MessageRole
 from dodo.schemas.message import Message as PydanticMessage, ToolReturn
 from dodo.settings import DatabaseChoice, settings
 

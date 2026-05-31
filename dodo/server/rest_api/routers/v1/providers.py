@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from dodo.schemas.enums import ProviderCategory, ProviderType
 from dodo.schemas.providers import Provider, ProviderCheck, ProviderCreate, ProviderUpdate
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.validators import ProviderId
 
 if TYPE_CHECKING:

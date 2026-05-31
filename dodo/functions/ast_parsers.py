@@ -5,8 +5,9 @@ import typing
 from typing import Dict, Optional, Tuple
 
 from dodo.errors import dodoToolCreateError
-from dodo.types import JsonDict
 from dodo.log import get_logger
+from dodo.types import JsonDict
+
 logger = get_logger(__name__)
 
 

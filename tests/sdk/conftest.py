@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import pytest
 import requests
 from dotenv import load_dotenv
+
 from dodo.client import dodo
 
 
@@ -246,7 +247,7 @@ def create_test_module(
                 elif e.__class__.__name__ in ("dodoError", "HandleNotFoundError"):
                     pass
                 else:
-                    from dodo.errors import dodoError, ErrorCode
+                    from dodo.errors import ErrorCode, dodoError
                     if isinstance(e, dodoError) and e.code == ErrorCode.NOT_FOUND:
                         pass
                     else:

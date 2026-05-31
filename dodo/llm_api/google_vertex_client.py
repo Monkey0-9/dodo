@@ -40,7 +40,6 @@ from dodo.log import get_logger
 from dodo.otel.tracing import trace_method
 from dodo.schemas.agent import AgentType
 from dodo.schemas.enums import ProviderCategory
-from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import Message as PydanticMessage
 from dodo.schemas.openai.chat_completion_request import Tool, Tool as OpenAITool

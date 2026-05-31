@@ -7,12 +7,12 @@ from starlette.requests import Request
 from dodo.agents.dodo_agent_batch import dodoAgentBatch
 from dodo.errors import dodoInvalidArgumentError
 from dodo.log import get_logger
-from dodo.schemas.job import BatchJob, JobStatus, JobType, JobUpdate
-from dodo.schemas.dodo_message import dodoMessageSearchResult, dodoMessageUnion, MessageType
+from dodo.schemas.dodo_message import MessageType, dodoMessageSearchResult, dodoMessageUnion
 from dodo.schemas.dodo_request import CreateBatch
 from dodo.schemas.dodo_response import dodoBatchMessages
+from dodo.schemas.job import BatchJob, JobStatus, JobType, JobUpdate
 from dodo.schemas.message import Message, SearchAllMessagesRequest
-from dodo.server.rest_api.dependencies import HeaderParams, get_headers, get_dodo_server
+from dodo.server.rest_api.dependencies import HeaderParams, get_dodo_server, get_headers
 from dodo.server.server import SyncServer
 from dodo.settings import settings
 from dodo.validators import MessageId

@@ -21,7 +21,6 @@ from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import MessageRole, TagMatchMode
 from dodo.schemas.passage import Passage as PydanticPassage
 from dodo.settings import model_settings, settings
-from dodo.log import get_logger
 
 logger = logging.getLogger(__name__)
 

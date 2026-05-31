@@ -26,12 +26,12 @@ from dodo.helpers import ToolRulesSolver
 from dodo.orm import Base
 from dodo.schemas.agent import CreateAgent
 from dodo.schemas.block import Block as PydanticBlock, CreateBlock
+from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import JobStatus, MessageRole, RunStatus
 from dodo.schemas.environment_variables import SandboxEnvironmentVariableCreate
 from dodo.schemas.file import FileMetadata as PydanticFileMetadata
 from dodo.schemas.job import BatchJob, Job as PydanticJob
-from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.llm_batch_job import AgentStepState
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import Message as PydanticMessage, MessageCreate

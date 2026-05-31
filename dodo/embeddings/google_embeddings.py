@@ -1,5 +1,6 @@
+from typing import List
+
 import httpx
-from typing import List, Optional
 
 
 class GoogleEmbeddings:

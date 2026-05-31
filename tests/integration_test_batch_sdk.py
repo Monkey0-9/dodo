@@ -4,8 +4,8 @@ import time
 
 import pytest
 from dotenv import load_dotenv
-from dodo.client import dodo, dodoBatchRequest, MessageCreate, TextContent
 
+from dodo.client import MessageCreate, TextContent, dodo, dodoBatchRequest
 from dodo.config import dodoConfig
 from dodo.jobs.llm_batch_job_polling import poll_running_llm_batches
 from dodo.orm import Base

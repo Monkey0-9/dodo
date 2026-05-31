@@ -32,20 +32,19 @@ from openai.types.responses.response_stream_event import ResponseStreamEvent
 from dodo.errors import (
     ContextWindowExceededError,
     ErrorCode,
-    dodoError,
     LLMAuthenticationError,
     LLMBadRequestError,
     LLMConnectionError,
     LLMRateLimitError,
     LLMServerError,
     LLMTimeoutError,
+    dodoError,
 )
 from dodo.helpers.json_helpers import sanitize_unicode_surrogates
 from dodo.llm_api.llm_client_base import LLMClientBase
 from dodo.log import get_logger
 from dodo.otel.tracing import trace_method
 from dodo.schemas.enums import AgentType, ProviderCategory
-from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import Message as PydanticMessage
 from dodo.schemas.openai.chat_completion_response import (

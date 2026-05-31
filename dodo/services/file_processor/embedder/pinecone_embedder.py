@@ -8,6 +8,7 @@ from dodo.schemas.enums import VectorDBProvider
 from dodo.schemas.passage import Passage
 from dodo.schemas.user import User
 from dodo.services.file_processor.embedder.base_embedder import BaseEmbedder
+
 logger = get_logger(__name__)
 
 

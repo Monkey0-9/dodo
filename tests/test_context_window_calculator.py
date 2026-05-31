@@ -441,8 +441,8 @@ hello
 
 def _make_system_message(text: str):
     """Helper to create a real Message object for use as a system message in tests."""
-    from dodo.schemas.enums import MessageRole
     from dodo.schemas.dodo_message_content import TextContent
+    from dodo.schemas.enums import MessageRole
     from dodo.schemas.message import Message
 
     return Message(role=MessageRole.system, content=[TextContent(text=text)])

@@ -17,12 +17,12 @@ from dodo.constants import (
     BASE_MEMORY_TOOLS,
     BASE_MEMORY_TOOLS_V2,
     BASE_TOOLS,
-    DEPRECATED_dodo_TOOLS,
     IN_CONTEXT_MEMORY_KEYWORD,
     LOCAL_ONLY_MULTI_AGENT_TOOLS,
     MAX_EMBEDDING_DIM,
     MULTI_AGENT_TOOLS,
     STRUCTURED_OUTPUT_MODELS,
+    DEPRECATED_dodo_TOOLS,
 )
 from dodo.errors import dodoAgentNotFoundError
 from dodo.helpers import ToolRulesSolver
@@ -39,9 +39,9 @@ from dodo.otel.tracing import trace_method
 from dodo.prompts import gpt_system
 from dodo.prompts.prompt_generator import PromptGenerator
 from dodo.schemas.agent import AgentState
+from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.embedding_config import EmbeddingConfig
 from dodo.schemas.enums import AgentType, MessageRole
-from dodo.schemas.dodo_message_content import TextContent
 from dodo.schemas.memory import Memory
 from dodo.schemas.message import Message, MessageCreate, ToolReturn
 from dodo.schemas.tool_rule import ToolRule

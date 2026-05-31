@@ -9,8 +9,8 @@ from dodo.llm_api.llm_client import LLMClient
 from dodo.log import get_logger
 from dodo.otel.tracing import trace_method
 from dodo.schemas.agent import AgentType
-from dodo.schemas.enums import MessageRole
 from dodo.schemas.dodo_message_content import TextContent
+from dodo.schemas.enums import MessageRole
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import Message, MessageCreate
 from dodo.schemas.provider_trace import BillingContext

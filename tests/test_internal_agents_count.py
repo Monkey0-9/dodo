@@ -2,8 +2,8 @@ from typing import List
 
 import httpx
 import pytest
-from dodo.client import dodo
 
+from dodo.client import dodo
 from dodo.schemas.agent import AgentState
 
 

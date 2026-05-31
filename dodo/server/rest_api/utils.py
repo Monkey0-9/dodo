@@ -26,7 +26,6 @@ from dodo.otel.context import get_ctx_attributes
 from dodo.otel.metric_registry import MetricRegistry
 from dodo.otel.tracing import tracer
 from dodo.schemas.agent import AgentState
-from dodo.schemas.enums import MessageRole
 from dodo.schemas.dodo_message import ToolReturn as dodoToolReturn
 from dodo.schemas.dodo_message_content import (
     OmittedReasoningContent,
@@ -35,6 +34,7 @@ from dodo.schemas.dodo_message_content import (
     SummarizedReasoningContent,
     TextContent,
 )
+from dodo.schemas.enums import MessageRole
 from dodo.schemas.llm_config import LLMConfig
 from dodo.schemas.message import ApprovalCreate, Message, MessageCreate, ToolReturn
 from dodo.schemas.provider_trace import BillingContext
