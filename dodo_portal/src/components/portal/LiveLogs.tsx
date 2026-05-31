@@ -26,7 +26,7 @@ export const LiveLogs = () => {
   // Keep isPausedRef in sync without triggering reconnect
   useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
 
-  const connect = useCallback(() => {
+  const connect = useCallback(async () => {
     if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
 
     // ─── Demo mode ───────────────────────────────────────────────────────────
@@ -57,7 +57,7 @@ export const LiveLogs = () => {
 
     // ─── Live WebSocket ───────────────────────────────────────────────────────
     setWsStatus('connecting');
-    const url = api.logs.getStreamUrl();
+    const url = await api.logs.getStreamUrl();
     let ws: WebSocket;
 
     try {
@@ -107,7 +107,10 @@ export const LiveLogs = () => {
   }, [connect]);
 
   useEffect(() => {
-    const cleanup = connect();
+    let cleanup: any;
+    connect().then(res => {
+      cleanup = res;
+    });
     return () => {
       if (typeof cleanup === 'function') cleanup();
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);

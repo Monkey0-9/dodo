@@ -234,5 +234,5 @@ line-ending = "auto"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-addopts = "--ignore=tests/locust_test.py --ignore=tests/test_modal_sandbox_v2.py --ignore=tests/test_temporal_metrics_local.py"
+addopts = "--ignore=tests/locust_test.py --ignore=tests/test_modal_sandbox_v2.py --ignore=tests/test_temporal_metrics_local.py --ignore=scratch"
 

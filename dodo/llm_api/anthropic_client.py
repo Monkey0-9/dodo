@@ -57,6 +57,7 @@ from dodo.schemas.usage import dodoUsageStatistics
 from dodo.settings import model_settings
 from dodo.llm_api.anthropic.thinking import apply_thinking_config
 from dodo.llm_api.anthropic.caching import apply_cache_control
+from dodo.llm_api.anthropic.beta_builder import build_beta_headers, build_streaming_betas  # noqa: F401 — exposed for tests
 
 DUMMY_FIRST_USER_MESSAGE = "User initializing bootup sequence."
 

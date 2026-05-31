@@ -39,6 +39,7 @@ apiClient.interceptors.request.use(async (config) => {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }).then(res => res.data.access_token).catch(err => {
       console.error('Frontend login failed', err);
+      tokenPromise = null;
       return '';
     });
   }
@@ -49,6 +50,16 @@ apiClient.interceptors.request.use(async (config) => {
   return config;
 });
 
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      tokenPromise = null; // Clear token on 401 so next request retries
+    }
+    return Promise.reject(error);
+  }
+);
+
 const handleApiError = (error: unknown) => {
   if (axios.isAxiosError(error)) {
     throw new ApiError(error.response?.status, error.response?.data?.detail || error.message);
@@ -57,6 +68,23 @@ const handleApiError = (error: unknown) => {
 };
 
 export const api = {
+  auth: {
+    getToken: async (): Promise<string> => {
+      if (!tokenPromise) {
+        tokenPromise = axios.post(`${API_BASE_URL}/auth/login`, new URLSearchParams({
+          username: 'user-default-admin',
+          password: 'dodo'
+        }), {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        }).then(res => res.data.access_token).catch(err => {
+          console.error('Frontend login failed', err);
+          tokenPromise = null;
+          return '';
+        });
+      }
+      return tokenPromise;
+    }
+  },
   agents: {
     list: async (): Promise<AgentState[]> => {
       try {
@@ -101,8 +129,9 @@ export const api = {
         throw handleApiError(error);
       }
     },
-    getStreamUrl: (id: string) => {
-      return `${WS_BASE_URL}/portal/stream/${id}`;
+    getStreamUrl: async (id: string) => {
+      const token = await api.auth.getToken();
+      return `${WS_BASE_URL}/portal/stream/${id}?token=${token}`;
     }
   },
   tools: {
@@ -264,8 +293,9 @@ export const api = {
     }
   },
   logs: {
-    getStreamUrl: () => {
-      return `${WS_BASE_URL}/logs/stream`;
+    getStreamUrl: async () => {
+      const token = await api.auth.getToken();
+      return `${WS_BASE_URL}/logs/stream?token=${token}`;
     }
   }
 };

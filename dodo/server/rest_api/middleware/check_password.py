@@ -25,8 +25,13 @@ class CheckPasswordMiddleware(BaseHTTPMiddleware):
 
         # Priority 1: JWT Bearer Token
         auth_header = request.headers.get("Authorization")
+        token = None
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
+        elif "token" in request.query_params:
+            token = request.query_params["token"]
+
+        if token:
             try:
                 jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
                 return await call_next(request)

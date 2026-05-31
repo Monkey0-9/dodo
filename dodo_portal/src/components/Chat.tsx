@@ -44,48 +44,52 @@ export const Chat = ({ agentId, onClose }: { agentId: string; onClose: () => voi
     if (import.meta.env.VITE_DEMO_MODE === 'true') {
       return;
     }
-    const url = api.agents.getStreamUrl(agentId);
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
+    let ws: WebSocket | null = null;
+    
+    api.agents.getStreamUrl(agentId).then(url => {
+      ws = new WebSocket(url);
+      wsRef.current = ws;
 
-    ws.onmessage = (event) => {
-      const data = event.data;
-      if (data.includes('[DONE]')) {
-        setMessages(prev => {
-          // Only add if we actually have streaming content
-          if (streamingMessage) {
-             return [...prev, { role: 'assistant', content: streamingMessage }];
-          }
-          return prev;
-        });
-        setStreamingMessage('');
-        setSending(false);
-        return;
-      }
+      ws.onmessage = (event) => {
+        const data = event.data;
+        if (data.includes('[DONE]')) {
+          setMessages(prev => {
+            // Only add if we actually have streaming content
+            if (streamingMessage) {
+               return [...prev, { role: 'assistant', content: streamingMessage }];
+            }
+            return prev;
+          });
+          setStreamingMessage('');
+          setSending(false);
+          return;
+        }
 
-      // Handle raw SSE chunks
-      if (data.startsWith('data: ')) {
-        const content = data.replace('data: ', '').trim();
-        try {
-          // Try parsing as JSON (OpenAI format)
-          const json = JSON.parse(content);
-          const text = json.choices?.[0]?.delta?.content || json.content || '';
-          if (text) setStreamingMessage(prev => prev + text);
-        } catch (e) {
-          // Raw text fallback
-          if (content && !content.startsWith('{')) {
-            setStreamingMessage(prev => prev + content);
+        // Handle raw SSE chunks
+        if (data.startsWith('data: ')) {
+          const content = data.replace('data: ', '').trim();
+          try {
+            // Try parsing as JSON (OpenAI format)
+            const json = JSON.parse(content);
+            const text = json.choices?.[0]?.delta?.content || json.content || '';
+            if (text) setStreamingMessage(prev => prev + text);
+          } catch (e) {
+            // Raw text fallback
+            if (content && !content.startsWith('{')) {
+              setStreamingMessage(prev => prev + content);
+            }
           }
         }
-      }
-    };
+      };
 
-    ws.onclose = () => {
-      console.log('WebSocket Closed');
-    };
+      ws.onclose = () => {
+        console.log('WebSocket Closed');
+      };
+    });
 
     return () => {
-      ws.close();
+      if (ws) ws.close();
+      else wsRef.current?.close();
     };
   }, [agentId, streamingMessage]);
 

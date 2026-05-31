@@ -28,7 +28,7 @@ function App() {
   const addNotification = useAppStore((s) => s.addNotification);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Announce demo mode on load
+  // Theme and demo mode setup
   useEffect(() => {
     if (import.meta.env.VITE_DEMO_MODE === 'true') {
       addNotification({
@@ -37,6 +37,37 @@ function App() {
         message: 'Set VITE_DEMO_MODE=false for live backend.',
       });
     }
+
+    const applyTheme = () => {
+      const savedTheme = localStorage.getItem('themeMode') || 'dark';
+      if (savedTheme === 'light') {
+        document.documentElement.classList.add('light');
+        document.documentElement.classList.remove('dark');
+      } else if (savedTheme === 'auto') {
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.classList.toggle('dark', isDark);
+        document.documentElement.classList.toggle('light', !isDark);
+      } else {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+      }
+
+      const savedColor = localStorage.getItem('accentColor');
+      if (savedColor) {
+        document.documentElement.style.setProperty('--color-primary', savedColor);
+      } else {
+        document.documentElement.style.removeProperty('--color-primary');
+      }
+    };
+    
+    applyTheme();
+    window.addEventListener('storage', applyTheme);
+    window.addEventListener('theme-changed', applyTheme);
+    
+    return () => {
+      window.removeEventListener('storage', applyTheme);
+      window.removeEventListener('theme-changed', applyTheme);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

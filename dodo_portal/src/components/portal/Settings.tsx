@@ -6,6 +6,40 @@ export const Settings = () => {
   const [org, setOrg] = useState<any>(null);
   const [providers, setProviders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [themeMode, setThemeMode] = useState(localStorage.getItem('themeMode') || 'dark');
+  const [accentColor, setAccentColor] = useState(localStorage.getItem('accentColor') || '#4cd7f6');
+  const [showAddProvider, setShowAddProvider] = useState(false);
+  const [newProvider, setNewProvider] = useState({ name: '', type: 'openai', apiKey: '' });
+
+  const handleAddProvider = async () => {
+    try {
+      await api.providers.create({
+        name: newProvider.name,
+        provider_type: newProvider.type,
+        api_key: newProvider.apiKey
+      });
+      setShowAddProvider(false);
+      setNewProvider({ name: '', type: 'openai', apiKey: '' });
+      // Refresh providers
+      const updated = await api.providers.list();
+      setProviders(updated || []);
+      alert('Provider added successfully!');
+    } catch (e: any) {
+      alert('Failed to add provider: ' + e.message);
+    }
+  };
+
+  const handleThemeChange = (mode: string) => {
+    setThemeMode(mode);
+    localStorage.setItem('themeMode', mode);
+    window.dispatchEvent(new Event('theme-changed'));
+  };
+
+  const handleColorChange = (color: string) => {
+    setAccentColor(color);
+    localStorage.setItem('accentColor', color);
+    window.dispatchEvent(new Event('theme-changed'));
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -104,19 +138,22 @@ export const Settings = () => {
                     <div className="space-y-3">
                       <label className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant font-bold">Theme Mode</label>
                       <div className="grid grid-cols-3 gap-2">
-                        <ThemeBtn icon="light_mode" label="Light" />
-                        <ThemeBtn icon="dark_mode" label="Dark" active />
-                        <ThemeBtn icon="monitor" label="Auto" />
+                        <ThemeBtn icon="light_mode" label="Light" active={themeMode === 'light'} onClick={() => handleThemeChange('light')} />
+                        <ThemeBtn icon="dark_mode" label="Dark" active={themeMode === 'dark'} onClick={() => handleThemeChange('dark')} />
+                        <ThemeBtn icon="monitor" label="Auto" active={themeMode === 'auto'} onClick={() => handleThemeChange('auto')} />
                       </div>
                     </div>
                     <div className="space-y-3">
                       <label className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant font-bold">Accent Color</label>
                       <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary ring-2 ring-offset-2 ring-offset-surface ring-primary cursor-pointer"></div>
-                        <div className="w-8 h-8 rounded-full bg-violet-500 cursor-pointer hover:scale-110 transition-transform"></div>
-                        <div className="w-8 h-8 rounded-full bg-emerald-500 cursor-pointer hover:scale-110 transition-transform"></div>
-                        <div className="w-8 h-8 rounded-full bg-orange-500 cursor-pointer hover:scale-110 transition-transform"></div>
-                        <div className="w-8 h-8 rounded-full bg-rose-500 cursor-pointer hover:scale-110 transition-transform"></div>
+                        {['#006782', '#4cd7f6', '#8b5cf6', '#10b981', '#f97316', '#f43f5e'].map(color => (
+                          <div 
+                            key={color}
+                            onClick={() => handleColorChange(color)}
+                            className={`w-8 h-8 rounded-full cursor-pointer transition-transform ${accentColor === color ? 'ring-2 ring-offset-2 ring-offset-surface ring-primary scale-110' : 'hover:scale-110'}`} 
+                            style={{ backgroundColor: color }}
+                          ></div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -133,7 +170,7 @@ export const Settings = () => {
                     </div>
                     <h3 className="text-lg font-bold text-on-surface">Model Providers</h3>
                   </div>
-                  <button className="text-primary text-sm font-medium hover:underline">Add New</button>
+                  <button onClick={() => setShowAddProvider(true)} className="text-primary text-sm font-medium hover:underline">Add New</button>
                 </div>
                 <div className="space-y-4">
                   {providers.map((p) => (
@@ -145,21 +182,26 @@ export const Settings = () => {
             )}
 
             {activeTab === 'memory' && (
-              <section className="lg:col-span-12 glass-panel p-6 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="flex items-center gap-3 mb-8">
+              <section className="lg:col-span-12 glass-panel p-6 rounded-xl animate-in fade-in slide-in-from-bottom-2 duration-300 relative overflow-hidden">
+                <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                  <div className="bg-surface-container-high px-6 py-3 rounded-full border border-outline-variant/50 font-bold text-on-surface shadow-lg">
+                    Coming Soon
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 mb-8 opacity-40">
                   <div className="p-2 rounded bg-tertiary/20 text-tertiary">
                     <span className="material-symbols-outlined">memory</span>
                   </div>
                   <h3 className="text-lg font-bold text-on-surface">Memory & Persistence</h3>
                 </div>
-                <div className="grid md:grid-cols-2 gap-12">
+                <div className="grid md:grid-cols-2 gap-12 opacity-40">
                   <div className="space-y-6">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <label className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant font-bold">Knowledge Retention</label>
                         <span className="text-primary font-mono text-sm">6 Months</span>
                       </div>
-                      <input title="Retention" className="w-full h-1.5 bg-surface-container-high rounded-lg appearance-none cursor-pointer" type="range" defaultValue="65"/>
+                      <input title="Retention" className="w-full h-1.5 bg-surface-container-high rounded-lg appearance-none cursor-pointer" type="range" defaultValue="65" disabled />
                       <div className="flex justify-between text-[10px] font-mono uppercase text-on-surface-variant opacity-50">
                         <span>Short-Term</span>
                         <span>Indefinite</span>
@@ -172,7 +214,7 @@ export const Settings = () => {
                         <label className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant font-bold">Compression Level</label>
                         <span className="text-secondary font-mono text-sm">Balanced</span>
                       </div>
-                      <input title="Compression" className="w-full h-1.5 bg-surface-container-high rounded-lg appearance-none cursor-pointer" type="range" defaultValue="40"/>
+                      <input title="Compression" className="w-full h-1.5 bg-surface-container-high rounded-lg appearance-none cursor-pointer" type="range" defaultValue="40" disabled />
                       <div className="flex justify-between text-[10px] font-mono uppercase text-on-surface-variant opacity-50">
                         <span>Lossless</span>
                         <span>Aggressive</span>
@@ -236,35 +278,45 @@ export const Settings = () => {
             )}
 
             {activeTab === 'security' && (
-              <section className="lg:col-span-12 glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="flex items-center gap-3 mb-2">
+              <section className="lg:col-span-12 glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 relative overflow-hidden">
+                <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                  <div className="bg-surface-container-high px-6 py-3 rounded-full border border-outline-variant/50 font-bold text-on-surface shadow-lg">
+                    Coming Soon
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 mb-2 opacity-40">
                   <div className="p-2 rounded bg-error/10 text-error">
                     <span className="material-symbols-outlined">security</span>
                   </div>
                   <h3 className="text-lg font-bold text-on-surface">Security & Control Center</h3>
                 </div>
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-2 gap-6 opacity-40">
                   <div className="p-4 bg-surface-container rounded-lg border border-outline-variant/30 flex items-center justify-between">
                     <div>
                       <p className="font-bold text-on-surface text-sm">Two-Factor Authentication (MFA)</p>
                       <p className="text-xs text-on-surface-variant mt-1">Enforce biometric or app OTP codes on login.</p>
                     </div>
-                    <input title="MFA Toggle" type="checkbox" defaultChecked className="accent-primary w-4 h-4" />
+                    <input title="MFA Toggle" type="checkbox" defaultChecked className="accent-primary w-4 h-4" disabled />
                   </div>
                   <div className="p-4 bg-surface-container rounded-lg border border-outline-variant/30 flex items-center justify-between">
                     <div>
                       <p className="font-bold text-on-surface text-sm">Strict TLS Encryption</p>
                       <p className="text-xs text-on-surface-variant mt-1">Reject insecure connections automatically.</p>
                     </div>
-                    <input title="TLS Toggle" type="checkbox" defaultChecked className="accent-primary w-4 h-4" />
+                    <input title="TLS Toggle" type="checkbox" defaultChecked className="accent-primary w-4 h-4" disabled />
                   </div>
                 </div>
               </section>
             )}
 
             {activeTab === 'billing' && (
-              <section className="lg:col-span-12 glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div className="flex items-center justify-between mb-4">
+              <section className="lg:col-span-12 glass-panel p-6 rounded-xl space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 relative overflow-hidden">
+                <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                  <div className="bg-surface-container-high px-6 py-3 rounded-full border border-outline-variant/50 font-bold text-on-surface shadow-lg">
+                    Coming Soon
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mb-4 opacity-40">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded bg-secondary/10 text-secondary">
                       <span className="material-symbols-outlined">payments</span>
@@ -273,7 +325,7 @@ export const Settings = () => {
                   </div>
                   <span className="px-3 py-1 bg-primary/20 text-primary border border-primary/30 rounded-full font-mono text-[10px] uppercase font-bold tracking-wider">Enterprise Tier</span>
                 </div>
-                <div className="grid md:grid-cols-3 gap-6">
+                <div className="grid md:grid-cols-3 gap-6 opacity-40">
                   <div className="p-4 bg-surface-container rounded-lg border border-outline-variant/30">
                     <p className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">Credits Consumed</p>
                     <p className="text-2xl font-bold text-on-surface mt-2">$142.50</p>
@@ -317,6 +369,42 @@ export const Settings = () => {
           </div>
         </div>
       </div>
+
+      {/* Add Provider Modal */}
+      {showAddProvider && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="bg-surface-container p-6 rounded-xl border border-outline-variant w-[400px] shadow-2xl">
+            <h3 className="text-xl font-bold mb-4">Add Model Provider</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant font-bold">Provider Name</label>
+                <input value={newProvider.name} onChange={e => setNewProvider({...newProvider, name: e.target.value})} className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2 mt-1 text-on-surface" placeholder="e.g. My Custom OpenAI" />
+              </div>
+              <div>
+                <label className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant font-bold">Type</label>
+                <select value={newProvider.type} onChange={e => setNewProvider({...newProvider, type: e.target.value})} className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2 mt-1 text-on-surface">
+                  <option value="openai">OpenAI</option>
+                  <option value="anthropic">Anthropic</option>
+                  <option value="xai">xAI</option>
+                  <option value="groq">Groq</option>
+                  <option value="together">Together AI</option>
+                  <option value="azure">Azure OpenAI</option>
+                  <option value="ollama">Ollama</option>
+                  <option value="dodo">Dodo Native</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant font-bold">API Key</label>
+                <input value={newProvider.apiKey} onChange={e => setNewProvider({...newProvider, apiKey: e.target.value})} type="password" className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2 mt-1 text-on-surface" placeholder="sk-..." />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={() => setShowAddProvider(false)} className="px-4 py-2 rounded-lg border border-outline-variant text-on-surface hover:bg-surface-bright">Cancel</button>
+              <button onClick={handleAddProvider} className="px-4 py-2 rounded-lg bg-primary text-on-primary font-bold hover:scale-105 transition-transform">Add Provider</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -353,8 +441,8 @@ const ProviderCard = ({ name, status, icon, iconColor = "text-on-surface", valid
   </div>
 );
 
-const ThemeBtn = ({ icon, label, active }: { icon: React.ReactNode, label: string, active?: boolean }) => (
-  <button className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${active ? 'bg-surface-container-lowest border-primary text-primary' : 'bg-surface-container-high border-outline-variant hover:border-primary text-on-surface-variant'}`}>
+const ThemeBtn = ({ icon, label, active, onClick }: { icon: React.ReactNode, label: string, active?: boolean, onClick?: () => void }) => (
+  <button onClick={onClick} className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${active ? 'bg-surface-container-lowest border-primary text-primary' : 'bg-surface-container-high border-outline-variant hover:border-primary text-on-surface-variant'}`}>
     <span className="material-symbols-outlined">{icon}</span>
     <span className="text-[10px] font-bold uppercase tracking-widest">{label}</span>
   </button>

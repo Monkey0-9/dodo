@@ -53,6 +53,46 @@
   --radius-lg: 0.5rem;
 }
 
+:root.light {
+  /* ── Surfaces ──────────────────────────────────────────────────── */
+  --color-background:                #fdfcff;
+  --color-surface:                   #faf9fd;
+  --color-surface-variant:           #f0eef4;
+  --color-surface-bright:            #e8e6eb;
+  --color-surface-container-lowest:  #ffffff;
+  --color-surface-container-low:     #f4f2f6;
+  --color-surface-container:         #efedf1;
+  --color-surface-container-high:    #e5e3e8;
+  --color-surface-container-highest: #dcdadd;
+
+  /* ── On-surface text ────────────────────────────────────────────── */
+  --color-on-surface:          #1a1c1e;
+  --color-on-surface-variant:  #43474e;
+
+  /* ── Primary palette ────────────────────────────────────────────── */
+  --color-primary:             #006782;
+  --color-on-primary:          #ffffff;
+  --color-primary-container:   #b3edfb;
+  --color-on-primary-container:#001f29;
+  --color-primary-fixed-dim:   #4cd7f6;
+
+  /* ── Secondary palette ──────────────────────────────────────────── */
+  --color-secondary:           #3a5ba9;
+  --color-on-secondary:        #ffffff;
+  --color-secondary-container: #d8e2ff;
+  --color-on-secondary-container:#001a43;
+
+  /* ── Tertiary palette ───────────────────────────────────────────── */
+  --color-tertiary:            #6750a4;
+  --color-on-tertiary:         #ffffff;
+  --color-tertiary-container:  #e9ddff;
+  --color-on-tertiary-container:#22005d;
+
+  /* ── Outlines ────────────────────────────────────────────────────── */
+  --color-outline:             #73777f;
+  --color-outline-variant:     #c3c6cf;
+}
+
 /* ─────────────────────────────────────────────────────────────────── */
 /*  Base Layer                                                         */
 /* ─────────────────────────────────────────────────────────────────── */
