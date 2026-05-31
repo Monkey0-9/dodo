@@ -53,6 +53,7 @@ services:
       - CLICKHOUSE_DATABASE=${CLICKHOUSE_DATABASE}
       - CLICKHOUSE_USERNAME=${CLICKHOUSE_USERNAME}
       - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+      - DODO_SERVER_PASSWORD=${DODO_SERVER_PASSWORD:-dodo}
     # volumes:
     # - ./configs/server_config.yaml:/root/.dodo/config # config file
     # - ~/.dodo/credentials:/root/.dodo/credentials # credentials file
