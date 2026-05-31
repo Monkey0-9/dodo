@@ -41,6 +41,9 @@ export const Chat = ({ agentId, onClose }: { agentId: string; onClose: () => voi
   }, [agentId]);
 
   useEffect(() => {
+    if (import.meta.env.VITE_DEMO_MODE === 'true') {
+      return;
+    }
     const url = api.agents.getStreamUrl(agentId);
     const ws = new WebSocket(url);
     wsRef.current = ws;

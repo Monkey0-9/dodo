@@ -1,4 +1,4 @@
-﻿#!/bin/sh
+#!/bin/sh
 set -e  # Exit on any error
 
 HOST="${HOST:-0.0.0.0}"

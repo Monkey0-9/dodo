@@ -48,7 +48,7 @@ export const Settings = () => {
   }
 
   return (
-    <div className="flex h-full overflow-hidden -m-8">
+    <div className="flex overflow-hidden -m-6" style={{ height: 'calc(100vh - 64px)' }}>
       {/* Settings Sub-Nav */}
       <nav className="hidden md:flex flex-col w-64 bg-surface-container-lowest/50 border-r border-outline-variant/50 p-6 gap-1 shrink-0">
         <p className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant opacity-60 mb-4 ml-4 font-bold">Configurations</p>
@@ -137,7 +137,7 @@ export const Settings = () => {
                 </div>
                 <div className="space-y-4">
                   {providers.map((p) => (
-                    <ProviderCard key={p.id} name={p.name} status={`Active • ${p.provider_type}`} icon="bolt" validated active />
+                    <ProviderCard key={p.id} name={p.name.charAt(0).toUpperCase() + p.name.slice(1)} status={`Active • ${p.provider_type || p.status || 'REST API'}`} icon="bolt" validated active />
                   ))}
                   {providers.length === 0 && <p className="text-on-surface-variant text-sm font-mono text-center py-10">No external providers configured.</p>}
                 </div>

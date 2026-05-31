@@ -202,8 +202,9 @@ export const setupDemoMock = (axiosInstance: AxiosInstance) => {
 
   // Mock Providers
   mock.onGet('/providers').reply(200, [
-    { id: 'p-1', name: 'openai', status: 'connected' },
-    { id: 'p-2', name: 'anthropic', status: 'connected' }
+    { id: 'p-1', name: 'openai', status: 'connected', provider_type: 'LLM Gateway' },
+    { id: 'p-2', name: 'anthropic', status: 'connected', provider_type: 'LLM Gateway' },
+    { id: 'p-3', name: 'google', status: 'connected', provider_type: 'Vertex AI' },
   ]);
 
   // Mock Groups

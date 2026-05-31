@@ -36,7 +36,7 @@ COPY pyproject.toml uv.lock ./
 # Then copy the rest of the application code
 COPY . .
 
-RUN uv sync --frozen --no-dev --all-extras --python 3.11
+RUN uv sync --python 3.11 --no-dev --all-extras
 
 # Runtime stage
 FROM pgvector/pgvector:0.8.1-pg15 AS runtime
@@ -92,13 +92,17 @@ WORKDIR /app
 # Copy virtual environment and app from builder
 COPY --from=builder /app .
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Copy initialization SQL if it exists
 COPY init.sql /docker-entrypoint-initdb.d/
 
 EXPOSE 8283 5432 6379 4317 4318
 
 # Set up non-root user for security
-RUN groupadd -r dodo && useradd -r -g dodo dodo && \
+RUN groupadd -r dodo && useradd -r -m -g dodo dodo && \
     chown -R dodo:dodo /app
 
 USER dodo

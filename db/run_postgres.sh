@@ -1,4 +1,4 @@
-﻿# build container
+# build container
 docker build -f db/Dockerfile.simple -t pg-test .
 
 # run container

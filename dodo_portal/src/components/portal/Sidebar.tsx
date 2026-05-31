@@ -33,11 +33,17 @@ export const Sidebar = ({ currentPath, onNavigate }: { currentPath: string, onNa
     <aside className="hidden lg:flex flex-col h-full w-64 bg-surface-container-low/90 backdrop-blur-lg border-r border-outline-variant py-5 z-50 fixed left-0 top-0">
       <div className="px-6 mb-10">
         <div className="flex items-center gap-3">
-          <img 
-            alt="Dodo AI Logo" 
-            className="w-8 h-8" 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPS5NFYQEFmxFg4eP1MJWxUrH04ZJYtwGher01j0B_WTNt237qWFjeGhrpspWzQmz9tv09Ea1JnoLzpc-AA7miodthiPboGco6_3We7wV3e3wT65i4gtB2SXTxbfVLmgRnpCXFVm6Imi5nz2yub9WyEQ9bvNfb3in6aCYlFwAf_w5X-AVUK5dGqq5wPD7S5YiySXwY7M5IGLDNKniILeD8hSyntg5mj0vcjwWczNJ9NciF9DIfcSClFVmYcCVi0bCiUzCdKiah30_2" 
-          />
+          <svg className="w-8 h-8 flex-shrink-0" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="var(--color-primary)" />
+                <stop offset="100%" stopColor="var(--color-tertiary)" />
+              </linearGradient>
+            </defs>
+            <path d="M16 2L28 9V23L16 30L4 23V9L16 2Z" fill="url(#logo-grad)" />
+            <path d="M16 6L24 11V21L16 26L8 21V11L16 6Z" fill="#131316" />
+            <circle cx="16" cy="16" r="4" fill="url(#logo-grad)" />
+          </svg>
           <div>
             <h1 className="font-headline-sm text-lg font-bold text-primary tracking-tight">Dodo OS</h1>
             <p className="font-mono-label text-[10px] uppercase tracking-widest text-on-surface-variant">v2.4.0-stable</p>

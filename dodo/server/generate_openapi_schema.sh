@@ -1,4 +1,4 @@
-﻿#!/bin/sh
+#!/bin/sh
 echo "Generating OpenAPI schema..."
 
 # check if uv is installed

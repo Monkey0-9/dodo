@@ -182,7 +182,7 @@ export const Analytics = () => {
                 <p className="text-xs text-on-surface-variant">Response latency fluctuations over observation window</p>
               </div>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-h-[120px] relative w-full">
                <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData}>
                     <Area type="monotone" dataKey="latency" stroke="var(--color-error)" fill="transparent" strokeWidth={2} dot={false} />

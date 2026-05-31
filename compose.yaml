@@ -21,6 +21,9 @@ services:
       timeout: 5s
       retries: 5
   dodo_server:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: dodo/dodo:latest
     hostname: dodo-server
     depends_on:
@@ -56,11 +59,22 @@ services:
     # Uncomment this line to mount a local directory for tool execution, and specify the mount path
     # before running docker compose: `export dodo_SANDBOX_MOUNT_PATH=$PWD/directory`
     # - ${dodo_SANDBOX_MOUNT_PATH:?}:/root/.dodo/tool_execution_dir # mounted volume for tool execution
+  dodo_portal:
+    build:
+      context: ./dodo_portal
+      dockerfile: Dockerfile
+    hostname: dodo-portal
+    expose:
+      - "80"
   dodo_nginx:
     hostname: dodo-nginx
     image: nginx:stable-alpine3.17-slim
+    depends_on:
+      - dodo_server
+      - dodo_portal
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
       - "80:80"
+      - "443:443"
 
