@@ -34,7 +34,7 @@ jobs:
     - name: Lint with ruff
       run: ruff check .
     - name: Type check with mypy
-      run: mypy dodo
+      run: mypy --strict dodo
 
   unit-tests:
     needs: [lint]
@@ -52,7 +52,7 @@ jobs:
         pip install -e .[dev,postgres]
     - name: Run unit tests
       run: |
-        pytest tests/unit --cov=dodo --cov-report=xml --cov-fail-under=70
+        pytest tests/unit --cov=dodo --cov-report=xml --cov-fail-under=80
 
   integration-tests:
     needs: [unit-tests]

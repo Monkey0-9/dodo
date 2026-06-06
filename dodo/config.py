@@ -48,11 +48,6 @@ class dodoConfig:
     persona: str = DEFAULT_PERSONA
     human: str = DEFAULT_HUMAN
 
-
-
-    # NONE OF THIS IS CONFIG â†“â†“â†“â†“â†“
-    # @norton120 these are the metdadatastore
-
     # database configs: archival
     archival_storage_type: str = "sqlite"  # local, db
     archival_storage_path: str = dodo_DIR
@@ -91,8 +86,6 @@ class dodoConfig:
         # avoid circular import
         from dodo.utils import printd
 
-
-
         config = configparser.ConfigParser()
 
         # allow overriding with env variables
@@ -108,11 +101,7 @@ class dodoConfig:
             # read existing config
             config.read(config_path)
 
-
-
-            # Everything else
             config_dict = {
-
                 # Agent related
                 "preset": get_field(config, "defaults", "preset"),
                 "persona": get_field(config, "defaults", "persona"),
@@ -137,8 +126,6 @@ class dodoConfig:
 
             return cls(**config_dict)
 
-
-
         # create new config
         config = cls(config_path=config_path)
 
@@ -155,8 +142,6 @@ class dodoConfig:
         set_field(config, "defaults", "preset", self.preset)
         set_field(config, "defaults", "persona", self.persona)
         set_field(config, "defaults", "human", self.human)
-
-
 
         # archival storage
         set_field(config, "archival_storage", "type", self.archival_storage_type)
