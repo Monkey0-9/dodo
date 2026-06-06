@@ -135,15 +135,23 @@ def modal_tool_wrapper(tool: PydanticTool, actor: PydanticUser, sandbox_env_vars
             # Add any other modules/variables the tool might need
         }
 
-        # Initialize the tool code
-        # Create a namespace for the tool
-        # tool_namespace = {}
-        exec(tool.source_code, tool_namespace)
+        # Initialize the tool code using importlib to construct the module dynamically
+        import importlib.util
+        import sys
+
+        module_name = f"dodo_tool_{tool_name}"
+        spec = importlib.util.spec_from_loader(module_name, loader=None)
+        tool_module = importlib.util.module_from_spec(spec)
+        tool_module.__dict__.update(tool_namespace)
+
+        code_obj = compile(tool.source_code, f"<tool_{tool_name}>", "exec")
+        sys.modules[module_name] = tool_module
+        exec(code_obj, tool_module.__dict__)
 
         # Get the tool function
-        if tool_name not in tool_namespace:
-            raise Exception(f"Tool function {tool_name} not found in {tool.source_code}, globals: {tool_namespace}")
-        tool_func = tool_namespace[tool_name]
+        if not hasattr(tool_module, tool_name):
+            raise Exception(f"Tool function {tool_name} not found in {tool.source_code}, globals: {tool_module.__dict__}")
+        tool_func = getattr(tool_module, tool_name)
 
         # Detect if the tool function is async
         import asyncio
@@ -172,7 +180,6 @@ def modal_tool_wrapper(tool: PydanticTool, actor: PydanticUser, sandbox_env_vars
                     kwargs = coerce_dict_args_by_annotations(
                         kwargs,
                         annotations,
-                        allow_unsafe_eval=True,
                         extra_globals=tool_func.__globals__,
                     )
                 except Exception as e:

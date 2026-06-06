@@ -209,6 +209,25 @@ class AgentManager:
         missing_names = names - set(name_to_id.keys())
         missing_ids = ids - set(id_to_name.keys())
 
+        from dodo.constants import dodo_TOOL_SET
+        missing_base_names = missing_names & dodo_TOOL_SET
+        if missing_base_names:
+            from dodo.services.tool_manager import ToolManager
+            from dodo.services.user_manager import UserManager
+            user_mgr = UserManager()
+            tool_mgr = ToolManager()
+            default_user = await user_mgr.get_default_actor_async()
+            await tool_mgr.upsert_base_tools_async(actor=default_user)
+            
+            # Re-run query
+            result = await session.execute(stmt)
+            rows = result.fetchall()
+            name_to_id = {row[1]: row[0] for row in rows}
+            id_to_name = {row[0]: row[1] for row in rows}
+            requires_approval = [row[1] for row in rows if row[2]]
+            missing_names = names - set(name_to_id.keys())
+            missing_ids = ids - set(id_to_name.keys())
+
         if not ignore_invalid_tools:
             # Original behavior: raise errors for missing tools
             if missing_names:
@@ -719,7 +738,7 @@ class AgentManager:
 
                 result.message_ids = [msg.id for msg in init_messages]
                 new_agent.message_ids = [msg.id for msg in init_messages]
-                await new_agent.update_async(session, no_refresh=True)
+                await new_agent.update_async(session, no_commit=True, no_refresh=True)
 
         await self.message_manager.create_many_messages_async(
             pydantic_msgs=init_messages, actor=actor, project_id=result.project_id, template_id=result.template_id
@@ -954,6 +973,8 @@ class AgentManager:
             }
             for col, val in scalar_updates.items():
                 if val is not None:
+                    if col == "last_stop_reason":
+                        print(f"DEBUG_UPDATE_AGENT: Setting last_stop_reason on agent {agent.id} to {val}")
                     setattr(agent, col, val)
 
             if agent_update.metadata is not None:

@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import base64
 import hashlib
 import os
@@ -18,9 +18,13 @@ logger = get_logger(__name__)
 # Eagerly load the cryptography backend at module import time.
 _CRYPTO_BACKEND = default_backend()
 
+_derivation_cache = {}
+_CACHE_TTL = 3600
+
 # Dedicated thread pool for CPU-intensive crypto operations
 # Prevents crypto from blocking health checks and other operations
 _crypto_executor = ThreadPoolExecutor(max_workers=8, thread_name_prefix="CryptoWorker")
+
 
 # Common API key prefixes that should not be considered encrypted
 # These are plaintext credentials that happen to be long strings
@@ -60,15 +64,14 @@ class CryptoUtils:
     # WARNING: DO NOT CHANGE THIS VALUE UNLESS YOU ARE SURE WHAT YOU ARE DOING
     # EXISTING ENCRYPTED SECRETS MUST BE DECRYPTED WITH THE SAME ITERATIONS
     # Number of PBKDF2 iterations
-    PBKDF2_ITERATIONS = 100000
+    PBKDF2_ITERATIONS = 600000
 
     @classmethod
-    @lru_cache(maxsize=256)
     def _derive_key_cached(cls, master_key: str, salt: bytes) -> bytes:
         """
         Derive an AES key from the master key using PBKDF2 with caching.
 
-        This is a CPU-intensive operation (100k iterations of PBKDF2-HMAC-SHA256)
+        This is a CPU-intensive operation (600k iterations of PBKDF2-HMAC-SHA256)
         that can take 100-500ms. Results are cached since key derivation is deterministic.
 
         Uses Python's standard hashlib.pbkdf2_hmac which produces identical output
@@ -77,13 +80,33 @@ class CryptoUtils:
         WARNING: This is a synchronous blocking operation. Use _derive_key_async()
         in async contexts to avoid blocking the event loop.
         """
-        return hashlib.pbkdf2_hmac(
+        import time
+        global _derivation_cache, _CACHE_TTL
+        now = time.time()
+
+        if len(_derivation_cache) >= 256:
+            _derivation_cache = {
+                k: v for k, v in _derivation_cache.items() if v[1] > now
+            }
+            if len(_derivation_cache) >= 256:
+                first_key = next(iter(_derivation_cache))
+                _derivation_cache.pop(first_key, None)
+
+        cache_key = (master_key, salt)
+        if cache_key in _derivation_cache:
+            derived_key, expiry = _derivation_cache[cache_key]
+            if expiry > now:
+                return derived_key
+
+        derived_key = hashlib.pbkdf2_hmac(
             hash_name="sha256",
             password=master_key.encode(),
             salt=salt,
             iterations=cls.PBKDF2_ITERATIONS,
             dklen=cls.KEY_SIZE,
         )
+        _derivation_cache[cache_key] = (derived_key, now + _CACHE_TTL)
+        return derived_key
 
     @classmethod
     def _derive_key(cls, master_key: str, salt: bytes) -> bytes:

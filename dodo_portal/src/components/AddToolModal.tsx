@@ -18,11 +18,24 @@ export const AddToolModal = ({ isOpen, onClose, onSuccess }: {
 
     setLoading(true);
     try {
+      const toolName = name.trim().toLowerCase().replace(/\s+/g, '_');
+      const normalizedToolType = toolType === 'mcp' ? 'external_mcp' : toolType;
+      const placeholderSource = `def ${toolName}(*args, **kwargs):\n    """\n    ${description || 'Custom tool description'}\n    """\n    return "Tool executed successfully"`;
+
       await api.tools.create({
-        name: name.trim().toLowerCase().replace(/\s+/g, '_'),
+        name: toolName,
         description: description,
-        tool_type: toolType,
-        json_schema: {}
+        tool_type: normalizedToolType,
+        source_type: 'python',
+        source_code: placeholderSource,
+        json_schema: {
+          name: toolName,
+          description: description || 'Custom tool description',
+          parameters: {
+            type: "object",
+            properties: {}
+          }
+        }
       });
       onSuccess();
       onClose();

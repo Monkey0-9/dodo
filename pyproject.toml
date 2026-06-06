@@ -43,7 +43,7 @@ dependencies = [
     "llama-index-embeddings-openai>=0.3.1",
     "anthropic>=0.75.0",
     # "dodo-client>=1.7.12",
-    "openai[realtime]>=2.24.0",
+    "openai[realtime]==2.24.0",
     "opentelemetry-api==1.30.0",
     "opentelemetry-sdk==1.30.0",
     "opentelemetry-instrumentation-requests==0.51b0",
@@ -101,7 +101,7 @@ experimental = [
 server = [
     "websockets",
     "fastapi>=0.115.6",
-    "uvicorn==0.29.0",
+    "uvicorn>=0.34.0",
     "slowapi>=0.1.9",
     "pyjwt>=2.8.0",
     "passlib>=1.7.4",
@@ -148,7 +148,7 @@ external-tools = [
 desktop = [
     "websockets",
     "fastapi>=0.115.6",
-    "uvicorn==0.29.0",
+    "uvicorn>=0.34.0",
     "docker>=7.1.0",
     "langchain>=0.3.7",
     "wikipedia>=1.4.0",

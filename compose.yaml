@@ -1,22 +1,22 @@
 services:
   dodo_db:
-    image: ankane/pgvector:v0.5.1
+    image: ankane/pgvector:v0.8.0
     networks:
       default:
         aliases:
           - pgvector_db
           - dodo-db
     environment:
-      - POSTGRES_USER=${dodo_PG_USER:-dodo}
-      - POSTGRES_PASSWORD=${dodo_PG_PASSWORD:-dodo}
-      - POSTGRES_DB=${dodo_PG_DB:-dodo}
+      - POSTGRES_USER=${dodo_PG_USER}
+      - POSTGRES_PASSWORD=${dodo_PG_PASSWORD}
+      - POSTGRES_DB=${dodo_PG_DB}
     volumes:
       - ./.persist/pgdata:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "${dodo_PG_PORT:-5432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dodo"]
+      test: ["CMD-SHELL", "pg_isready -U ${dodo_PG_USER}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -35,7 +35,7 @@ services:
     env_file:
       - .env
     environment:
-      - dodo_PG_URI=${dodo_PG_URI:-postgresql://${dodo_PG_USER:-dodo}:${dodo_PG_PASSWORD:-dodo}@${dodo_DB_HOST:-dodo-db}:${dodo_PG_PORT:-5432}/${dodo_PG_DB:-dodo}}
+      - dodo_PG_URI=${dodo_PG_URI:-postgresql://${dodo_PG_USER}:${dodo_PG_PASSWORD}@${dodo_DB_HOST:-dodo-db}:${dodo_PG_PORT:-5432}/${dodo_PG_DB}}
       - dodo_DEBUG=False
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GROQ_API_KEY=${GROQ_API_KEY}
@@ -53,7 +53,7 @@ services:
       - CLICKHOUSE_DATABASE=${CLICKHOUSE_DATABASE}
       - CLICKHOUSE_USERNAME=${CLICKHOUSE_USERNAME}
       - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
-      - DODO_SERVER_PASSWORD=${DODO_SERVER_PASSWORD:-dodo}
+      - DODO_SERVER_PASSWORD=${DODO_SERVER_PASSWORD}
     # volumes:
     # - ./configs/server_config.yaml:/root/.dodo/config # config file
     # - ~/.dodo/credentials:/root/.dodo/credentials # credentials file

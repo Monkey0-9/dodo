@@ -1,4 +1,4 @@
-﻿from conftest import create_test_module
+from conftest import create_test_module
 
 from dodo.client import UnprocessableEntityError
 from dodo.constants import CORE_MEMORY_BLOCK_CHAR_LIMIT
@@ -14,9 +14,9 @@ BLOCKS_UPDATE_PARAMS = [
 ]
 
 BLOCKS_LIST_PARAMS = [
-    ({}, 2),
-    ({"label": "human"}, 1),
-    ({"label": "persona"}, 1),
+    ({"limit": 1000}, 2),
+    ({"label": "human", "limit": 1000}, 1),
+    ({"label": "persona", "limit": 1000}, 1),
 ]
 
 # Create all test module components at once

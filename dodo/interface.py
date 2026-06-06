@@ -1,3 +1,4 @@
+import ast
 import re
 from abc import ABC, abstractmethod
 from typing import List, Optional
@@ -197,11 +198,11 @@ class CLIInterface(AgentInterface):
                     function_args = match.group(2)
                     if function_name in ["archival_memory_insert", "archival_memory_search", "core_memory_replace", "core_memory_append"]:
                         if function_name in ["archival_memory_insert", "core_memory_append", "core_memory_replace"]:
-                            print_function_message("ðŸ§ ", f"updating memory with {function_name}")
+                            print_function_message("🧠", f"updating memory with {function_name}")
                         elif function_name == "archival_memory_search":
-                            print_function_message("ðŸ§ ", f"searching memory with {function_name}")
+                            print_function_message("🧠", f"searching memory with {function_name}")
                         try:
-                            msg_dict = eval(function_args)
+                            msg_dict = ast.literal_eval(function_args)
                             if function_name == "archival_memory_search":
                                 output = f"\tquery: {msg_dict['query']}, page: {msg_dict['page']}"
                                 if STRIP_UI:
@@ -209,25 +210,25 @@ class CLIInterface(AgentInterface):
                                 else:
                                     print(f"{Fore.RED}{output}{Style.RESET_ALL}")
                             elif function_name == "archival_memory_insert":
-                                output = f"\tâ†’ {msg_dict['content']}"
+                                output = f"\t→ {msg_dict['content']}"
                                 if STRIP_UI:
                                     print(output)
                                 else:
                                     print(f"{Style.BRIGHT}{Fore.RED}{output}{Style.RESET_ALL}")
                             else:
                                 if STRIP_UI:
-                                    print(f"\t {msg_dict['old_content']}\n\tâ†’ {msg_dict['new_content']}")
+                                    print(f"\t {msg_dict['old_content']}\n\t→ {msg_dict['new_content']}")
                                 else:
                                     print(
-                                        f"{Style.BRIGHT}\t{Fore.RED} {msg_dict['old_content']}\n\t{Fore.GREEN}â†’ {msg_dict['new_content']}{Style.RESET_ALL}"
+                                        f"{Style.BRIGHT}\t{Fore.RED} {msg_dict['old_content']}\n\t{Fore.GREEN}→ {msg_dict['new_content']}{Style.RESET_ALL}"
                                     )
                         except Exception as e:
                             printd(str(e))
                             printd(msg_dict)
                     elif function_name in ["conversation_search", "conversation_search_date"]:
-                        print_function_message("ðŸ§ ", f"searching memory with {function_name}")
+                        print_function_message("🧠", f"searching memory with {function_name}")
                         try:
-                            msg_dict = eval(function_args)
+                            msg_dict = ast.literal_eval(function_args)
                             output = f"\tquery: {msg_dict['query']}, page: {msg_dict['page']}"
                             if STRIP_UI:
                                 print(output)

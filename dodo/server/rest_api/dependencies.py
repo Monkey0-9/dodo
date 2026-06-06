@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 
-from fastapi import Header
+from fastapi import Header, Request
 from pydantic import BaseModel
 
 from dodo.errors import dodoInvalidArgumentError
@@ -84,8 +84,10 @@ def get_headers(
 
 
 # TODO: why does this double up the interface?
-async def get_dodo_server() -> "SyncServer":
+async def get_dodo_server(request: Request) -> "SyncServer":
     with tracer.start_as_current_span("dependency.get_dodo_server"):
+        if hasattr(request.app.state, "server") and request.app.state.server is not None:
+            return request.app.state.server
         from dodo.server.rest_api.state import get_server
         return get_server()
 

@@ -1,4 +1,4 @@
-﻿from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import ConfigDict, Field, model_validator
 
@@ -124,6 +124,7 @@ class ToolCreate(dodoBase):
     )
     pip_requirements: list[PipRequirement] | None = Field(None, description="Optional list of pip packages required by this tool.")
     npm_requirements: list[NpmRequirement] | None = Field(None, description="Optional list of npm packages required by this tool.")
+    name: Optional[str] = Field(None, description="The name of the tool.")
     default_requires_approval: Optional[bool] = Field(None, description="Whether or not to require approval before executing this tool.")
     enable_parallel_execution: Optional[bool] = Field(
         False, description="If set to True, then this tool will potentially be executed concurrently with other tools. Default False."

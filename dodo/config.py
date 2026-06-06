@@ -1,4 +1,4 @@
-﻿import configparser
+import configparser
 import os
 from dataclasses import dataclass
 from typing import Optional
@@ -48,11 +48,7 @@ class dodoConfig:
     persona: str = DEFAULT_PERSONA
     human: str = DEFAULT_HUMAN
 
-    # model parameters
-    # default_llm_config: LLMConfig = None
 
-    # embedding parameters
-    # default_embedding_config: EmbeddingConfig = None
 
     # NONE OF THIS IS CONFIG â†“â†“â†“â†“â†“
     # @norton120 these are the metdadatastore
@@ -88,10 +84,6 @@ class dodoConfig:
     core_memory_human_char_limit: int = CORE_MEMORY_HUMAN_CHAR_LIMIT
 
     def __post_init__(self):
-        # ensure types
-        # self.embedding_chunk_size = int(self.embedding_chunk_size)
-        # self.embedding_dim = int(self.embedding_dim)
-        # self.context_window = int(self.context_window)
         pass
 
     @classmethod
@@ -99,15 +91,7 @@ class dodoConfig:
         # avoid circular import
         from dodo.utils import printd
 
-        # from dodo.migrate import VERSION_CUTOFF, config_is_compatible
-        # if not config_is_compatible(allow_empty=True):
-        #    error_message = " ".join(
-        #        [
-        #            f"\nYour current config file is incompatible with dodo versions later than {VERSION_CUTOFF}.",
-        #            f"\nTo use dodo, you must either downgrade your dodo version (<= {VERSION_CUTOFF}) or regenerate your config using `dodo configure`, or `dodo migrate` if you would like to migrate old agents.",
-        #        ]
-        #    )
-        #    raise ValueError(error_message)
+
 
         config = configparser.ConfigParser()
 
@@ -124,42 +108,11 @@ class dodoConfig:
             # read existing config
             config.read(config_path)
 
-            ## Handle extraction of nested LLMConfig and EmbeddingConfig
-            # llm_config_dict = {
-            #    # Extract relevant LLM configuration from the config file
-            #    "model": get_field(config, "model", "model"),
-            #    "model_endpoint": get_field(config, "model", "model_endpoint"),
-            #    "model_endpoint_type": get_field(config, "model", "model_endpoint_type"),
-            #    "model_wrapper": get_field(config, "model", "model_wrapper"),
-            #    "context_window": get_field(config, "model", "context_window"),
-            # }
-            # embedding_config_dict = {
-            #    # Extract relevant Embedding configuration from the config file
-            #    "embedding_endpoint": get_field(config, "embedding", "embedding_endpoint"),
-            #    "embedding_model": get_field(config, "embedding", "embedding_model"),
-            #    "embedding_endpoint_type": get_field(config, "embedding", "embedding_endpoint_type"),
-            #    "embedding_dim": get_field(config, "embedding", "embedding_dim"),
-            #    "embedding_chunk_size": get_field(config, "embedding", "embedding_chunk_size"),
-            # }
-            ## Remove null values
-            # llm_config_dict = {k: v for k, v in llm_config_dict.items() if v is not None}
-            # embedding_config_dict = {k: v for k, v in embedding_config_dict.items() if v is not None}
-            # Correct the types that aren't strings
-            # if "context_window" in llm_config_dict and llm_config_dict["context_window"] is not None:
-            #    llm_config_dict["context_window"] = int(llm_config_dict["context_window"])
-            # if "embedding_dim" in embedding_config_dict and embedding_config_dict["embedding_dim"] is not None:
-            #    embedding_config_dict["embedding_dim"] = int(embedding_config_dict["embedding_dim"])
-            # if "embedding_chunk_size" in embedding_config_dict and embedding_config_dict["embedding_chunk_size"] is not None:
-            #    embedding_config_dict["embedding_chunk_size"] = int(embedding_config_dict["embedding_chunk_size"])
-            ## Construct the inner properties
-            # llm_config = LLMConfig(**llm_config_dict)
-            # embedding_config = EmbeddingConfig(**embedding_config_dict)
+
 
             # Everything else
             config_dict = {
-                # Two prepared configs
-                # "default_llm_config": llm_config,
-                # "default_embedding_config": embedding_config,
+
                 # Agent related
                 "preset": get_field(config, "defaults", "preset"),
                 "persona": get_field(config, "defaults", "persona"),
@@ -184,8 +137,7 @@ class dodoConfig:
 
             return cls(**config_dict)
 
-        # assert embedding_config is not None, "Embedding config must be provided if config does not exist"
-        # assert llm_config is not None, "LLM config must be provided if config does not exist"
+
 
         # create new config
         config = cls(config_path=config_path)
@@ -204,54 +156,7 @@ class dodoConfig:
         set_field(config, "defaults", "persona", self.persona)
         set_field(config, "defaults", "human", self.human)
 
-        # model defaults
-        # set_field(config, "model", "model", self.default_llm_config.model)
-        ##set_field(config, "model", "model_endpoint", self.default_llm_config.model_endpoint)
-        # set_field(
-        #    config,
-        #    "model",
-        #    "model_endpoint_type",
-        #    self.default_llm_config.model_endpoint_type,
-        # )
-        # set_field(config, "model", "model_wrapper", self.default_llm_config.model_wrapper)
-        # set_field(
-        #    config,
-        #    "model",
-        #    "context_window",
-        #    str(self.default_llm_config.context_window),
-        # )
 
-        ## embeddings
-        # set_field(
-        #    config,
-        #    "embedding",
-        #    "embedding_endpoint_type",
-        #    self.default_embedding_config.embedding_endpoint_type,
-        # )
-        # set_field(
-        #    config,
-        #    "embedding",
-        #    "embedding_endpoint",
-        #    self.default_embedding_config.embedding_endpoint,
-        # )
-        # set_field(
-        #    config,
-        #    "embedding",
-        #    "embedding_model",
-        #    self.default_embedding_config.embedding_model,
-        # )
-        # set_field(
-        #    config,
-        #    "embedding",
-        #    "embedding_dim",
-        #    str(self.default_embedding_config.embedding_dim),
-        # )
-        # set_field(
-        #    config,
-        #    "embedding",
-        #    "embedding_chunk_size",
-        #    str(self.default_embedding_config.embedding_chunk_size),
-        # )
 
         # archival storage
         set_field(config, "archival_storage", "type", self.archival_storage_type)

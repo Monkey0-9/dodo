@@ -228,6 +228,8 @@ class ResilientRoutingClient:
         )
 
     async def record_failure(self, handle: str) -> None:
+        if not handle:
+            return
         cb = await self._get_breaker(handle)
         cb.record_failure()
         await self._persist_state(cb)
@@ -236,6 +238,8 @@ class ResilientRoutingClient:
         """
         Records a successful request for a model handle.
         """
+        if not handle:
+            return
         cb = await self._get_breaker(handle)
         cb.record_success(latency_ms)
         await self._persist_state(cb)

@@ -1,6 +1,4 @@
 import os
-import secrets
-import warnings
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -11,10 +9,7 @@ from jwt import PyJWTError as JWTError
 
 _secret = os.getenv("JWT_SECRET")
 if not _secret:
-    warnings.warn(
-        "JWT_SECRET environment variable is not set. Generating a temporary random key for this session."
-    )
-    _secret = secrets.token_urlsafe(32)
+    raise RuntimeError("JWT_SECRET environment variable is not set.")
 
 SECRET_KEY = _secret
 ALGORITHM = "HS256"
@@ -50,7 +45,10 @@ async def get_current_user(
     request: Request = None,
     websocket: WebSocket = None,
 ):
-    """Dependency injection to get the current user from JWT, supporting HTTP and WebSocket."""
+    """Dependency injection to get the current user from JWT.
+
+    Supports HTTP and WebSocket connections.
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -75,6 +73,11 @@ async def get_current_user(
         raise credentials_exception
 
     try:
+        # Blacklist 'none' algorithm
+        unverified_header = jwt.get_unverified_header(token)
+        if unverified_header.get("alg", "").lower() == "none":
+            raise credentials_exception
+
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:

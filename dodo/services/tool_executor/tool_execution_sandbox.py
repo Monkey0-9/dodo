@@ -147,20 +147,14 @@ class ToolExecutionSandbox:
 
         # Write the code to a temp file in the sandbox_dir
         with tempfile.NamedTemporaryFile(mode="w", dir=local_configs.sandbox_dir, suffix=".py", delete=False) as temp_file:
-            if local_configs.use_venv:
-                # If using venv, we need to wrap with special string markers to separate out the output and the stdout (since it is all in stdout)
-                code = self.generate_execution_script(agent_state=agent_state, wrap_print_with_markers=True)
-            else:
-                code = self.generate_execution_script(agent_state=agent_state)
+            # Enforce subprocess venv markers
+            code = self.generate_execution_script(agent_state=agent_state, wrap_print_with_markers=True)
 
             temp_file.write(code)
             temp_file.flush()
             temp_file_path = temp_file.name
         try:
-            if local_configs.use_venv:
-                return self.run_local_dir_sandbox_venv(sbx_config, env, temp_file_path)
-            else:
-                return self.run_local_dir_sandbox_directly(sbx_config, env, temp_file_path)
+            return self.run_local_dir_sandbox_venv(sbx_config, env, temp_file_path)
         except Exception as e:
             logger.error(f"Executing tool {self.tool_name} has an unexpected error: {e}")
             logger.error(f"Logging out tool {self.tool_name} auto-generated code for debugging: \n\n{code}")
@@ -168,151 +162,6 @@ class ToolExecutionSandbox:
         finally:
             # Clean up the temp file
             os.remove(temp_file_path)
-
-    @trace_method
-    def run_local_dir_sandbox_venv(
-        self,
-        sbx_config: SandboxConfig,
-        env: Dict[str, str],
-        temp_file_path: str,
-    ) -> ToolExecutionResult:
-        local_configs = sbx_config.get_local_config()
-        sandbox_dir = os.path.expanduser(local_configs.sandbox_dir)  # Expand tilde
-        venv_path = os.path.join(sandbox_dir, local_configs.venv_name)
-
-        # Recreate venv if required
-        if self.force_recreate_venv or not os.path.isdir(venv_path):
-            logger.warning(f"Virtual environment directory does not exist at: {venv_path}, creating one now...")
-            log_event(name="start create_venv_for_local_sandbox", attributes={"venv_path": venv_path})
-            create_venv_for_local_sandbox(
-                sandbox_dir_path=sandbox_dir, venv_path=venv_path, env=env, force_recreate=self.force_recreate_venv
-            )
-            log_event(name="finish create_venv_for_local_sandbox")
-
-        log_event(name="start install_pip_requirements_for_sandbox", attributes={"local_configs": local_configs.model_dump_json()})
-        install_pip_requirements_for_sandbox(local_configs, env=env)
-        log_event(name="finish install_pip_requirements_for_sandbox", attributes={"local_configs": local_configs.model_dump_json()})
-
-        # Ensure Python executable exists
-        python_executable = find_python_executable(local_configs)
-        if not os.path.isfile(python_executable):
-            raise FileNotFoundError(f"Python executable not found in virtual environment: {python_executable}")
-
-        # Set up environment variables
-        env["VIRTUAL_ENV"] = venv_path
-        env["PATH"] = os.path.join(venv_path, "bin") + ":" + env["PATH"]
-        env["PYTHONWARNINGS"] = "ignore"
-
-        # Execute the code
-        try:
-            log_event(name="start subprocess")
-            result = subprocess.run(
-                [python_executable, temp_file_path], env=env, cwd=sandbox_dir, timeout=60, capture_output=True, text=True, check=True
-            )
-            log_event(name="finish subprocess")
-            func_result, stdout = self.parse_out_function_results_markers(result.stdout)
-            func_return, agent_state = self.parse_best_effort(func_result)
-
-            return ToolExecutionResult(
-                status="success",
-                func_return=func_return,
-                agent_state=agent_state,
-                stdout=[stdout] if stdout else [],
-                stderr=[result.stderr] if result.stderr else [],
-                sandbox_config_fingerprint=sbx_config.fingerlogger.info(),
-            )
-
-        except subprocess.CalledProcessError as e:
-            with open(temp_file_path, "r") as f:
-                code = f.read()
-
-            # Tool errors are expected behavior - tools can raise exceptions as part of their normal operation
-            # Only log at debug level to avoid triggering Sentry alerts for expected errors
-            logger.debug(f"Tool {self.tool_name} process error: {e}")
-            logger.debug(f"Tool {self.tool_name} auto-generated code for debugging: \n\n{code}")
-            func_return = get_friendly_error_msg(
-                function_name=self.tool_name,
-                exception_name=type(e).__name__,
-                exception_message=str(e),
-            )
-            return ToolExecutionResult(
-                status="error",
-                func_return=func_return,
-                agent_state=None,
-                stdout=[e.stdout] if e.stdout else [],
-                stderr=[e.stderr] if e.stderr else [],
-                sandbox_config_fingerprint=sbx_config.fingerlogger.info(),
-            )
-
-        except subprocess.TimeoutExpired:
-            raise TimeoutError(f"Executing tool {self.tool_name} has timed out.")
-
-        except Exception as e:
-            logger.error(f"Executing tool {self.tool_name} has an unexpected error: {e}")
-            raise e
-
-    def run_local_dir_sandbox_directly(
-        self,
-        sbx_config: SandboxConfig,
-        env: Dict[str, str],
-        temp_file_path: str,
-    ) -> ToolExecutionResult:
-        status = "success"
-        func_return, agent_state, _stderr = None, None, None
-
-        old_stdout = sys.stdout
-        old_stderr = sys.stderr
-        captured_stdout, captured_stderr = io.StringIO(), io.StringIO()
-
-        sys.stdout = captured_stdout
-        sys.stderr = captured_stderr
-
-        try:
-            with self.temporary_env_vars(env):
-                # Read and compile the Python script
-                with open(temp_file_path, "r", encoding="utf-8") as f:
-                    source = f.read()
-                code_obj = compile(source, temp_file_path, "exec")
-
-                # Provide a dict for globals.
-                globals_dict = dict(env)  # or {}
-                # If you need to mimic `__main__` behavior:
-                globals_dict["__name__"] = "__main__"
-                globals_dict["__file__"] = temp_file_path
-
-                # Execute the compiled code
-                log_event(name="start exec", attributes={"temp_file_path": temp_file_path})
-                exec(code_obj, globals_dict)
-                log_event(name="finish exec", attributes={"temp_file_path": temp_file_path})
-
-                # Get result from the global dict
-                func_result = globals_dict.get(self.LOCAL_SANDBOX_RESULT_VAR_NAME)
-                func_return, agent_state = self.parse_best_effort(func_result)
-
-        except Exception as e:
-            func_return = get_friendly_error_msg(
-                function_name=self.tool_name,
-                exception_name=type(e).__name__,
-                exception_message=str(e),
-            )
-            traceback.print_exc(file=sys.stderr)
-            status = "error"
-
-        # Restore stdout/stderr
-        sys.stdout = old_stdout
-        sys.stderr = old_stderr
-
-        stdout_output = [captured_stdout.getvalue()] if captured_stdout.getvalue() else []
-        stderr_output = [captured_stderr.getvalue()] if captured_stderr.getvalue() else []
-
-        return ToolExecutionResult(
-            status=status,
-            func_return=func_return,
-            agent_state=agent_state,
-            stdout=stdout_output,
-            stderr=stderr_output,
-            sandbox_config_fingerprint=sbx_config.fingerlogger.info(),
-        )
 
     def parse_out_function_results_markers(self, text: str):
         if self.LOCAL_SANDBOX_RESULT_START_MARKER not in text:

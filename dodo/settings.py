@@ -1,7 +1,11 @@
 import os
+import sys
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from dodo.schemas.enums import SandboxType
 
 from dotenv import load_dotenv
 
@@ -13,7 +17,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # Load config file and apply to environment before settings are created
 # This allows YAML config values to be picked up by pydantic-settings
 from dodo.config_file import apply_config_to_env
-from dodo.schemas.enums import SandboxType
 from dodo.services.summarizer.enums import SummarizationMode
 
 apply_config_to_env()
@@ -64,12 +67,13 @@ class ToolSettings(BaseSettings):
         return bool(self.modal_token_id and self.modal_token_secret)
 
     @property
-    def sandbox_type(self) -> SandboxType:
+    def sandbox_type(self) -> "SandboxType":
         """Default sandbox type based on available credentials.
 
         Note: Modal is checked separately via modal_sandbox_enabled property.
         This property determines the fallback behavior (E2B or LOCAL).
         """
+        from dodo.schemas.enums import SandboxType
         if self.e2b_api_key:
             return SandboxType.E2B
         else:
@@ -247,6 +251,8 @@ class ModelSettings(BaseSettings):
 
 
 env_cors_origins = os.getenv("ACCEPTABLE_ORIGINS")
+debug_env = os.getenv("DODO_DEBUG", "").lower() == "true" or "--debug" in sys.argv
+additional_origins_env = os.getenv("DODO_CORS_ORIGINS", "")
 
 cors_origins = [
     "http://dodo.localhost",
@@ -258,14 +264,25 @@ cors_origins = [
 
 # attach the env_cors_origins to the cors_origins if it exists
 if env_cors_origins:
-    cors_origins.extend(env_cors_origins.split(","))
+    cors_origins.extend([o.strip() for o in env_cors_origins.split(",") if o.strip()])
+
+if debug_env:
+    cors_origins.extend(["http://localhost:5173", "http://localhost:5174"])
+
+if additional_origins_env:
+    cors_origins.extend([o.strip() for o in additional_origins_env.split(",") if o.strip()])
+
+if "https://app.dodo.com" not in cors_origins:
+    cors_origins.append("https://app.dodo.com")
+
+# Filter out '*' to prevent wildcard with credentials
+cors_origins = [o for o in cors_origins if o != "*"]
+cors_origins_tuple = tuple(cors_origins)
 
 # read pg_uri from ~/.dodo/pg_uri or set to none, this is to support dodo Desktop
 default_pg_uri = None
 
 ## check if --use-file-pg-uri is passed
-import sys
-
 if "--use-file-pg-uri" in sys.argv:
     try:
         with open(Path.home() / ".dodo/pg_uri", "r") as f:
@@ -285,7 +302,7 @@ class Settings(BaseSettings):
 
     dodo_dir: Optional[Path] = Field(Path.home() / ".dodo", alias="dodo_DIR")
     debug: Optional[bool] = False
-    cors_origins: Optional[list] = cors_origins
+    cors_origins: tuple[str, ...] = cors_origins_tuple
     environment: Optional[str] = Field(
         default=None,
         description="Application environment (prod, dev, canary, etc. - lowercase values used for OTEL tags)",

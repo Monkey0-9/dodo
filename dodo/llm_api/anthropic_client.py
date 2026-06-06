@@ -634,8 +634,6 @@ class AnthropicClient(LLMClientBase):
                 tools_for_request,
                 use_strict=use_strict,
             )
-            # Apply modular cache control to tools
-            apply_cache_control(data["messages"], data["tools"])
 
         # Messages
         inner_thoughts_xml_tag = "thinking"
@@ -686,8 +684,8 @@ class AnthropicClient(LLMClientBase):
         # produce multiple tool_result blocks with the same id; consolidate them here.
         data["messages"] = dedupe_tool_results_in_user_messages(data["messages"])
 
-        # Apply modular cache control to final message
-        apply_cache_control(data["messages"])
+        # Apply modular cache control to tools and final message
+        apply_cache_control(data["messages"], data.get("tools"))
 
         # Debug: Log cache control placement
         logger.debug(f"Anthropic request has {len(data.get('messages', []))} messages")

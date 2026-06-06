@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 from typing import List, Literal, Optional
 
 from httpx import AsyncClient
@@ -395,12 +395,12 @@ class RunManager:
             except Exception as lock_error:
                 logger.warning(f"Failed to release conversation lock for conversation {conversation_id}: {lock_error}")
 
-        # Update agent's last_stop_reason when run completes
-        # Do this after run update is committed to database
+        print(f"DEBUG_UPDATE_RUN: is_terminal_update={is_terminal_update}, stop_reason={update.stop_reason if 'update' in locals() else 'None'}")
         if is_terminal_update and update.stop_reason:
             try:
                 from dodo.schemas.agent import UpdateAgent
 
+                print(f"DEBUG_UPDATE_RUN: Updating agent {pydantic_run.agent_id} last_stop_reason to {update.stop_reason}")
                 await self.agent_manager.update_agent_async(
                     agent_id=pydantic_run.agent_id,
                     agent_update=UpdateAgent(last_stop_reason=update.stop_reason),
@@ -408,6 +408,7 @@ class RunManager:
                 )
             except Exception as e:
                 logger.error(f"Failed to update agent's last_stop_reason for run {run_id}: {e}")
+                print(f"DEBUG_UPDATE_RUN: Exception: {e}")
 
         # update run metrics table
         num_steps = len(await self.step_manager.list_steps_async(run_id=run_id, actor=actor))

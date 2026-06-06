@@ -1,26 +1,32 @@
-﻿import ast
+import ast
 import base64
-import pickle
 from typing import Any, Union
 
 from dodo.constants import REQUEST_HEARTBEAT_DESCRIPTION, REQUEST_HEARTBEAT_PARAM, SEND_MESSAGE_TOOL_NAME
 from dodo.schemas.agent import AgentState
 from dodo.schemas.response_format import ResponseFormatType, ResponseFormatUnion
+from dodo.services.tool_sandbox.safe_pickle import safe_json_loads
 from dodo.types import JsonDict, JsonValue
 
 
 def parse_stdout_best_effort(text: Union[str, bytes]) -> tuple[Any, AgentState | None]:
     """
-    Decode and unpickle the result from the function execution if possible.
+    Decode and load the JSON result from the function execution if possible.
     Returns (function_return_value, agent_state).
     """
     if not text:
         return None, None
     if isinstance(text, str):
         text = base64.b64decode(text)
-    result = pickle.loads(text)
-    agent_state = result["agent_state"]
-    return result["results"], agent_state
+    result = safe_json_loads(text)
+    agent_state_data = result.get("agent_state")
+    agent_state = None
+    if agent_state_data is not None:
+        try:
+            agent_state = AgentState.model_validate(agent_state_data)
+        except Exception:
+            agent_state = agent_state_data
+    return result.get("results"), agent_state
 
 
 def parse_function_arguments(source_code: str, tool_name: str):

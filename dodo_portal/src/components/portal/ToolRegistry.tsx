@@ -58,7 +58,7 @@ export const ToolRegistry = () => {
             key={tool.id}
             title={tool.name} 
             category={tool.tool_type || 'FUNCTION'} 
-            icon={tool.tool_type === 'mcp' ? 'hub' : 'code'} 
+            icon={tool.tool_type === 'external_mcp' || tool.tool_type === 'mcp' ? 'hub' : 'code'}
             status="READY" 
             version="v1.0.0" 
             success="100%" 

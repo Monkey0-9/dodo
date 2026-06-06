@@ -1,13 +1,13 @@
-﻿import importlib
+import importlib
 import inspect
 import os
-import pickle
 import uuid
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 
 from dodo.constants import dodo_MULTI_AGENT_TOOL_MODULE_NAME
 from dodo.functions.helpers import generate_model_from_args_json_schema
+from dodo.services.tool_sandbox.safe_pickle import safe_json_dumps
 from dodo.log import get_logger
 from dodo.otel.tracing import trace_method
 from dodo.schemas.agent import AgentState
@@ -157,7 +157,7 @@ class AsyncToolSandboxBase(ABC):
             for param in self.args:
                 tool_args += self.initialize_param(param, self.args[param])
 
-        agent_state_pickle = pickle.dumps(agent_state) if self.inject_agent_state else None
+        agent_state_json = safe_json_dumps(agent_state) if self.inject_agent_state else None
         agent_id = agent_state.id if agent_state else None
 
         code = self._render_sandbox_code(
@@ -166,7 +166,7 @@ class AsyncToolSandboxBase(ABC):
             inject_dodo_client=self.inject_dodo_client,
             inject_agent_id=self.inject_agent_id,
             schema_imports=schema_code or "",
-            agent_state_pickle=agent_state_pickle,
+            agent_state_json=agent_state_json,
             agent_id=agent_id,
             tool_args=tool_args,
             tool_source_code=self.tool.source_code,
@@ -186,7 +186,7 @@ class AsyncToolSandboxBase(ABC):
         inject_dodo_client: bool,
         inject_agent_id: bool,
         schema_imports: str,
-        agent_state_pickle: bytes | None,
+        agent_state_json: bytes | None,
         agent_id: str | None,
         tool_args: str,
         tool_source_code: str,
@@ -202,11 +202,11 @@ class AsyncToolSandboxBase(ABC):
         lines.extend(
             [
                 "from typing import *",
-                "import pickle",
                 "import sys",
                 "import base64",
                 "import struct",
                 "import hashlib",
+                "import json",
             ]
         )
         if self.is_async_function:
@@ -229,8 +229,17 @@ class AsyncToolSandboxBase(ABC):
         if schema_imports:
             lines.append(schema_imports.rstrip())
 
-        if agent_state_pickle is not None:
-            lines.append(f"agent_state = pickle.loads({repr(agent_state_pickle)})")
+        if agent_state_json is not None:
+            lines.extend(
+                [
+                    f"__dodo_agent_state_dict = json.loads({repr(agent_state_json.decode('utf-8'))})",
+                    "try:",
+                    "    from dodo.schemas.agent import AgentState",
+                    "    agent_state = AgentState.model_validate(__dodo_agent_state_dict)",
+                    "except Exception:",
+                    "    agent_state = __dodo_agent_state_dict",
+                ]
+            )
         else:
             lines.append("agent_state = None")
 
@@ -282,7 +291,6 @@ class AsyncToolSandboxBase(ABC):
                     "    __dodo_coerced_args = coerce_dict_args_by_annotations(",
                     "        __dodo_raw_args,",
                     "        __dodo_annotations,",
-                    "        allow_unsafe_eval=True,",
                     "        extra_globals=__dodo_func.__globals__,",
                     "    )",
                 ]
@@ -315,9 +323,9 @@ class AsyncToolSandboxBase(ABC):
                     "",
                     f"{local_sandbox_result_var_name} = {{",
                     '    "results": _serialized_result,',
-                    '    "agent_state": agent_state',
+                    '    "agent_state": agent_state.model_dump() if hasattr(agent_state, "model_dump") else (agent_state.dict() if hasattr(agent_state, "dict") else agent_state)',
                     "}",
-                    f"{local_sandbox_result_var_name}_pkl = pickle.dumps({local_sandbox_result_var_name})",
+                    f"{local_sandbox_result_var_name}_json = json.dumps({local_sandbox_result_var_name}).encode('utf-8')",
                 ]
             )
         else:
@@ -345,7 +353,7 @@ class AsyncToolSandboxBase(ABC):
                     "",
                     "    return {",
                     '        "results": _serialized_result,',
-                    '        "agent_state": agent_state',
+                    '        "agent_state": agent_state.model_dump() if hasattr(agent_state, "model_dump") else (agent_state.dict() if hasattr(agent_state, "dict") else agent_state)',
                     "    }",
                 ]
             )
@@ -353,24 +361,24 @@ class AsyncToolSandboxBase(ABC):
                 lines.append(f"{local_sandbox_result_var_name} = await _async_wrapper()")
             else:
                 lines.append(f"{local_sandbox_result_var_name} = asyncio.run(_async_wrapper())")
-            lines.append(f"{local_sandbox_result_var_name}_pkl = pickle.dumps({local_sandbox_result_var_name})")
+            lines.append(f"{local_sandbox_result_var_name}_json = json.dumps({local_sandbox_result_var_name}).encode('utf-8')")
 
         if wrap_print_with_markers:
             lines.extend(
                 [
-                    f"data_checksum = hashlib.md5({local_sandbox_result_var_name}_pkl).hexdigest().encode('ascii')",
+                    f"data_checksum = hashlib.md5({local_sandbox_result_var_name}_json).hexdigest().encode('ascii')",
                     f"{local_sandbox_result_var_name}_msg = (",
                     f"  {repr(start_marker)} +",
-                    f"  struct.pack('>I', len({local_sandbox_result_var_name}_pkl)) +",
+                    f"  struct.pack('>I', len({local_sandbox_result_var_name}_json)) +",
                     "  data_checksum +",
-                    f"  {local_sandbox_result_var_name}_pkl",
+                    f"  {local_sandbox_result_var_name}_json",
                     ")",
                     f"sys.stdout.buffer.write({local_sandbox_result_var_name}_msg)",
                     "sys.stdout.buffer.flush()",
                 ]
             )
         else:
-            lines.append(f"base64.b64encode({local_sandbox_result_var_name}_pkl).decode('utf-8')")
+            lines.append(f"base64.b64encode({local_sandbox_result_var_name}_json).decode('utf-8')")
 
         return "\n".join(lines) + "\n"
 

@@ -377,6 +377,14 @@ class SyncServer(object):
                 )
             )
 
+        # Instantiate services for domain decomposition
+        self.agent_service = AgentService(self)
+        self.memory_service = MemoryService(self)
+        self.tool_service = ToolService(self)
+        self.file_service = FileService(self)
+        self.source_service = SourceService(self)
+        self.block_service = BlockService(self)
+
     async def init_async(self, init_with_default_org_and_user: bool = True):
         # unfortunately we must always create default org/user
         self.default_org = await self.organization_manager.create_default_organization_async()
@@ -1939,4 +1947,104 @@ class SyncServer(object):
             raise dodoInvalidArgumentError(f"Failed to write MCP config file {mcp_config_path}")
 
         return list(current_mcp_servers.values())
+
+
+# ==========================================
+# Domain Service Boundary Classes
+# ==========================================
+
+class AgentService:
+    def __init__(self, server: "SyncServer"):
+        self.server = server
+
+    async def create_agent_async(self, request: CreateAgent, actor: User) -> AgentState:
+        return await self.server.create_agent_async(request, actor)
+
+    async def update_agent_async(self, request: UpdateAgent, actor: User) -> AgentState:
+        return await self.server.update_agent_async(request, actor)
+
+    async def create_sleeptime_agent_async(self, main_agent: AgentState, actor: User) -> Optional[AgentState]:
+        return await self.server.create_sleeptime_agent_async(main_agent, actor)
+
+    async def create_voice_sleeptime_agent_async(self, main_agent: AgentState, actor: User) -> Optional[AgentState]:
+        return await self.server.create_voice_sleeptime_agent_async(main_agent, actor)
+
+    async def create_document_sleeptime_agent_async(self, agent_state: AgentState, file_ids: List[str], actor: User) -> Optional[AgentState]:
+        return await self.server.create_document_sleeptime_agent_async(agent_state, file_ids, actor)
+
+
+class MemoryService:
+    def __init__(self, server: "SyncServer"):
+        self.server = server
+
+    async def get_agent_memory_async(self, agent_id: str, actor: User) -> Memory:
+        return await self.server.get_agent_memory_async(agent_id, actor)
+
+    async def get_agent_archival_async(self, agent_id: str, actor: User, limit: Optional[int] = None, start: Optional[int] = None):
+        return await self.server.get_agent_archival_async(agent_id, actor, limit, start)
+
+    async def insert_archival_memory_async(self, agent_id: str, memory: str, actor: User):
+        return await self.server.insert_archival_memory_async(agent_id, memory, actor)
+
+    async def delete_archival_memory_async(self, memory_id: str, actor: User):
+        return await self.server.delete_archival_memory_async(memory_id, actor)
+
+    async def get_agent_recall(self, agent_id: str, actor: User, limit: Optional[int] = None, start: Optional[int] = None):
+        return await self.server.get_agent_recall(agent_id, actor, limit, start)
+
+    async def get_agent_recall_async(self, agent_id: str, actor: User, limit: Optional[int] = None, start: Optional[int] = None):
+        return await self.server.get_agent_recall_async(agent_id, actor, limit, start)
+
+    async def get_all_messages_recall_async(self, agent_id: str, actor: User, limit: Optional[int] = None, start: Optional[int] = None):
+        return await self.server.get_all_messages_recall_async(agent_id, actor, limit, start)
+
+    def update_agent_core_memory(self, agent_id: str, label: str, value: str, actor: User) -> Memory:
+        return self.server.update_agent_core_memory(agent_id, label, value, actor)
+
+
+class ToolService:
+    def __init__(self, server: "SyncServer"):
+        self.server = server
+
+    async def run_tool_from_source(self, tool_name: str, source_code: str, args: dict, actor: User, agent_id: Optional[str] = None):
+        return await self.server.run_tool_from_source(tool_name, source_code, args, actor, agent_id)
+
+
+class FileService:
+    def __init__(self, server: "SyncServer"):
+        self.server = server
+
+    async def _remove_file_from_agent(self, agent_id: str, file_id: str, actor: User) -> None:
+        return await self.server._remove_file_from_agent(agent_id, file_id, actor)
+
+    async def remove_file_from_context_windows(self, source_id: str, file_id: str, actor: User) -> None:
+        return await self.server.remove_file_from_context_windows(source_id, file_id, actor)
+
+    async def remove_files_from_context_window(self, agent_state: AgentState, file_ids: List[str], actor: User) -> None:
+        return await self.server.remove_files_from_context_window(agent_state, file_ids, actor)
+
+
+class SourceService:
+    def __init__(self, server: "SyncServer"):
+        self.server = server
+
+    async def delete_source(self, source_id: str, actor: User):
+        return await self.server.delete_source(source_id, actor)
+
+    async def load_file_to_source(self, source_id: str, file_path: str, job_id: str, actor: User) -> Job:
+        return await self.server.load_file_to_source(source_id, file_path, job_id, actor)
+
+    async def load_file_to_source_via_mistral(self):
+        return await self.server.load_file_to_source_via_mistral()
+
+    async def sleeptime_document_ingest_async(self, agent_id: str, file_id: str, actor: User):
+        return await self.server.sleeptime_document_ingest_async(agent_id, file_id, actor)
+
+    async def load_data(self, connector: DataConnector, source_name: str, actor: User) -> Source:
+        return await self.server.load_data(connector, source_name, actor)
+
+
+class BlockService:
+    def __init__(self, server: "SyncServer"):
+        self.server = server
 

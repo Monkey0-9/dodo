@@ -12,6 +12,8 @@ export interface Tool {
   description?: string;
   json_schema: Record<string, any>;
   tool_type: string;
+  source_type?: string;
+  source_code?: string;
 }
 
 export interface Message {

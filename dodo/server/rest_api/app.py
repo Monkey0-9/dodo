@@ -115,7 +115,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from dodo.server.global_exception_handler import setup_global_exception_handlers
 
 # Mount necessary routes for backwards compatibility and extension support
-from dodo.server.rest_api.auth.index import setup_auth_router
 from dodo.server.rest_api.interface import StreamingServerInterface
 from dodo.server.rest_api.middleware import LoggingMiddleware, RequestIdMiddleware
 from dodo.server.rest_api.routers.v1 import ROUTERS as v1_routes
@@ -176,8 +175,6 @@ def generate_password():
     return secrets.token_urlsafe(16)
 
 
-from dodo.server.rest_api.routers.v1.auth import MASTER_PASSWORD as random_password
-
 
 @asynccontextmanager
 async def lifespan(app_: FastAPI):
@@ -208,10 +205,15 @@ async def lifespan(app_: FastAPI):
         import nltk
 
         logger.info(f"[Worker {worker_id}] Checking NLTK data availability...")
-        await asyncio.to_thread(nltk.download, "punkt_tab", quiet=True)
-        logger.info(f"[Worker {worker_id}] NLTK data ready")
+        try:
+            nltk.data.find("tokenizers/punkt_tab")
+            logger.info(f"[Worker {worker_id}] NLTK data already available locally")
+        except LookupError:
+            logger.info(f"[Worker {worker_id}] NLTK data not found, downloading...")
+            await asyncio.to_thread(nltk.download, "punkt_tab", quiet=True)
+            logger.info(f"[Worker {worker_id}] NLTK data ready")
     except Exception as e:
-        logger.warning(f"[Worker {worker_id}] Failed to download NLTK data: {e}")
+        logger.warning(f"[Worker {worker_id}] Failed to check/download NLTK data: {e}")
 
     # Log effective database timeout settings for debugging
     try:
@@ -244,6 +246,7 @@ async def lifespan(app_: FastAPI):
 
     logger.info(f"[Worker {worker_id}] Starting scheduler with leader election")
     current_server = get_server()
+    app_.state.server = current_server
     await current_server.init_async(init_with_default_org_and_user=not settings.no_default_actor)
 
     # Set server instance for git HTTP endpoints
@@ -447,8 +450,17 @@ def create_application() -> "FastAPI":
     # === Security Headers ===
     class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         async def dispatch(self, request, call_next):
+            import secrets
+            nonce = secrets.token_urlsafe(16)
+            request.state.csp_nonce = nonce
             response = await call_next(request)
-            response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:;"
+            response.headers["Content-Security-Policy"] = (
+                f"default-src 'self'; "
+                f"script-src 'self' 'nonce-{nonce}'; "
+                f"style-src 'self' 'nonce-{nonce}'; "
+                f"img-src 'self' data:; "
+                f"connect-src 'self' ws: wss:;"
+            )
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
             response.headers["X-Content-Type-Options"] = "nosniff"
             response.headers["X-Frame-Options"] = "DENY"
@@ -827,15 +839,7 @@ def create_application() -> "FastAPI":
             },
         )
 
-    if debug_mode or os.getenv("DODO_DEBUG", "").lower() == "true":
-        settings.cors_origins.extend(["http://localhost:5173", "http://localhost:5174"])
 
-    additional_origins = os.getenv("DODO_CORS_ORIGINS", "")
-    if additional_origins:
-        settings.cors_origins.extend([origin.strip() for origin in additional_origins.split(",") if origin.strip()])
-
-    if "https://app.dodo.com" not in settings.cors_origins:
-        settings.cors_origins.append("https://app.dodo.com")
 
     if (os.getenv("DODO_SERVER_SECURE") == "true") or "--secure" in sys.argv:
         logger.info("â–¶ Using secure mode with JWT authentication")
@@ -918,8 +922,7 @@ def create_application() -> "FastAPI":
     from dodo.server.rest_api.routers.auth import router as new_auth_router
     app.include_router(new_auth_router)
 
-    # /api/auth endpoints (legacy)
-    app.include_router(setup_auth_router(server, interface, random_password), prefix=API_PREFIX)
+
 
     # / static files
     mount_static_files(app)

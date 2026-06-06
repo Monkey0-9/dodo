@@ -225,7 +225,10 @@ class AgentsResource(BaseResource):
 class MessagesResource(BaseResource):
     def list(self, agent_id: str, **kwargs) -> ListWrapper:
         resp = self.client.get(f"/v1/agents/{agent_id}/messages", params=kwargs)
-        return ListWrapper([Message(**m) for m in resp])
+        from dodo.schemas.dodo_message import dodoMessageUnion
+        from pydantic import TypeAdapter
+        adapter = TypeAdapter(dodoMessageUnion)
+        return ListWrapper([adapter.validate_python(m) for m in resp])
 
     def create(self, agent_id: str, **kwargs) -> AgentStepResponse:
         resp = self.client.post(f"/v1/agents/{agent_id}/messages", json=kwargs)

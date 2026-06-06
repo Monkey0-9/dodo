@@ -815,4 +815,219 @@ def mock_llm_client_embeddings(monkeypatch):
     monkeypatch.setattr(OpenAIClient, "request_embeddings", mock_request_embeddings)
 
 
+@pytest.fixture(autouse=True)
+def mock_openai_client(monkeypatch):
+    """Globally mock request_async and stream_async to avoid making real API calls during tests."""
+    from dodo.llm_api.openai_client import OpenAIClient
+    from openai.types.chat.chat_completion_chunk import ChatCompletionChunk, Choice, ChoiceDelta, ChoiceDeltaToolCall, ChoiceDeltaToolCallFunction
+    from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall, Function
+
+    async def mock_request_async(self, request_data: dict, llm_config):
+        model = llm_config.model if llm_config else "mock-model"
+        
+        tool_names = []
+        if request_data.get("tools"):
+            for t in request_data["tools"]:
+                if "function" in t and "name" in t["function"]:
+                    tool_names.append(t["function"]["name"])
+                elif "name" in t:
+                    tool_names.append(t["name"])
+
+        is_tool_response = False
+        content = ""
+        if "messages" in request_data and len(request_data["messages"]) > 0:
+            last_msg = request_data["messages"][-1]
+            if isinstance(last_msg, dict):
+                if last_msg.get("role") in ("tool", "function"):
+                    is_tool_response = True
+                elif last_msg.get("role") == "user":
+                    content = last_msg.get("content") or ""
+                    if isinstance(content, str):
+                        has_tool_mention = any(t_name in content.lower() or (t_name.replace("_tool", "") in content.lower()) for t_name in tool_names)
+                        is_tool_response = not has_tool_mention
+
+        tool_calls = None
+        if request_data.get("tools") and not is_tool_response:
+            target_tool = "send_message"
+            for t_name in tool_names:
+                if t_name in content.lower() or (t_name.replace("_tool", "") in content.lower()):
+                    target_tool = t_name
+                    break
+            if target_tool == "send_message" and "send_message" not in tool_names:
+                target_tool = tool_names[0] if tool_names else "send_message"
+
+            tool_calls = [
+                ChatCompletionMessageToolCall(
+                    id="call-mock-tool",
+                    type="function",
+                    function=Function(
+                        name=target_tool,
+                        arguments='{"message": "Mock standard response text"}'
+                    )
+                )
+            ]
+
+        # Return dict matching ChatCompletion structure
+        return {
+            "id": "chatcmpl-mock",
+            "object": "chat.completion",
+            "created": 1677652288,
+            "model": model,
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": None if tool_calls else "Mock standard response text",
+                        "tool_calls": [tc.model_dump() for tc in tool_calls] if tool_calls else None
+                    },
+                    "finish_reason": "tool_calls" if tool_calls else "stop"
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 10,
+                "completion_tokens": 20,
+                "total_tokens": 30
+            }
+        }
+
+    async def mock_stream_async(self, request_data: dict, llm_config, **kwargs):
+        model = llm_config.model if llm_config else "mock-model"
+
+        is_tool_response = False
+        if "messages" in request_data and len(request_data["messages"]) > 0:
+            last_msg = request_data["messages"][-1]
+            if isinstance(last_msg, dict):
+                if last_msg.get("role") in ("tool", "function"):
+                    is_tool_response = True
+                elif last_msg.get("role") == "user":
+                    content = last_msg.get("content") or ""
+                    if isinstance(content, str):
+                        if "bash_tool" not in content.lower() and "bash" not in content.lower():
+                            is_tool_response = True
+                        else:
+                            is_tool_response = False
+
+        tool_calls = None
+        if request_data.get("tools") and not is_tool_response:
+            tool_names = []
+            for t in request_data["tools"]:
+                if "function" in t and "name" in t["function"]:
+                    tool_names.append(t["function"]["name"])
+                elif "name" in t:
+                    tool_names.append(t["name"])
+            target_tool = "send_message" if "send_message" in tool_names else (tool_names[0] if tool_names else "send_message")
+            tool_calls = [
+                ChoiceDeltaToolCall(
+                    index=0,
+                    id="call-mock-tool",
+                    type="function",
+                    function=ChoiceDeltaToolCallFunction(
+                        name=target_tool,
+                        arguments='{"message": "Mock standard response text"}'
+                    )
+                )
+            ]
+
+        # We yield a couple of chunks to simulate streaming
+        class MockAsyncStream:
+            def __init__(self, chunks):
+                self.chunks = chunks
+                self.index = 0
+
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, exc_type, exc, tb):
+                return None
+
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                if self.index >= len(self.chunks):
+                    raise StopAsyncIteration
+                chunk = self.chunks[self.index]
+                self.index += 1
+                return chunk
+
+        if tool_calls:
+            chunks = [
+                ChatCompletionChunk(
+                    id="chatcmpl-mock",
+                    object="chat.completion.chunk",
+                    created=1677652288,
+                    model=model,
+                    choices=[
+                        Choice(
+                            index=0,
+                            delta=ChoiceDelta(
+                                role="assistant",
+                                content=None,
+                                tool_calls=tool_calls
+                            ),
+                            finish_reason=None
+                        )
+                    ]
+                ),
+                ChatCompletionChunk(
+                    id="chatcmpl-mock",
+                    object="chat.completion.chunk",
+                    created=1677652288,
+                    model=model,
+                    choices=[
+                        Choice(
+                            index=0,
+                            delta=ChoiceDelta(
+                                role=None,
+                                content=None,
+                                tool_calls=None
+                            ),
+                            finish_reason="tool_calls"
+                        )
+                    ]
+                )
+            ]
+        else:
+            chunks = [
+                ChatCompletionChunk(
+                    id="chatcmpl-mock",
+                    object="chat.completion.chunk",
+                    created=1677652288,
+                    model=model,
+                    choices=[
+                        Choice(
+                            index=0,
+                            delta=ChoiceDelta(
+                                role="assistant",
+                                content="Mock standard response text"
+                            ),
+                            finish_reason=None
+                        )
+                    ]
+                ),
+                ChatCompletionChunk(
+                    id="chatcmpl-mock",
+                    object="chat.completion.chunk",
+                    created=1677652288,
+                    model=model,
+                    choices=[
+                        Choice(
+                            index=0,
+                            delta=ChoiceDelta(
+                                role=None,
+                                content=None
+                            ),
+                            finish_reason="stop"
+                        )
+                    ]
+                )
+            ]
+        return MockAsyncStream(chunks)
+
+    monkeypatch.setattr(OpenAIClient, "request_async", mock_request_async)
+    monkeypatch.setattr(OpenAIClient, "stream_async", mock_stream_async)
+
+
+
 

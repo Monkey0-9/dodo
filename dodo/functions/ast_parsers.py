@@ -56,7 +56,7 @@ def _resolve_subscript_slice(slice_node: ast.AST):
     return _resolve_annotation_node(slice_node)
 
 
-def resolve_type(annotation: str, *, allow_unsafe_eval: bool = False, extra_globals: Optional[Dict[str, object]] = None):
+def resolve_type(annotation: str, *, extra_globals: Optional[Dict[str, object]] = None):
     """
     Resolve a type annotation string into a Python type.
     Previously, primitive support for int, float, str, dict, list, set, tuple, bool.
@@ -82,11 +82,6 @@ def resolve_type(annotation: str, *, allow_unsafe_eval: bool = False, extra_glob
         return _resolve_annotation_node(parsed.body)
     except Exception as e:
         logger.exception(f"Unexpected error: {e}")
-        if allow_unsafe_eval:
-            try:
-                return eval(annotation, python_types)
-            except Exception as exc:
-                raise ValueError(f"Unsupported annotation: {annotation}") from exc
 
     raise ValueError(f"Unsupported annotation: {annotation}")
 
@@ -118,12 +113,10 @@ def get_function_annotations_from_source(source_code: str, function_name: str) -
     raise ValueError(f"Function '{function_name}' not found in the provided source code.")
 
 
-# NOW json_loads -> ast.literal_eval -> typing.get_origin
 def coerce_dict_args_by_annotations(
     function_args: JsonDict,
     annotations: Dict[str, object],
     *,
-    allow_unsafe_eval: bool = False,
     extra_globals: Optional[Dict[str, object]] = None,
 ) -> dict:
     coerced_args = dict(function_args)  # Shallow copy
@@ -136,13 +129,11 @@ def coerce_dict_args_by_annotations(
                 if isinstance(annotation_value, str):
                     arg_type = resolve_type(
                         annotation_value,
-                        allow_unsafe_eval=allow_unsafe_eval,
                         extra_globals=extra_globals,
                     )
                 elif isinstance(annotation_value, typing.ForwardRef):
                     arg_type = resolve_type(
                         annotation_value.__forward_arg__,
-                        allow_unsafe_eval=allow_unsafe_eval,
                         extra_globals=extra_globals,
                     )
                 else:
@@ -191,10 +182,9 @@ def get_function_name_and_docstring(source_code: str, name: Optional[str] = None
         function_def = None
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
-                if name is not None and node.name == name:
+                if name is None or node.name == name:
                     function_def = node
                     break
-                function_def = node
 
         if not function_def:
             raise dodoToolCreateError("No function definition found in source code")

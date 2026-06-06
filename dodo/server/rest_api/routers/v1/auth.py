@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -5,19 +7,11 @@ from dodo.log import get_logger
 from dodo.server.rest_api.auth.jwt_handler import create_access_token
 
 logger = get_logger(__name__)
-import os
-
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-import secrets
-import warnings
 
 _master = os.getenv("DODO_SERVER_PASSWORD")
 if not _master:
-    warnings.warn(
-        "DODO_SERVER_PASSWORD environment variable is not set. Generating a temporary random password for this session."
-    )
-    _master = secrets.token_urlsafe(16)
+    raise RuntimeError("DODO_SERVER_PASSWORD environment variable is not set.")
 
 MASTER_PASSWORD = _master
 
